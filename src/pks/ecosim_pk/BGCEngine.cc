@@ -116,7 +116,7 @@ BGCEngine::BGCEngine(const std::string& engineName,
 
 
   //This calls the Setup function that we pointed the code to within alquimia
-
+  /*
   chem_.Setup(chem_engine_inputfile_.c_str(),
               hands_off,
               &engine_state_,
@@ -130,20 +130,14 @@ BGCEngine::BGCEngine(const std::string& engineName,
     msg << "Error in creation of ChemistryEngine.";
     Exceptions::amanzi_throw(msg);
   }
+  */
+  //We don't need the chem interface call
+  //Place the call to the EcoSIM setup driver here:
+  EcoSIMSetup();
 
   // Allocate storage for additional Alquimia data.
-  AllocateAlquimiaProblemMetaData(&sizes_, &chem_metadata_);
-
-  // Get the problem metadata (species and mineral names, etc).
-  chem_.GetProblemMetaData(&engine_state_,
-                           &chem_metadata_,
-                           &chem_status_);
-  if (chem_status_.error != 0)
-  {
-    std::cout << chem_status_.message << std::endl;
-    PrintAlquimiaProblemMetaData(&chem_metadata_, stdout);
-    msg << "Error in ChemistryEngine::Initialize";
-    Exceptions::amanzi_throw(msg);
+  // Below this sets up Alquimia metadata I don't think we
+  //need this
   }
 }
 
@@ -199,45 +193,24 @@ bool ChemistryEngine::Advance(const double delta_time,
                               AlquimiaAuxiliaryOutputData& aux_output,
                               int& num_iterations)
 {
-#ifdef AMANZI_USE_FENV
-  // Disable divide-by-zero floating point exceptions.
-  int fpe_mask = fedisableexcept(FE_DIVBYZERO);
-#endif
 
   // Advance the chemical reaction all operator-split-like.
-  chem_.ReactionStepOperatorSplit(&engine_state_,
+  /*chem_.ReactionStepOperatorSplit(&engine_state_,
                                   delta_time,
                                   &(const_cast<AlquimiaProperties&>(mat_props)),
                                   &chem_state,
                                   &aux_data,
                                   &chem_status_);
+  */
+  //This is alquimia's advance function which we won't need
+  //calling EcoSIM advance driver
+  EcoSIMAdvance();
 
-#ifdef AMANZI_USE_FENV
-  // Re-enable pre-existing floating point exceptions.
-  feclearexcept(fpe_mask);
-  fpe_mask = feenableexcept(fpe_mask);
-#endif
-
-  // Retrieve auxiliary output.
-  chem_.GetAuxiliaryOutput(&engine_state_,
-                           &(const_cast<AlquimiaProperties&>(mat_props)),
-                           &chem_state,
-                           &aux_data,
-                           &aux_output,
-                           &chem_status_);
-
-  // Did we succeed?
-  if (chem_status_.error != kAlquimiaNoError)
-    return false;
-
-  // Did we converge?
-  if (!chem_status_.converged)
-    return false;
-
-  // Write down the (maximum) number of Newton iterations.
-  num_iterations = chem_status_.num_newton_iterations;
-  return true;
 }
+
+//Here is where alquimai has the set condition functions.
+//Is this the equivalent to setting ICs for the runs?
+
 
 void ChemistryEngine::CreateCondition(const std::string& condition_name)
 {
@@ -256,57 +229,6 @@ void ChemistryEngine::CreateCondition(const std::string& condition_name)
   chem_conditions_[condition_name] = condition;
 }
 
-
-/* Mineral constraints will be discontinued in Alquimia -- see Sergi
-
-void ChemistryEngine::AddMineralConstraint(const std::string& condition_name,
-                                           const std::string& mineral_name,
-                                           double volume_fraction,
-                                           double specific_surface_area)
-{
-  assert(condition_name.length() > 0);
-  assert(volume_fraction >= 0.0);
-  assert(specific_surface_area >= 0.0);
-
-  GeochemicalConditionMap::iterator iter = chem_conditions_.find(condition_name);
-  if (iter != chem_conditions_.end())
-  {
-    AlquimiaGeochemicalCondition* condition = &iter->second->condition;
-
-    // Do we have an existing constraint?
-    int index = -1;
-    for (int i = 0; i < condition->mineral_constraints.size; ++i)
-    {
-      if (!std::strcmp(condition->mineral_constraints.data[i].mineral_name, mineral_name.c_str()))
-      {
-        // Overwrite the old constraint.
-        index = i;
-        free(condition->mineral_constraints.data[index].mineral_name);
-      }
-    }
-    if (index == -1)
-    {
-      // New constraint!
-      index = condition->mineral_constraints.size;
-      condition->mineral_constraints.size++;
-      condition->mineral_constraints.data = (AlquimiaMineralConstraint*)realloc(condition->mineral_constraints.data, sizeof(AlquimiaMineralConstraint) * (index+1));
-    }
-
-    // Add the mineral constraint.
-    condition->mineral_constraints.data[index].mineral_name = strdup(mineral_name.c_str());
-    condition->mineral_constraints.data[index].volume_fraction = volume_fraction;
-    condition->mineral_constraints.data[index].specific_surface_area = specific_surface_area;
-  }
-  else
-  {
-    Errors::Message msg;
-    msg << "ChemistryEngine::AddMineralConstraint: no condition named '" << condition_name << "'.";
-    Exceptions::amanzi_throw(msg);
-  }
-}
-Mineral constraints will be discontinued in Alquimia -- see Sergi */
-
-
 void ChemistryEngine::AddAqueousConstraint(const std::string& condition_name,
                                            const std::string& primary_species_name,
                                            const std::string& constraint_type,
@@ -322,27 +244,6 @@ void ChemistryEngine::AddAqueousConstraint(const std::string& condition_name,
   if (iter != chem_conditions_.end())
   {
     AlquimiaGeochemicalCondition* condition = &iter->second->condition;
-
-    /* Mineral constraints will be discontinued from Alquimia in the near future -- see Sergi
-
-    // Is there a mineral constraint for the associated species?
-    if (!associated_species.empty())
-    {
-      bool found_mineral = false;
-      for (int i = 0; i < condition->mineral_constraints.size; ++i)
-      {
-        if (!std::strcmp(condition->mineral_constraints.data[i].mineral_name, associated_species.c_str()))
-          found_mineral = true;
-      }
-      if (!found_mineral)
-      {
-        Errors::Message msg;
-        msg << "ChemistryEngine::AddAqueousConstraint: the condition '" << condition_name << "' does not have a mineral constraint for '" << associated_species << "'.";
-        Exceptions::amanzi_throw(msg);
-      }
-    }
-
-    Mineral constraints will be discontinued from Alquimia in the near future -- see Sergi */
 
     // Do we have an existing constraint?
     int index = -1;
