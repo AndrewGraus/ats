@@ -109,12 +109,12 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // This is a small function in ChemistryEngine that simply looks at the metadata
     // finds the number of primary species and fills a vector with the names of those
     //species
-    comp_names_.clear();
-    bgc_engine_->GetPrimarySpeciesNames(comp_names_);
+    //comp_names_.clear();
+    //bgc_engine_->GetPrimarySpeciesNames(comp_names_);
 
-    number_aqueous_components_ = comp_names_.size();
-    number_free_ion_ = number_aqueous_components_;
-    number_total_sorbed_ = number_aqueous_components_;
+    //number_aqueous_components_ = comp_names_.size();
+    //number_free_ion_ = number_aqueous_components_;
+    //number_total_sorbed_ = number_aqueous_components_;
 
   }
 
@@ -175,7 +175,7 @@ void EcoSIM::Setup() {
 
   // Setup more auxiliary data
   if (!S_->HasRecord(alquimia_aux_data_key_, tag_next_)) {
-    int num_aux_data = chem_engine_->Sizes().num_aux_integers + chem_engine_->Sizes().num_aux_doubles;
+    int num_aux_data = bgc_engine_->Sizes().num_aux_integers + bgc_engine_->Sizes().num_aux_doubles;
     S_->Require<CompositeVector, CompositeVectorSpace>(alquimia_aux_data_key_, tag_next_, passwd_)
       .SetMesh(mesh_)->SetGhosted(false)->SetComponent("cell", AmanziMesh::CELL, num_aux_data);
 
@@ -237,10 +237,6 @@ void EcoSIM::Initialize() {
   auto col_depth = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_dz = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
-  S_->GetEvaluator("temperature", tag_next_).Update(*S_, name_);
-  const Epetra_Vector& temp = *(*S_->Get<CompositeVector>("temperature", tag_next_)
-				.ViewComponent("cell",false))(0);
-
   int num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
   //This is the main set up code in alquimia it loops over times and chemical conditions
@@ -257,8 +253,8 @@ void EcoSIM::Initialize() {
                    << "\" in region \"" << region << "\"\n";
             }
             for (int col=0; col!=num_cols_; ++col) {
-              FieldToColumn_(col, temp, col_temp.ptr());
-              ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
+              //FieldToColumn_(col, temp, col_temp.ptr());
+              //ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
 
               //We're going to need to write an InitializeSingleColumn code
               //ierr = InitializeSingleCell(cell, condition);
@@ -493,10 +489,8 @@ void EcoSIM::CopyToEcoSIM(int col,
                                  BGCState& state,
                                  BGCAuxiliaryData& aux_data)
 {
-  //NOTE: I Have not touched this yet as it will depend on what we have to
-  //Transfer
-  //
   //Fill state with ATS variables that are going to be changed by EcoSIM
+  //NEED TO DECIDE WHICH PROPERTIES GO WHERE
   const auto& porosity = *S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", true);
   const auto& fluid_density = *S_->Get<CompositeVector>(fluid_den_key_, water_tag).ViewComponent("cell", true);
   const auto& water_saturation = *S_->Get<CompositeVector>(saturation_key_, water_tag).ViewComponent("cell", true);
@@ -522,46 +516,9 @@ void EcoSIM::CopyToEcoSIM(int col,
     }
   }
 
-  // minerals
-  assert(state.mineral_volume_fraction.size == number_minerals_);
-  assert(state.mineral_specific_surface_area.size == number_minerals_);
-  assert(mat_props.mineral_rate_cnst.size == number_minerals_);
-
-  if (number_minerals_ > 0) {
-    const auto& mineral_vf = *S_->Get<CompositeVector>(min_vol_frac_key_, tag_next_).ViewComponent("cell");
-    const auto& mineral_ssa = *S_->Get<CompositeVector>(min_ssa_key_, tag_next_).ViewComponent("cell");
-    const auto& mineral_rate = *S_->Get<CompositeVector>(mineral_rate_constant_key_, tag_next_).ViewComponent("cell");
-    for (unsigned int i = 0; i < number_minerals_; ++i) {
-      state.mineral_volume_fraction.data[i] = mineral_vf[i][cell];
-      mat_props.mineral_rate_cnst.data[i] = mineral_rate[i][cell];
-      state.mineral_specific_surface_area.data[i] = mineral_ssa[i][cell];
-    }
-  }
-
-  // ion exchange
-  assert(state.cation_exchange_capacity.size == number_ion_exchange_sites_);
-  if (number_ion_exchange_sites_ > 0) {
-    const auto& ion_exchange = *S_->Get<CompositeVector>(ion_exchange_sites_key_, tag_next_).ViewComponent("cell");
-    for (int i = 0; i < number_ion_exchange_sites_; i++) {
-      state.cation_exchange_capacity.data[i] = ion_exchange[i][cell];
-    }
-  }
-
-  // surface complexation
-  if (number_sorption_sites_ > 0) {
-    const auto& sorption_sites = *S_->Get<CompositeVector>(sorp_sites_key_, tag_next_).ViewComponent("cell");
-
-    assert(number_sorption_sites_ == state.surface_site_density.size);
-    for (int i = 0; i < number_sorption_sites_; ++i) {
-      // FIXME: Need site density names, too?
-      state.surface_site_density.data[i] = sorption_sites[i][cell];
-      // TODO(bandre): need to save surface complexation free site conc here!
-    }
-  }
-
   // Auxiliary data -- block copy.
-  if (S_->HasRecord(alquimia_aux_data_key_, tag_next_)) {
-    aux_data_ = S_->GetW<CompositeVector>(alquimia_aux_data_key_, tag_next_, passwd_).ViewComponent("cell");
+  if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
+    aux_data_ = S_->GetW<CompositeVector>(bgc_aux_data_key_, tag_next_, passwd_).ViewComponent("cell");
     int num_aux_ints = chem_engine_->Sizes().num_aux_integers;
     int num_aux_doubles = chem_engine_->Sizes().num_aux_doubles;
 
@@ -577,39 +534,18 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   mat_props.volume = mesh_->cell_volume(cell);
   mat_props.saturation = water_saturation[0][cell];
-
-  // sorption isotherms
-  if (using_sorption_isotherms_) {
-    const auto& isotherm_kd = *S_->Get<CompositeVector>(isotherm_kd_key_, tag_next_).ViewComponent("cell");
-    const auto& isotherm_freundlich_n = *S_->Get<CompositeVector>(isotherm_freundlich_n_key_, tag_next_).ViewComponent("cell");
-    const auto& isotherm_langmuir_b = *S_->Get<CompositeVector>(isotherm_langmuir_b_key_, tag_next_).ViewComponent("cell");
-
-    for (unsigned int i = 0; i < number_aqueous_components_; ++i) {
-      mat_props.isotherm_kd.data[i] = isotherm_kd[i][cell];
-      mat_props.freundlich_n.data[i] = isotherm_freundlich_n[i][cell];
-      mat_props.langmuir_b.data[i] = isotherm_langmuir_b[i][cell];
-    }
-  }
-
-  // first order reaction rate cnst
-  if (number_aqueous_kinetics_ > 0) {
-    const auto& aqueous_kinetics_rate = *S_->Get<CompositeVector>(first_order_decay_constant_key_, tag_next_).ViewComponent("cell");
-    for (unsigned int i = 0; i < number_aqueous_kinetics_; ++i) {
-      mat_props.aqueous_kinetic_rate_cnst.data[i] = aqueous_kinetics_rate[i][cell];
-    }
-  }
 }
 
 void EcoSIM::CopyEcoSIMStateToAmanzi(
-    const int cell,
+    const int col,
     const BGCProperties& props,
     const BGCState& state,
     const BGCAuxiliaryData& aux_data)
 {
-  CopyFromEcoSIM(cell, props, state, aux_data);
+  CopyFromEcoSIM(col, props, state, aux_data);
 }
 
-void EcoSIM::CopyFromEcoSIM(const int cell,
+void EcoSIM::CopyFromEcoSIM(const int col,
                                    const BGCProperties& props,
                                    const BGCState& state,
                                    const BGCAuxiliaryData& aux_data)
@@ -630,11 +566,11 @@ void EcoSIM::CopyFromEcoSIM(const int cell,
 
   //Here is where the auxiliary data is filled need to try to change this to columns
   //This may not be trivial
-  if (S_->HasRecord(alquimia_aux_data_key_, tag_next_)) {
-    aux_data_ = S_->GetW<CompositeVector>(alquimia_aux_data_key_, tag_next_, passwd_).ViewComponent("cell");
+  if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
+    aux_data_ = S_->GetW<CompositeVector>(bgc_aux_data_key_, tag_next_, passwd_).ViewComponent("cell");
 
-    int num_aux_ints = chem_engine_->Sizes().num_aux_integers;
-    int num_aux_doubles = chem_engine_->Sizes().num_aux_doubles;
+    int num_aux_ints = bgc_engine_->Sizes().num_aux_integers;
+    int num_aux_doubles = bgc_engine_->Sizes().num_aux_doubles;
 
     for (int i = 0; i < num_aux_ints; i++) {
       double* cell_aux_ints = (*aux_data_)[i];
@@ -670,12 +606,12 @@ int EcoSIM::InitializeSingleColumn(int col, const std::string& condition)
 {
   // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
   // should use the same tag as transport.  See #673
-  CopyToAlquimia(col, bgc_props_, bgc_state_, bgc_aux_data_);
+  CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_);
 
   bgc_engine_->EnforceCondition(condition, current_time_, bgc_props_,
           bgc_state_, bgc_aux_data_);
 
-  CopyAlquimiaStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_);
+  CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_);
 
 
   // ETC: hacking to get consistent solution -- if there is no water

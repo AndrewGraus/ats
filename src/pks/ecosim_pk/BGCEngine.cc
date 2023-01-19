@@ -16,7 +16,7 @@
 #include <cstring>
 #include <cstdio>
 #include <assert.h>
-#include "ChemistryEngine.hh"
+#include "BGCEngine.hh"
 #include "errors.hh"
 #include "exceptions.hh"
 
@@ -35,6 +35,7 @@ namespace {
 
 void CopyEcoSIMState(EcoSIMState* dest, EcoSIMState* src)
 {
+  //NEED TO EDIT STILL
   dest->water_density = src->water_density;
   dest->porosity = src->porosity;
   dest->temperature = src->temperature;
@@ -50,6 +51,7 @@ void CopyEcoSIMState(EcoSIMState* dest, EcoSIMState* src)
 // These functions are going into the next release of Alquimia.
 void CopyEcoSIMProperties(EcoSIMProperties* dest, EcoSIMProperties* src)
 {
+  //NEED TO EDIT STILL
   dest->volume = src->saturation;
   dest->saturation = src->saturation;
   memcpy(dest->aqueous_kinetic_rate_cnst.data, src->aqueous_kinetic_rate_cnst.data, sizeof(double) * src->aqueous_kinetic_rate_cnst.size);
@@ -141,56 +143,54 @@ BGCEngine::BGCEngine(const std::string& engineName,
   }
 }
 
-ChemistryEngine::~ChemistryEngine()
+BGCEngine::~BGCEngine()
 {
-  chem_.Shutdown(&engine_state_, &chem_status_);
-  FreeAlquimiaProblemMetaData(&chem_metadata_);
+  //chem_.Shutdown(&engine_state_, &chem_status_);
+  //FreeAlquimiaProblemMetaData(&chem_metadata_);
 
   // Delete the various geochemical conditions.
   for (GeochemicalConditionMap::iterator
        iter = chem_conditions_.begin(); iter != chem_conditions_.end(); ++iter)
   {
-    FreeAlquimiaGeochemicalCondition(&iter->second->condition);
-    FreeAlquimiaState(&iter->second->chem_state);
-    FreeAlquimiaProperties(&iter->second->mat_props);
-    FreeAlquimiaAuxiliaryData(&iter->second->aux_data);
+    //FreeBGCGeochemicalCondition(&iter->second->condition);
+    FreeBGCState(&iter->second->chem_state);
+    FreeBGCProperties(&iter->second->mat_props);
+    FreeBGCAuxiliaryData(&iter->second->aux_data);
     delete iter->second;
   }
 
-  FreeAlquimiaEngineStatus(&chem_status_);
+  //FreeAlquimiaEngineStatus(&chem_status_);
 }
 
-void ChemistryEngine::InitState(AlquimiaProperties& mat_props,
-                                AlquimiaState& chem_state,
-                                AlquimiaAuxiliaryData& aux_data,
-                                AlquimiaAuxiliaryOutputData& aux_output)
+void BGCEngine::InitState(BGCProperties& mat_props,
+                                BGCState& chem_state,
+                                BGCAuxiliaryData& aux_data)
 {
-  AllocateAlquimiaProperties(&sizes_, &mat_props);
-  AllocateAlquimiaState(&sizes_, &chem_state);
-  AllocateAlquimiaAuxiliaryData(&sizes_, &aux_data);
-  AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);
+  AllocateBGCProperties(&sizes_, &mat_props);
+  AllocateBGCState(&sizes_, &chem_state);
+  AllocateBGCAuxiliaryData(&sizes_, &aux_data);
+  //AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);
 
   // Make sure the auxiliary ints/doubles are zeroed out.
   std::fill(aux_data.aux_ints.data, aux_data.aux_ints.data + aux_data.aux_ints.size, 0);
   std::fill(aux_data.aux_doubles.data, aux_data.aux_doubles.data + aux_data.aux_doubles.size, 0.0);
 }
 
-void ChemistryEngine::FreeState(AlquimiaProperties& mat_props,
-                                AlquimiaState& chem_state,
-                                AlquimiaAuxiliaryData& aux_data,
-                                AlquimiaAuxiliaryOutputData& aux_output)
+void BGCEngine::FreeState(BGCProperties& mat_props,
+                                BGCState& chem_state,
+                                BGCAuxiliaryData& aux_data)
 {
-  FreeAlquimiaProperties(&mat_props);
-  FreeAlquimiaState(&chem_state);
-  FreeAlquimiaAuxiliaryData(&aux_data);
-  FreeAlquimiaAuxiliaryOutputData(&aux_output);
+  FreeBGCProperties(&mat_props);
+  FreeBGCState(&chem_state);
+  FreeBGCAuxiliaryData(&aux_data);
+  //FreeAlquimiaAuxiliaryOutputData(&aux_output);
 }
 
-bool ChemistryEngine::Advance(const double delta_time,
-                              const AlquimiaProperties& mat_props,
-                              AlquimiaState& chem_state,
-                              AlquimiaAuxiliaryData& aux_data,
-                              AlquimiaAuxiliaryOutputData& aux_output,
+bool BGCEngine::Advance(const double delta_time,
+                              const BGCProperties& mat_props,
+                              BGCState& chem_state,
+                              BGCAuxiliaryData& aux_data,
+                              BGCAuxiliaryOutputData& aux_output,
                               int& num_iterations)
 {
 
