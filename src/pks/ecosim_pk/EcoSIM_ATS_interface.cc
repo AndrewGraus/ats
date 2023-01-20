@@ -20,7 +20,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
                const Teuchos::RCP<State>& S,
                const Teuchos::RCP<TreeVector>& solution):
   PK_Physical_Default(pk_tree, global_list, S, solution),
-  PK(pk_tree, global_list, S, solution)
+  PK(pk_tree, global_list, S, solution),
+  ncells_per_col_(-1)
   {
     domain_ = plist_->get<std::string>("domain name", "domain");
 
@@ -29,12 +30,11 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // transport, flow, and energy
     // What do we need for EcoSIM? Based on the variables doc it is:
     // grid position (X,Y,Z) - can we just pass Z and assume X and Y are 0?
-    // soil texture - not sure where this is
     // bulk density - not sure
-    // Elevation
     // Aspect in geometric format
-    // soil texture (sand, clay, silt)
-    // water table depth
+    // water table depth - There's a water table evaluator in
+    // /src/constitutive_relations/column_integrators/ but I don't see it used
+    // anywhere can we just use it here?
 
     // transport
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
@@ -46,6 +46,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     ice_den_key_ = Keys::readKey(plist_, domain, "ice mass density", "mass_density_ice");
     mass_den_key_ = Keys::readKey(plist_, domain, "mass density", mass_key);
     rhos_key_ = Keys::readKey(plist_, domain_name, "density rock", "density_rock");
+    elev_key_ = Keys::readKey(*plist_, domain_, "elevation", "elevation");
 
     //energy
     T_key_ = Keys::readKey(plist_, domain_name, "temperature", "temperature");
@@ -55,6 +56,14 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     cv_key_ = Keys::readKey(plist_, domain_name, "cell volume", "cell_volume");
     min_vol_frac_key_ = Keys::readKey(*plist_, domain_, "mineral volume fractions", "mineral_volume_fractions");
     ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
+
+    //There are no native variables for sand, silt and clay we need to implement these
+    //ourselves. Is this something that can be in the EcoSIM input file? In that case
+    //it should just be just held in memory.
+
+    sand_frac_key_ = Keys::readKey(*plist_, domain_ss_, "sand fraction", "sand_fraction");
+    silt_frac_key_ = Keys::readKey(*plist_, domain_ss_, "silt fraction", "silt_fraction");
+    clay_frac_key_ = Keys::readKey(*plist_, domain_ss_, "clay fraction", "clay_fraction");
 
     // parameters
     // initial timestep
@@ -159,6 +168,28 @@ void EcoSIM::Setup() {
     }
   }
   */
+
+  //Need to do some basic setup of the columns:
+  mesh_surf_ = S_->GetMesh(domain_surf_);
+  num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+
+  for (unsigned int col = 0; col != num_cols_; ++col) {
+    int f = mesh_surf_->entity_get_parent(AmanziMesh::CELL, col);
+    auto& col_iter = mesh_->cells_of_column(col);
+    std::size_t ncol_cells = col_iter.size();
+
+    // unclear which this should be:
+    // -- col area is the true face area
+    double col_area = mesh_->face_area(f);
+    // -- col area is the projected face area
+    // double col_area = mesh_surf_->cell_volume(col);
+
+    if (ncells_per_col_ < 0) {
+      ncells_per_col_ = ncol_cells;
+    } else {
+      AMANZI_ASSERT(ncol_cells == ncells_per_col_);
+    }
+  }
 
   //This is for the Auxiliary Data which we will need
   if (plist_->isParameter("auxiliary data")) {
@@ -501,6 +532,16 @@ void EcoSIM::CopyToEcoSIM(int col,
   const auto& Temp = *S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", true);
   const auto& conductivity = *S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", true);
   const auto& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", true);
+
+  //Define the column vectors to hold the data
+  auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+
+  //Here is where we should do the various field-to-column calls to then pass along
+  //to the data structures that will pass the data to EcoSIM
+  //Format is:
+  //FieldToColumn_(column index, dataset to copy from, vector to put the data in)
+
+  FieldToColumn_(col,temp, col_temp.ptr());
 
   state.water_density = fluid_density[0][cell];
   state.porosity = porosity[0][cell];
