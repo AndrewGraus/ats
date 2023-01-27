@@ -630,6 +630,14 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   num_components = tcc.NumVectors();
 
+  //This probably isn't going to work. I think I either need to think
+  //of a way to do this
+  //Possible ideas:
+  // 1) creat a data column per component (how to do that without hard coding?)
+  // 2) have some sort of array of shape num_componentsXcolumnsize and loop over
+  //    the components
+  // For #2 I think I just need to change the serieal dense vector call to
+  // a different data type (are these always 1d?) What is the 2d version?
   for (int i = 0; i < num_components; i++) {
     state.total_mobile.data[i] = (*col_tcc)[i];
   }
@@ -670,13 +678,15 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   // (this->water_density())[cell] = state.water_density;
   // (this->porosity())[cell] = state.porosity;
 
-  for (int i = 0; i < number_aqueous_components_; ++i) {
-    (*aqueous_components)[i][cell] = state.total_mobile.data[i];
+  col_f_dens = state.fluid_density;
+  col_g_dens = state.gas_density;
+  col_i_dnes = state.ice_density;
+  col_poro = state.porosity;
+  col_wc = state.water_content;
+  col_temp = state.temperature;
 
-    if (using_sorption_) {
-      auto& sorbed = *S_->GetW<CompositeVector>(total_sorbed_key_, tag_next_, passwd_).ViewComponent("cell");
-      sorbed[i][cell] = state.total_immobile.data[i];
-    }
+  for (int i = 0; i < num_components; i++) {
+    state.total_mobile.data[i] = (*col_tcc)[i];
   }
 
   //Here is where the auxiliary data is filled need to try to change this to columns
@@ -697,20 +707,23 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     }
   }
 
+  //pack this data back into the num_columns
+  ColumnToField_(col,tcc,col_tcc.ptr());
+  ColumnToField_(col,porosity,col_poro.ptr());
+  ColumnToField_(col,liquid_saturation,col_l_sat.ptr());
+  ColumnToField_(col,gas_saturation,col_g_sat.ptr());
+  ColumnToField_(col,ice_saturation,col_i_sat.ptr());
+  ColumnToField_(col,elevation,col_elev.ptr());
+  ColumnToField_(col,water_content,col_wc.ptr());
+  ColumnToField_(col,relative_permeability,col_rel_perm.ptr());
+  ColumnToField_(col,fluid_density,col_f_dens.ptr());
+  ColumnToField_(col,ice_density,col_i_dens.ptr());
+  ColumnToField_(col,gas_density,col_g_dens.ptr());
+  ColumnToField_(col,rock_density,col_r_dens.ptr());
+  ColumnToField_(col,temp, col_temp.ptr());
+  ColumnToField_(col,conductivity,col_cond.ptr());
+  ColumnToField_(col,cell_volume,col_vol.ptr());
 
-  // Here is where constants are saved as properties (things that won't be
-  //changed by EcoSIM)
-  if (using_sorption_isotherms_) {
-    auto& isotherm_kd = *S_->GetW<CompositeVector>(isotherm_kd_key_, tag_next_, passwd_).ViewComponent("cell");
-    auto& isotherm_freundlich_n = *S_->GetW<CompositeVector>(isotherm_freundlich_n_key_, tag_next_, passwd_).ViewComponent("cell");
-    auto& isotherm_langmuir_b = *S_->GetW<CompositeVector>(isotherm_langmuir_b_key_, tag_next_, passwd_).ViewComponent("cell");
-
-    for (unsigned int i = 0; i < number_aqueous_components_; ++i) {
-      isotherm_kd[i][cell] = mat_props.isotherm_kd.data[i];
-      isotherm_freundlich_n[i][cell] = mat_props.freundlich_n.data[i];
-      isotherm_langmuir_b[i][cell] = mat_props.langmuir_b.data[i];
-    }
-  }
 }
 
 /* *******************************************************************
