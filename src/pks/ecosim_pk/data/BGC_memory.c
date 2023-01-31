@@ -1,29 +1,29 @@
 /* -*-  mode: c++; c-default-style: "google"; indent-tabs-mode: nil -*- */
 
 /*
-** Alquimia Copyright (c) 2013-2016, The Regents of the University of California, 
-** through Lawrence Berkeley National Laboratory (subject to receipt of any 
+** Alquimia Copyright (c) 2013-2016, The Regents of the University of California,
+** through Lawrence Berkeley National Laboratory (subject to receipt of any
 ** required approvals from the U.S. Dept. of Energy).  All rights reserved.
-** 
+**
 ** Alquimia is available under a BSD license. See LICENSE.txt for more
 ** information.
 **
-** If you have questions about your rights to use or distribute this software, 
-** please contact Berkeley Lab's Technology Transfer and Intellectual Property 
+** If you have questions about your rights to use or distribute this software,
+** please contact Berkeley Lab's Technology Transfer and Intellectual Property
 ** Management at TTD@lbl.gov referring to Alquimia (LBNL Ref. 2013-119).
-** 
-** NOTICE.  This software was developed under funding from the U.S. Department 
-** of Energy.  As such, the U.S. Government has been granted for itself and 
-** others acting on its behalf a paid-up, nonexclusive, irrevocable, worldwide 
-** license in the Software to reproduce, prepare derivative works, and perform 
-** publicly and display publicly.  Beginning five (5) years after the date 
-** permission to assert copyright is obtained from the U.S. Department of Energy, 
-** and subject to any subsequent five (5) year renewals, the U.S. Government is 
-** granted for itself and others acting on its behalf a paid-up, nonexclusive, 
+**
+** NOTICE.  This software was developed under funding from the U.S. Department
+** of Energy.  As such, the U.S. Government has been granted for itself and
+** others acting on its behalf a paid-up, nonexclusive, irrevocable, worldwide
+** license in the Software to reproduce, prepare derivative works, and perform
+** publicly and display publicly.  Beginning five (5) years after the date
+** permission to assert copyright is obtained from the U.S. Department of Energy,
+** and subject to any subsequent five (5) year renewals, the U.S. Government is
+** granted for itself and others acting on its behalf a paid-up, nonexclusive,
 ** irrevocable, worldwide license in the Software to reproduce, prepare derivative
-** works, distribute copies to the public, perform publicly and display publicly, 
+** works, distribute copies to the public, perform publicly and display publicly,
 ** and to permit others to do so.
-** 
+**
 ** Authors: Benjamin Andre <bandre@lbl.gov>
 */
 
@@ -45,7 +45,7 @@
  **
  *******************************************************************************/
 
-#include "alquimia/alquimia_memory.h"
+#include "BGC_memory.h"
 #include "alquimia/alquimia_interface.h"
 #include "alquimia/alquimia_constants.h"
 #include "alquimia/alquimia_containers.h"
@@ -65,7 +65,7 @@ static inline int nearest_power_of_2(int n)
  **  Alquimia Vectors
  **
  *******************************************************************************/
-void AllocateAlquimiaVectorDouble(const int size, AlquimiaVectorDouble* vector) {
+void AllocateBGCVectorDouble(const int size, BGCVectorDouble* vector) {
   if (size > 0) {
     vector->size = size;
     vector->capacity = nearest_power_of_2(size);
@@ -78,7 +78,7 @@ void AllocateAlquimiaVectorDouble(const int size, AlquimiaVectorDouble* vector) 
   }
 }  /* end AllocateAlquimiaVectorDouble() */
 
-void FreeAlquimiaVectorDouble(AlquimiaVectorDouble* vector) {
+void FreeBGCVectorDouble(BGCVectorDouble* vector) {
   if (vector != NULL) {
     free(vector->data);
     vector->data = NULL;
@@ -87,7 +87,7 @@ void FreeAlquimiaVectorDouble(AlquimiaVectorDouble* vector) {
   }
 }  /* end FreeAlquimiaVectorDouble() */
 
-void AllocateAlquimiaVectorInt(const int size, AlquimiaVectorInt* vector) {
+void AllocateBGCVectorInt(const int size, BGCVectorInt* vector) {
   if (size > 0) {
     vector->size = size;
     vector->capacity = nearest_power_of_2(size);
@@ -99,8 +99,8 @@ void AllocateAlquimiaVectorInt(const int size, AlquimiaVectorInt* vector) {
     vector->data = NULL;
   }
 }  /* end AllocateAlquimiaVectorInt() */
- 
-void FreeAlquimiaVectorInt(AlquimiaVectorInt* vector) {
+
+void FreeBGCVectorInt(BGCVectorInt* vector) {
   if (vector != NULL) {
     free(vector->data);
     vector->data = NULL;
@@ -109,7 +109,7 @@ void FreeAlquimiaVectorInt(AlquimiaVectorInt* vector) {
   }
 }  /* end FreeAlquimiaVectorInt() */
 
-void AllocateAlquimiaVectorString(const int size, AlquimiaVectorString* vector) {
+void AllocateBGCVectorString(const int size, BGCVectorString* vector) {
   int i;
   if (size > 0) {
     vector->size = size;
@@ -126,7 +126,7 @@ void AllocateAlquimiaVectorString(const int size, AlquimiaVectorString* vector) 
     vector->data = NULL;
   }
 }  /* end AllocateAlquimiaVectorString() */
- 
+
 void FreeAlquimiaVectorString(AlquimiaVectorString* vector) {
   int i;
   if (vector != NULL) {
@@ -146,9 +146,9 @@ void FreeAlquimiaVectorString(AlquimiaVectorString* vector) {
  **
  *******************************************************************************/
 
-void AllocateAlquimiaState(const AlquimiaSizes* const sizes,
-                           AlquimiaState* state) {
-  AllocateAlquimiaVectorDouble(sizes->num_primary, &(state->total_mobile));
+void AllocateBGCState(const BGCSizes* const sizes,
+                           BGCState* state) {
+  AllocateBGCVectorDouble(sizes->num_primary, &(state->total_mobile));
   ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
   AllocateAlquimiaVectorDouble(sizes->num_sorbed, &(state->total_immobile));
@@ -359,13 +359,13 @@ void AllocateAlquimiaGeochemicalConditionVector(const int num_conditions,
 
   if (condition_list->size > 0) {
     condition_list->data = (AlquimiaGeochemicalCondition*)
-        calloc((size_t)condition_list->capacity, 
+        calloc((size_t)condition_list->capacity,
                sizeof(AlquimiaGeochemicalCondition));
   }
 }  /* end AllocateAlquimiaGeochemicalConditionVector() */
 
 void AllocateAlquimiaGeochemicalCondition(const int size_name,
-                                          const int num_aqueous_constraints, 
+                                          const int num_aqueous_constraints,
                                           const int num_mineral_constraints,
     AlquimiaGeochemicalCondition* condition) {
   /* NOTE: we are only allocating pointers to N constraints here, not
@@ -394,7 +394,7 @@ void AllocateAlquimiaAqueousConstraintVector(int num_constraints,
   constraint_list->capacity = nearest_power_of_2(num_constraints);
   if (constraint_list->size > 0) {
     constraint_list->data = (AlquimiaAqueousConstraint*)
-      calloc((size_t)constraint_list->capacity, 
+      calloc((size_t)constraint_list->capacity,
              sizeof(AlquimiaAqueousConstraint));
   }
   else
@@ -414,7 +414,7 @@ void AllocateAlquimiaMineralConstraintVector(int num_constraints,
   constraint_list->capacity = nearest_power_of_2(num_constraints);
   if (constraint_list->size > 0) {
     constraint_list->data = (AlquimiaMineralConstraint*)
-      calloc((size_t)constraint_list->capacity, 
+      calloc((size_t)constraint_list->capacity,
              sizeof(AlquimiaMineralConstraint));
   }
   else

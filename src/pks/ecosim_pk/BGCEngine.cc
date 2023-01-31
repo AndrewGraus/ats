@@ -148,8 +148,8 @@ BGCEngine::~BGCEngine()
   //chem_.Shutdown(&engine_state_, &chem_status_);
   //FreeAlquimiaProblemMetaData(&chem_metadata_);
 
-  // Delete the various geochemical conditions.
-  for (GeochemicalConditionMap::iterator
+  // As there are no chemical conditions, am I just deleting variables?
+  /*for (GeochemicalConditionMap::iterator
        iter = chem_conditions_.begin(); iter != chem_conditions_.end(); ++iter)
   {
     //FreeBGCGeochemicalCondition(&iter->second->condition);
@@ -157,7 +157,11 @@ BGCEngine::~BGCEngine()
     FreeBGCProperties(&iter->second->mat_props);
     FreeBGCAuxiliaryData(&iter->second->aux_data);
     delete iter->second;
-  }
+  }*/
+
+  FreeBGCState(state);
+  FreeBGCProperties(props);
+  FreeBGCAuxiliaryData(aux_data);
 
   //FreeAlquimiaEngineStatus(&chem_status_);
 }
@@ -176,13 +180,13 @@ void BGCEngine::InitState(BGCProperties& mat_props,
   std::fill(aux_data.aux_doubles.data, aux_data.aux_doubles.data + aux_data.aux_doubles.size, 0.0);
 }
 
-void BGCEngine::FreeState(BGCProperties& mat_props,
-                                BGCState& chem_state,
+void BGCEngine::FreeState(BGCProperties& props,
+                                BGCState& state,
                                 BGCAuxiliaryData& aux_data)
 {
-  FreeBGCProperties(&mat_props);
-  FreeBGCState(&chem_state);
-  FreeBGCAuxiliaryData(&aux_data);
+  FreeBGCProperties(&props);
+  FreeBGCState(&state);
+  FreeBGCAuxiliaryData(&data);
   //FreeAlquimiaAuxiliaryOutputData(&aux_output);
 }
 
@@ -208,10 +212,11 @@ bool BGCEngine::Advance(const double delta_time,
 
 }
 
-//Here is where alquimai has the set condition functions.
-//Is this the equivalent to setting ICs for the runs?
 
+//For now I don't need any of the rest of this code yet. Just commenting
+//out in case I need it later.
 
+/*
 void ChemistryEngine::CreateCondition(const std::string& condition_name)
 {
   // NOTE: a condition with zero aqueous/mineral constraints is assumed to be defined in
@@ -525,7 +530,7 @@ void ChemistryEngine::GetAqueousKineticNames(std::vector<std::string>& kinetics_
 const AlquimiaSizes& ChemistryEngine::Sizes() const
 {
   return sizes_;
-}
+}*/
 
 } // namespace
 } // namespace

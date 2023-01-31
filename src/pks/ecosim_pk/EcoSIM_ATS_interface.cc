@@ -196,6 +196,8 @@ void EcoSIM::Setup() {
   }
 
   //This is for the Auxiliary Data which we will need
+  //commenting for now because we don't need it yet
+  /*
   if (plist_->isParameter("auxiliary data")) {
     auto names = plist_->get<Teuchos::Array<std::string> >("auxiliary data");
 
@@ -216,7 +218,7 @@ void EcoSIM::Setup() {
 
     S_->GetRecordW(alquimia_aux_data_key_, tag_next_, passwd_).set_io_vis(false);
   }
-
+  */
   std::cout << "\nEnd setup\n";
 }
 
@@ -610,23 +612,23 @@ void EcoSIM::CopyToEcoSIM(int col,
   // not modified:
   // everything else?
 
-  state.fluid_density = col_f_dens;
-  state.gas_density = col_g_dens;
-  state.ice_density = col_i_dens;
-  state.porosity = col_poro;
-  state.water_content = col_wc;
-  state.temperature = col_temp;
+  bgc_state.fluid_density = col_f_dens;
+  bgc_state.gas_density = col_g_dens;
+  bgc_state.ice_density = col_i_dens;
+  bgc_state.porosity = col_poro;
+  bgc_state.water_content = col_wc;
+  bgc_state.temperature = col_temp;
 
   //mat_props.volume = mesh_->cell_volume(cell;
   //mat_props.saturation = water_saturation[0][cell];
 
-  mat_props.liquid_saturation = col_l_sat;
-  mat_props.gas_saturation = col_g_sat;
-  mat_props.ice_saturation = col_i_sat;
-  mat_props.elevation = col_elev;
-  mat_props.relative_permeability = col_rel_perm;
-  mat_props.conductivity = col_cond;
-  mat_props.volume = col_vol;
+  bgc_props.liquid_saturation = col_l_sat;
+  bgc_props.gas_saturation = col_g_sat;
+  bgc_props.ice_saturation = col_i_sat;
+  bgc_props.elevation = col_elev;
+  bgc_props.relative_permeability = col_rel_perm;
+  bgc_props.conductivity = col_cond;
+  bgc_props.volume = col_vol;
 
   num_components = tcc.NumVectors();
 
@@ -639,7 +641,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   // For #2 I think I just need to change the serieal dense vector call to
   // a different data type (are these always 1d?) What is the 2d version?
   for (int i = 0; i < num_components; i++) {
-    state.total_mobile.data[i] = (*col_tcc)[i];
+    bgc_state.total_mobile.data[i] = (*col_tcc)[i];
   }
 
   // Auxiliary data -- block copy.
@@ -678,20 +680,28 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   // (this->water_density())[cell] = state.water_density;
   // (this->porosity())[cell] = state.porosity;
 
-  col_f_dens = state.fluid_density;
-  col_g_dens = state.gas_density;
-  col_i_dnes = state.ice_density;
-  col_poro = state.porosity;
-  col_wc = state.water_content;
-  col_temp = state.temperature;
+  col_f_dens = bgc_state.fluid_density;
+  col_g_dens = bgc_state.gas_density;
+  col_i_dnes = bgc_state.ice_density;
+  col_poro = bgc_state.porosity;
+  col_wc = bgc_state.water_content;
+  col_temp = bgc_state.temperature;
+
+  col_l_sat = bgc_props.liquid_saturation;
+  col_g_sat = bgc_props.gas_saturation;
+  col_i_sat = bgc_props.ice_saturation;
+  col_elev = bgc_props.elevation;
+  col_rel_perm = bgc_props.relative_permeability;
+  col_cond = bgc_props.conductivity;
+  col_vol = bgc_props.volume;
 
   for (int i = 0; i < num_components; i++) {
-    state.total_mobile.data[i] = (*col_tcc)[i];
+    bgc_state.total_mobile.data[i] = (*col_tcc)[i];
   }
 
   //Here is where the auxiliary data is filled need to try to change this to columns
   //This may not be trivial
-  if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
+  /*if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
     aux_data_ = S_->GetW<CompositeVector>(bgc_aux_data_key_, tag_next_, passwd_).ViewComponent("cell");
 
     int num_aux_ints = bgc_engine_->Sizes().num_aux_integers;
@@ -705,7 +715,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
       double* cell_aux_doubles = (*aux_data_)[i + num_aux_ints];
       cell_aux_doubles[cell] = aux_data.aux_doubles.data[i];
     }
-  }
+  }*/
 
   //pack this data back into the num_columns
   ColumnToField_(col,tcc,col_tcc.ptr());
