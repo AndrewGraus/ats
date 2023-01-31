@@ -23,6 +23,9 @@
 #ifndef PKS_ECOSIM_HH_
 #define PKS_ECOSIM_HH_
 
+#include <vector>
+
+#include "Epetra_MultiVector.h"
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Epetra_SerialDenseVector.h"
@@ -30,9 +33,13 @@
 #include "VerboseObject.hh"
 #include "TreeVector.hh"
 
+#include "Key.hh"
+#include "Mesh.hh"
+#include "State.hh"
 #include "BGCEngine.hh"
 #include "PK_Factory.hh"
 #include "pk_physical_default.hh"
+#include "PK_Physical.hh"
 
 namespace Amanzi {
 namespace EcoSIM {
@@ -125,17 +132,37 @@ class EcoSIM : public PK_Physical_Default {
                                          double* col_vec, int ncol);
   void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID col,
                               Teuchos::Ptr<Epetra_SerialDenseVector> depth,
-                              Teuchos::Ptr<Epetra_SerialDenseVector> dz)
+                              Teuchos::Ptr<Epetra_SerialDenseVector> dz);
 
   //evaluator for transpiration;
   //I don't think I need this anymore
   //Teuchos::RCP<PrimaryVariableFieldEvaluator> p_root_eval_;
 
+  int number_aqueous_components_;
+
   // keys
-  Key wc_key_;
-  Key wc_root_key_;
-  Key trans_key_;
-  Key p_root_key_;
+  Key tcc_key_;
+  Key poro_key_;
+  Key saturation_liquid_key_;
+  Key saturation_gas_key_;
+  Key saturation_ice_key_;
+  Key elev_key_;
+  Key water_content_key_;
+  Key rel_perm_key_;
+  Key fluid_den_key_;
+  Key ice_den_key_;
+  Key gas_den_key_;
+  Key rock_den_key_;
+  Key T_key_;
+  Key conductivity_key_;
+  Key cv_key;
+  Key ecosim_aux_data_key_;
+
+ private:
+  BGCState bgc_state_;
+  BGCProperties bgc_props_;
+  BGCAuxiliaryData bgc_aux_data_;
+
  private:
   //factory registration
   static RegisteredPKFactory<EcoSIM> reg_;

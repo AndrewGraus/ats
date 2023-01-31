@@ -5,20 +5,17 @@ add_subdirectory(constitutive_relations)
 include_directories(${ATS_SOURCE_DIR}/src/pks)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/root_storage)
-include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/flux_uptake)
-include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/atm_flux)
 
 # ATS EcoSIM pk
+# For adding F90 files add the F90 file to the ecosim source files and
+# inc files. The inc file also needs a header
 
 set(ats_ecosim_src_files
-    Ecosim_interface_test.cc
-    constitutive_relations/flux_uptake/eco_fort_test.F90
+    Ecosim_ATS_interface.cc
   )
 
 set(ats_ecosim_inc_files
     Ecosim_interface_test.hh
-    constitutive_relations/flux_uptake/eco_fort_test.F90
-    constitutive_relations/flux_uptake/eco_fort_test_interface_private.hh
   )
 
 set(ats_ecosim_link_libs
@@ -51,13 +48,10 @@ add_amanzi_library(ats_ecosim
 # register evaluators/factories/pks
 
 register_evaluator_with_factory(
-  HEADERFILE Ecosim_interface_test_reg.hh
+  HEADERFILE Ecosim_interface_reg.hh
   LISTNAME ATS_ECOSIM_REG
 )
 
-#Do I need this?
-#seems like you don't need the file, it's auto-generated
-generate_evaluators_registration_header(
   HEADERFILE ats_ecosim_registration.hh
   LISTNAME   ATS_ECOSIM_REG
   INSTALL    True
