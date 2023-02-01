@@ -49,7 +49,7 @@
 !
 ! **************************************************************************** !
 
-module AlquimiaContainers_module
+module BGCContainers_module
 
   use, intrinsic :: iso_c_binding
 
@@ -130,4 +130,4 @@ module AlquimiaContainers_module
      type (BGCVectorDouble) :: aux_doubles
   end type BGCAuxiliaryData
 
-end module AlquimiaContainers_module
+end module BGCContainers_module

@@ -22,6 +22,7 @@
 
 #include "BGC_memory.h"
 #include "BGC_containers.h"
+#include "BGC_constants.h"
 /*#include "alquimia/alquimia_util.h"
 #include "alquimia/alquimia_constants.h"
 #include "alquimia/alquimia_containers.h"
@@ -48,7 +49,7 @@ class BGCEngine {
 
   // Returns a reference to a "sizes" object that can be queried to find the sizes of the various
   // arrays representing the geochemical state within the engine.
-  const AlquimiaSizes& Sizes() const;
+  const BGCSizes& Sizes() const;
 
   // Initializes the data structures that hold the chemical state information.
   void InitState(BGCProperties& mat_props,

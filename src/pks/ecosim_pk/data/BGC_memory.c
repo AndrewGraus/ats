@@ -128,7 +128,7 @@ void AllocateBGCVectorString(const int size, BGCVectorString* vector) {
   }
 }  /* end AllocateAlquimiaVectorString() */
 
-void FreeAlquimiaVectorString(AlquimiaVectorString* vector) {
+void FreeBGCVectorString(BGCVectorString* vector) {
   int i;
   if (vector != NULL) {
     for (i = 0; i < vector->size; ++i) {
@@ -149,32 +149,24 @@ void FreeAlquimiaVectorString(AlquimiaVectorString* vector) {
 
 void AllocateBGCState(const BGCSizes* const sizes,
                            BGCState* state) {
-  AllocateBGCVectorDouble(sizes->num_primary, &(state->total_mobile));
-  ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->fluid_density));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->gas_density));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->ice_density));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->porosity));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->water_content));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->temperature));
+  //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
-  AllocateAlquimiaVectorDouble(sizes->num_sorbed, &(state->total_immobile));
-
-  AllocateAlquimiaVectorDouble(sizes->num_surface_sites,
-                               &(state->surface_site_density));
-
-  AllocateAlquimiaVectorDouble(sizes->num_ion_exchange_sites,
-                               &(state->cation_exchange_capacity));
-
-  AllocateAlquimiaVectorDouble(sizes->num_minerals,
-                               &(state->mineral_volume_fraction));
-
-  AllocateAlquimiaVectorDouble(sizes->num_minerals,
-                               &(state->mineral_specific_surface_area));
 }  /* end AllocateAlquimiaState() */
 
-void FreeAlquimiaState(AlquimiaState* state) {
+void FreeBGCState(BGCState* state) {
   if (state != NULL) {
-    FreeAlquimiaVectorDouble(&(state->total_mobile));
-    FreeAlquimiaVectorDouble(&(state->total_immobile));
-    FreeAlquimiaVectorDouble(&(state->mineral_volume_fraction));
-    FreeAlquimiaVectorDouble(&(state->mineral_specific_surface_area));
-    FreeAlquimiaVectorDouble(&(state->cation_exchange_capacity));
-    FreeAlquimiaVectorDouble(&(state->surface_site_density));
+    FreeBGCVectorDouble(&(state->fluid_density));
+    FreeBGCVectorDouble(&(state->gas_density));
+    FreeBGCVectorDouble(&(state->ice_density));
+    FreeBGCVectorDouble(&(state->porosity));
+    FreeBGCVectorDouble(&(state->water_content));
+    FreeBGCVectorDouble(&(state->temperature));
   }
 }  /* end FreeAlquimiaState() */
 
@@ -184,20 +176,20 @@ void FreeAlquimiaState(AlquimiaState* state) {
  **
  *******************************************************************************/
 
-void AllocateAlquimiaAuxiliaryData(const AlquimiaSizes* const sizes,
-                                   AlquimiaAuxiliaryData* aux_data) {
-  AllocateAlquimiaVectorInt(sizes->num_aux_integers,
+void AllocateBGCAuxiliaryData(const BGCSizes* const sizes,
+                                   BGCAuxiliaryData* aux_data) {
+  AllocateBGCVectorInt(sizes->num_aux_integers,
                             &(aux_data->aux_ints));
 
-  AllocateAlquimiaVectorDouble(sizes->num_aux_doubles,
+  AllocateBGCVectorDouble(sizes->num_aux_doubles,
                                &(aux_data->aux_doubles));
 
 }  /* end AllocateAlquimiaAuxiliaryData() */
 
-void FreeAlquimiaAuxiliaryData(AlquimiaAuxiliaryData* aux_data) {
+void FreeBGCAuxiliaryData(AlquimiaAuxiliaryData* aux_data) {
   if (aux_data != NULL) {
-    FreeAlquimiaVectorInt(&(aux_data->aux_ints));
-    FreeAlquimiaVectorDouble(&(aux_data->aux_doubles));
+    FreeBGCVectorInt(&(aux_data->aux_ints));
+    FreeBGCVectorDouble(&(aux_data->aux_doubles));
   }
 }  /* end FreeAlquimiaAuxiliaryData() */
 
@@ -207,28 +199,26 @@ void FreeAlquimiaAuxiliaryData(AlquimiaAuxiliaryData* aux_data) {
  **
  *******************************************************************************/
 
-void AllocateAlquimiaProperties(const AlquimiaSizes* const sizes,
-                                AlquimiaProperties* props) {
-  AllocateAlquimiaVectorDouble(sizes->num_isotherm_species,
-                               &(props->isotherm_kd));
-  AllocateAlquimiaVectorDouble(sizes->num_isotherm_species,
-                               &(props->freundlich_n));
-  AllocateAlquimiaVectorDouble(sizes->num_isotherm_species,
-                               &(props->langmuir_b));
-  AllocateAlquimiaVectorDouble(sizes->num_minerals,
-                               &(props->mineral_rate_cnst));
-  AllocateAlquimiaVectorDouble(sizes->num_aqueous_kinetics,
-                               &(props->aqueous_kinetic_rate_cnst));
-
+void AllocateBGCProperties(const BGCSizes* const sizes,
+                                BGCProperties* props) {
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->liquid_saturation));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->gas_saturation));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->ice_saturation));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->elevation));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->relative_permeability));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->conductivity));
+  AllocateBGCVectorDouble(sizes->num_cols_, &(state->volume));
 }  /* end AllocateAlquimiaProperties() */
 
-void FreeAlquimiaProperties(AlquimiaProperties* props) {
+void FreeBGCProperties(AlquimiaProperties* props) {
   if (props != NULL) {
-    FreeAlquimiaVectorDouble(&(props->isotherm_kd));
-    FreeAlquimiaVectorDouble(&(props->freundlich_n));
-    FreeAlquimiaVectorDouble(&(props->langmuir_b));
-    FreeAlquimiaVectorDouble(&(props->mineral_rate_cnst));
-    FreeAlquimiaVectorDouble(&(props->aqueous_kinetic_rate_cnst));
+    FreeBGCVectorDouble(&(props->liquid_saturation));
+    FreeBGCVectorDouble(&(props->gas_saturation));
+    FreeBGCVectorDouble(&(props->ice_saturation));
+    FreeBGCVectorDouble(&(props->elevation));
+    FreeBGCVectorDouble(&(props->relative_permeability));
+    FreeBGCVectorDouble(&(props->conductivity));
+    FreeBGCVectorDouble(&(props->volume));
   }
 }  /* end FreeAlquimiaProperties() */
 
@@ -237,7 +227,7 @@ void FreeAlquimiaProperties(AlquimiaProperties* props) {
  **  Problem Meta Data
  **
  *******************************************************************************/
-
+/*
 void AllocateAlquimiaProblemMetaData(const AlquimiaSizes* const sizes,
                                      AlquimiaProblemMetaData* meta_data) {
 
@@ -262,7 +252,7 @@ void AllocateAlquimiaProblemMetaData(const AlquimiaSizes* const sizes,
   AllocateAlquimiaVectorString(sizes->num_aqueous_kinetics,
                                &(meta_data->aqueous_kinetic_names));
 
-}  /* end AllocateAlquimiaProblemMetaData() */
+}  //end AllocateAlquimiaProblemMetaData()
 
 void FreeAlquimiaProblemMetaData(AlquimiaProblemMetaData* meta_data) {
 
@@ -275,14 +265,14 @@ void FreeAlquimiaProblemMetaData(AlquimiaProblemMetaData* meta_data) {
     FreeAlquimiaVectorString(&(meta_data->isotherm_species_names));
     FreeAlquimiaVectorString(&(meta_data->aqueous_kinetic_names));
   }
-}  /* end FreeAlquimiaProblemMetaData() */
+}  end FreeAlquimiaProblemMetaData() */
 
 /*******************************************************************************
  **
  **  Auxiliary Output Data
  **
  *******************************************************************************/
-
+/*
 void AllocateAlquimiaAuxiliaryOutputData(const AlquimiaSizes* const sizes,
                                          AlquimiaAuxiliaryOutputData* aux_output) {
   aux_output->pH = -999.9;
@@ -305,7 +295,7 @@ void AllocateAlquimiaAuxiliaryOutputData(const AlquimiaSizes* const sizes,
   AllocateAlquimiaVectorDouble(sizes->num_aqueous_complexes,
                                &(aux_output->secondary_activity_coeff));
 
-}  /* end AllocateAlquimiaAuxiliaryOutputData() */
+}  // end AllocateAlquimiaAuxiliaryOutputData()
 
 void FreeAlquimiaAuxiliaryOutputData(AlquimiaAuxiliaryOutputData* aux_output) {
   if (aux_output != NULL) {
@@ -317,21 +307,21 @@ void FreeAlquimiaAuxiliaryOutputData(AlquimiaAuxiliaryOutputData* aux_output) {
     FreeAlquimiaVectorDouble(&(aux_output->secondary_free_ion_concentration));
     FreeAlquimiaVectorDouble(&(aux_output->secondary_activity_coeff));
   }
-}  /* end FreeAlquimiaAuxiliaryOutputData() */
+}   end FreeAlquimiaAuxiliaryOutputData() */
 
 /*******************************************************************************
  **
  **  Engine Status
  **
  *******************************************************************************/
-
+/*
 void AllocateAlquimiaEngineStatus(AlquimiaEngineStatus* status) {
 
   status->message = (char*) calloc((size_t)kAlquimiaMaxStringLength, sizeof(char));
   if (NULL == status->message) {
-    /* TODO(bja): error handling */
+    // TODO(bja): error handling
   }
-}  /* end AllocateAlquimiaEngineStatus() */
+}  // end AllocateAlquimiaEngineStatus()
 
 void FreeAlquimiaEngineStatus(AlquimiaEngineStatus* status) {
   if (status != NULL) {
@@ -339,7 +329,7 @@ void FreeAlquimiaEngineStatus(AlquimiaEngineStatus* status) {
   }
   status->message = NULL;
 
-}  /* end FreeAlquimiaEngineStatus() */
+}  end FreeAlquimiaEngineStatus() */
 
 
 
@@ -348,11 +338,11 @@ void FreeAlquimiaEngineStatus(AlquimiaEngineStatus* status) {
  **  Geochemical conditions/constraints
  **
  *******************************************************************************/
-
+/*
 void AllocateAlquimiaGeochemicalConditionVector(const int num_conditions,
                                                 AlquimiaGeochemicalConditionVector* condition_list) {
-  /* NOTE: we are only allocating pointers to N conditions here, not
-     the actual conditions themselves. */
+  // NOTE: we are only allocating pointers to N conditions here, not
+     the actual conditions themselves.
   fprintf(stdout, " AllocateAlquimiaGeochemicalConditionList() : %d\n",
           num_conditions);
   condition_list->size = num_conditions;
@@ -363,21 +353,21 @@ void AllocateAlquimiaGeochemicalConditionVector(const int num_conditions,
         calloc((size_t)condition_list->capacity,
                sizeof(AlquimiaGeochemicalCondition));
   }
-}  /* end AllocateAlquimiaGeochemicalConditionVector() */
+}  // end AllocateAlquimiaGeochemicalConditionVector()
 
 void AllocateAlquimiaGeochemicalCondition(const int size_name,
                                           const int num_aqueous_constraints,
                                           const int num_mineral_constraints,
     AlquimiaGeochemicalCondition* condition) {
-  /* NOTE: we are only allocating pointers to N constraints here, not
-     the actual condstraints themselves. */
+  // NOTE: we are only allocating pointers to N constraints here, not
+     the actual condstraints themselves.
   if (condition != NULL) {
-    /* size_name + 1 to include the null character! */
+    // size_name + 1 to include the null character!
     condition->name = (char*) calloc((size_t)size_name+1, sizeof(char));
     AllocateAlquimiaAqueousConstraintVector(num_aqueous_constraints, &condition->aqueous_constraints);
     AllocateAlquimiaMineralConstraintVector(num_mineral_constraints, &condition->mineral_constraints);
   }
-}  /* end AllocateAlquimiaGeochemicalCondition() */
+}  // end AllocateAlquimiaGeochemicalCondition()
 
 void AllocateAlquimiaAqueousConstraint(AlquimiaAqueousConstraint* constraint) {
   constraint->primary_species_name =
@@ -387,7 +377,7 @@ void AllocateAlquimiaAqueousConstraint(AlquimiaAqueousConstraint* constraint) {
   constraint->associated_species =
       (char*) calloc((size_t)kAlquimiaMaxStringLength, sizeof(char));
   constraint->value = 0.0;
-}  /* end AllocateAlquimiaAqueousConstraint() */
+}  // end AllocateAlquimiaAqueousConstraint()
 
 void AllocateAlquimiaAqueousConstraintVector(int num_constraints,
                                              AlquimiaAqueousConstraintVector* constraint_list) {
@@ -407,7 +397,7 @@ void AllocateAlquimiaMineralConstraint(AlquimiaMineralConstraint* constraint) {
       (char*) calloc((size_t)kAlquimiaMaxStringLength, sizeof(char));
   constraint->volume_fraction = -1.0;
   constraint->specific_surface_area = -1.0;
-}  /* end AllocateAlquimiaMineralConstraint() */
+}  // end AllocateAlquimiaMineralConstraint()
 
 void AllocateAlquimiaMineralConstraintVector(int num_constraints,
                                              AlquimiaMineralConstraintVector* constraint_list) {
@@ -435,7 +425,7 @@ void FreeAlquimiaGeochemicalConditionVector(AlquimiaGeochemicalConditionVector* 
     condition_list->size = 0;
     condition_list->capacity = 0;
   }
-}  /* end FreeAlquimiaGeochemicalConditionList() */
+}  // end FreeAlquimiaGeochemicalConditionList()
 
 void FreeAlquimiaGeochemicalCondition(AlquimiaGeochemicalCondition* condition) {
   if (condition != NULL) {
@@ -446,7 +436,7 @@ void FreeAlquimiaGeochemicalCondition(AlquimiaGeochemicalCondition* condition) {
     FreeAlquimiaAqueousConstraintVector(&(condition->aqueous_constraints));
     FreeAlquimiaMineralConstraintVector(&(condition->mineral_constraints));
   }
-}  /* end FreeAlquimiaGeochemicalCondition() */
+}  // end FreeAlquimiaGeochemicalCondition()
 
 void FreeAlquimiaAqueousConstraintVector(AlquimiaAqueousConstraintVector* vector) {
   int i;
@@ -461,7 +451,7 @@ void FreeAlquimiaAqueousConstraintVector(AlquimiaAqueousConstraintVector* vector
     vector->size = 0;
     vector->capacity = 0;
   }
-}  /* end FreeAlquimiaAqueousConstraintVector() */
+}  // end FreeAlquimiaAqueousConstraintVector()
 
 void FreeAlquimiaAqueousConstraint(AlquimiaAqueousConstraint* constraint) {
   free(constraint->primary_species_name);
@@ -470,7 +460,7 @@ void FreeAlquimiaAqueousConstraint(AlquimiaAqueousConstraint* constraint) {
   constraint->constraint_type = NULL;
   free(constraint->associated_species);
   constraint->associated_species = NULL;
-}  /* end FreeAlquimiaAqueousConstraint() */
+}  // end FreeAlquimiaAqueousConstraint()
 
 void FreeAlquimiaMineralConstraintVector(AlquimiaMineralConstraintVector* vector) {
   int i;
@@ -483,12 +473,12 @@ void FreeAlquimiaMineralConstraintVector(AlquimiaMineralConstraintVector* vector
     vector->size = 0;
     vector->capacity = 0;
   }
-}  /* end FreeAlquimiaMineralConstraintVector() */
+}  // end FreeAlquimiaMineralConstraintVector()
 
 void FreeAlquimiaMineralConstraint(AlquimiaMineralConstraint* constraint) {
   free(constraint->mineral_name);
   constraint->mineral_name = NULL;
-}  /* end FreeAlquimiaMineralConstraint() */
+}  // end FreeAlquimiaMineralConstraint() */
 
 
 /*******************************************************************************
@@ -496,13 +486,14 @@ void FreeAlquimiaMineralConstraint(AlquimiaMineralConstraint* constraint) {
  **  Data convenience struct
  **
  *******************************************************************************/
+/*
 void AllocateAlquimiaData(AlquimiaData* data) {
     AllocateAlquimiaState(&data->sizes, &data->state);
     AllocateAlquimiaProperties(&data->sizes, &data->properties);
     AllocateAlquimiaAuxiliaryData(&data->sizes, &data->aux_data);
     AllocateAlquimiaProblemMetaData(&data->sizes, &data->meta_data);
     AllocateAlquimiaAuxiliaryOutputData(&data->sizes, &data->aux_output);
-}  /* end AllocateAlquimiaData() */
+}  // end AllocateAlquimiaData()
 
 
 void FreeAlquimiaData(AlquimiaData* data) {
@@ -511,4 +502,4 @@ void FreeAlquimiaData(AlquimiaData* data) {
   FreeAlquimiaAuxiliaryData(&data->aux_data);
   FreeAlquimiaProblemMetaData(&data->meta_data);
   FreeAlquimiaAuxiliaryOutputData(&data->aux_output);
-}  /* end FreeAlquimiaData() */
+}  // end FreeAlquimiaData() */
