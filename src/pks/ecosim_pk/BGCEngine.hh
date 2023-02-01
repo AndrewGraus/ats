@@ -21,6 +21,7 @@
 #include <map>
 
 #include "BGC_memory.h"
+#include "BGC_containers.h"
 /*#include "alquimia/alquimia_util.h"
 #include "alquimia/alquimia_constants.h"
 #include "alquimia/alquimia_containers.h"

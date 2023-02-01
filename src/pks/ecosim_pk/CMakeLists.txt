@@ -1,10 +1,11 @@
 # -*- mode: cmake -*-
 
 add_subdirectory(constitutive_relations)
+add_subdirectory(data)
 
 include_directories(${ATS_SOURCE_DIR}/src/pks)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk)
-include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/root_storage)
+#include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/root_storage)
 
 # ATS EcoSIM pk
 # For adding F90 files add the F90 file to the ecosim source files and

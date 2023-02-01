@@ -46,9 +46,10 @@
  *******************************************************************************/
 
 #include "BGC_memory.h"
-#include "alquimia/alquimia_interface.h"
-#include "alquimia/alquimia_constants.h"
-#include "alquimia/alquimia_containers.h"
+#include "BGC_containers.h"
+//#include "alquimia/alquimia_interface.h"
+//#include "alquimia/alquimia_constants.h"
+//#include "alquimia/alquimia_containers.h"
 
 // Returns the nearest power of 2 greater than or equal to n, or 0 if n == 0.
 static inline int nearest_power_of_2(int n)

@@ -55,23 +55,23 @@ module AlquimiaContainers_module
 
   implicit none
 
-  integer (c_int), parameter :: kAlquimiaMaxStringLength = 512
-  integer (c_int), parameter :: kAlquimiaMaxWordLength = 32
+  integer (c_int), parameter :: kBGCMaxStringLength = 512
+  integer (c_int), parameter :: kBGCMaxWordLength = 32
 
-  integer (c_int), parameter :: kAlquimiaNoError = 0
-  integer (c_int), parameter :: kAlquimiaErrorInvalidEngine = 1
-  integer (c_int), parameter :: kAlquimiaErrorUnknownConstraintName = 2
-  integer (c_int), parameter :: kAlquimiaErrorUnsupportedFunctionality = 3
-  integer (c_int), parameter :: kAlquimiaErrorEngineIntegrity = 4577
+  integer (c_int), parameter :: kBGCNoError = 0
+  integer (c_int), parameter :: kBGCErrorInvalidEngine = 1
+  integer (c_int), parameter :: kBGCErrorUnknownConstraintName = 2
+  integer (c_int), parameter :: kBGCErrorUnsupportedFunctionality = 3
+  integer (c_int), parameter :: kBGCErrorEngineIntegrity = 4577
 
-  character (13), parameter :: kAlquimiaStringTotalAqueous = 'total_aqueous'
-  character (12), parameter :: kAlquimiaStringTotalSorbed = 'total_sorbed'
-  character (25), parameter :: kAlquimiaStringTotalAqueousPlusSorbed = 'total_aqueous_plus_sorbed'
-  character (4), parameter :: kAlquimiaStringFree = 'free'
-  character (2), parameter :: kAlquimiaStringPH = 'pH'
-  character (7), parameter :: kAlquimiaStringMineral = 'mineral'
-  character (3), parameter :: kAlquimiaStringGas = 'gas'
-  character (6), parameter :: kAlquimiaStringCharge = 'charge'
+  character (13), parameter :: kBGCStringTotalAqueous = 'total_aqueous'
+  character (12), parameter :: kBGCStringTotalSorbed = 'total_sorbed'
+  character (25), parameter :: kBGCStringTotalAqueousPlusSorbed = 'total_aqueous_plus_sorbed'
+  character (4), parameter :: kBGCStringFree = 'free'
+  character (2), parameter :: kBGCStringPH = 'pH'
+  character (7), parameter :: kBGCStringMineral = 'mineral'
+  character (3), parameter :: kBGCStringGas = 'gas'
+  character (6), parameter :: kBGCStringCharge = 'charge'
 
   type, public, bind(c) :: BGCVectorDouble
      integer (c_int) :: size

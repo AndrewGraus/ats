@@ -166,12 +166,12 @@ BGCEngine::~BGCEngine()
   //FreeAlquimiaEngineStatus(&chem_status_);
 }
 
-void BGCEngine::InitState(BGCProperties& mat_props,
-                                BGCState& chem_state,
+void BGCEngine::InitState(BGCProperties& props,
+                                BGCState& state,
                                 BGCAuxiliaryData& aux_data)
 {
-  AllocateBGCProperties(&sizes_, &mat_props);
-  AllocateBGCState(&sizes_, &chem_state);
+  AllocateBGCProperties(&sizes_, &props);
+  AllocateBGCState(&sizes_, &state);
   AllocateBGCAuxiliaryData(&sizes_, &aux_data);
   //AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);
 
@@ -191,8 +191,8 @@ void BGCEngine::FreeState(BGCProperties& props,
 }
 
 bool BGCEngine::Advance(const double delta_time,
-                              const BGCProperties& mat_props,
-                              BGCState& chem_state,
+                              const BGCProperties& props,
+                              BGCState& state,
                               BGCAuxiliaryData& aux_data,
                               BGCAuxiliaryOutputData& aux_output,
                               int& num_iterations)
