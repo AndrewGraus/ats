@@ -146,15 +146,19 @@ void FreeBGCVectorString(BGCVectorString* vector) {
  **  State
  **
  *******************************************************************************/
-
+/*Note that sizes for all the datasets that are single vectors should just be
+the size of the column, need to test
+For reference the old function call was:
 void AllocateBGCState(const BGCSizes* const sizes,
-                           BGCState* state) {
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->fluid_density));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->gas_density));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->ice_density));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->porosity));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->water_content));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->temperature));
+                           BGCState* state)*/
+
+void AllocateBGCState(BGCState* state) {
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->fluid_density));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->gas_density));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->ice_density));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->porosity));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->water_content));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->temperature));
   //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
 }  /* end AllocateAlquimiaState() */
@@ -176,12 +180,11 @@ void FreeBGCState(BGCState* state) {
  **
  *******************************************************************************/
 
-void AllocateBGCAuxiliaryData(const BGCSizes* const sizes,
-                                   BGCAuxiliaryData* aux_data) {
-  AllocateBGCVectorInt(sizes->num_aux_integers,
+void AllocateBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
+  AllocateBGCVectorInt(sizes->ncells_per_col_,
                             &(aux_data->aux_ints));
 
-  AllocateBGCVectorDouble(sizes->num_aux_doubles,
+  AllocateBGCVectorDouble(sizes->ncells_per_col_,
                                &(aux_data->aux_doubles));
 
 }  /* end AllocateAlquimiaAuxiliaryData() */
@@ -199,15 +202,15 @@ void FreeBGCAuxiliaryData(AlquimiaAuxiliaryData* aux_data) {
  **
  *******************************************************************************/
 
-void AllocateBGCProperties(const BGCSizes* const sizes,
-                                BGCProperties* props) {
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->liquid_saturation));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->gas_saturation));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->ice_saturation));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->elevation));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->relative_permeability));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->conductivity));
-  AllocateBGCVectorDouble(sizes->num_cols_, &(state->volume));
+void AllocateBGCProperties(BGCProperties* props) {
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->liquid_saturation));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->gas_saturation));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->ice_saturation));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->elevation));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->relative_permeability));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->conductivity));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->volume));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->total_mobile));
 }  /* end AllocateAlquimiaProperties() */
 
 void FreeBGCProperties(AlquimiaProperties* props) {

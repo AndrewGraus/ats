@@ -55,7 +55,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // f_gas = S_gas * porosity
     // f_ice = S_ice * porosity
 
-    fluid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
+    liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
     ice_den_key_ = Keys::readKey(plist_, domain, "ice mass density", "mass_density_ice");
     gas_den_key_ = Keys::readKey(plist_,domain,"gas mass density", "mass_density_gas")
     rock_den_key_ = Keys::readKey(plist_, domain_name, "density rock", "density_rock");
@@ -84,9 +84,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // We will probably need something like this eventually if we add in other BGC codes but it
     // is very complex and we can almost certainly do something simpler to start out with to just get
     // EcoSIM running.
-    //
-    // For now I'm changing the syntax from chem_engine to bgc_engine but I'll probably end up
-    // either cutting this out or commenting it out.
 
     if (!plist_->isParameter("engine")) {
       Errors::Message msg;
@@ -101,27 +98,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     std::string engine_name = plist_->get<std::string>("engine");
     std::string engine_inputfile = plist_->get<std::string>("engine input file");
     bgc_engine_ = Teuchos::rcp(new EcoSIM::BGCEngine(engine_name, engine_inputfile));
-    //When creating the engine there are a few functions in ChemistryEngine that
-    //are called AllocateAlquimiaEngineStatus, CreateAlquimiaInterface, and chem_.Setup
-    //these are functions in the Alquimia standalone code
-    //
-    // AllocateAlquimiaEngineStatus - is in alquimia_memory.c does some simple memory
-    // Calculation I think.
-    //
-    // CreateAlquimiaInterface - in alquimia_interface.c, this makes the main
-    // decision between Pflotran and CrunchFlow, then allocates to the interface
-    // called chem_ where to find the processes the interface will need including
-    // Setup, Shutdown, ProcessCondition, ReactionStepOperatorSplit, GetAuxiliaryOutput
-    // GetProblemMetaData
-    //
-    // Basically it goes Alquimia PK -> ChemistryEngine -> Alquimia Interface ->
-    // CrunchFlow/PFloTran. We don't have to stick to this and probably just simplify to:
-    // EcoSIM_PK -> BGCEngine -> EcoSIM driver
 
-    // grab the component names
-    // This is a small function in ChemistryEngine that simply looks at the metadata
-    // finds the number of primary species and fills a vector with the names of those
-    //species
     //comp_names_.clear();
     //bgc_engine_->GetPrimarySpeciesNames(comp_names_);
 
@@ -134,9 +111,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
 /* *******************************************************************
 * Destroy ansilary data structures.
 ******************************************************************* */
-//Going to need this eventually to clear the strutures
-//the various data structures were named for alquimia i.e.
-//alq_mat_props_, alq_state, ect. changed to just bgc
 EcoSIM::~EcoSIM()
   {
   if (bgc_initialized_)
@@ -148,17 +122,6 @@ EcoSIM::~EcoSIM()
 void EcoSIM::Setup() {
   std::cout << "beginning Ecosim setup\n";
   PK_Physical_Default::Setup();
-  //I actually don't think we have much to do here. In BGC_simple they set up
-  //The arrays for the PFTs and the carbon pools but we're not going to setup
-  //variables in this way. Other than that it sets the required variables. It
-  //seems like these are things that are "owned" by this PK so the auxiliary data
-  //Leaving in the alquimia code for this. It seems to set the auxiliary data up
-  //in several different ways. Still need to understand what is going on here.
-  //
-  //To further confuse things the chemistry engine function called Setup occurs
-  //When the engine is created in the constructor NOT called in the PK setup
-
-  // Set up auxiliary chemistry data using the ChemistryEngine.
 
   /*This is for setting up the Auxiliary Output data which I'm not sure we need
   chem_engine_->GetAuxiliaryOutputNames(aux_names_, aux_subfield_names_);
@@ -238,9 +201,9 @@ void EcoSIM::Initialize() {
   //which can be found in Amanzi/src/PKs/PK_Physical.cc:
 
   // initialize fields as soon as possible
-  for (size_t i = 0; i < aux_names_.size(); ++i) {
+  /*for (size_t i = 0; i < aux_names_.size(); ++i) {
     InitializeCVField(S_, *vo_, aux_names_[i], tag_next_, passwd_, 0.0);
-  }
+  }*/
 
   //Now we call the engine's init state function which allocates the data
   bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_);
@@ -254,7 +217,6 @@ void EcoSIM::Initialize() {
   // output (probably don't need for now)
 
   // Ensure dependencies are filled
-  // I think this is everything from ATS that needs to be updated
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(poro_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -263,7 +225,7 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(fluid_den_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(ice_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(gas_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -272,9 +234,6 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
 
   // init root carbon
-  // I think we can basically make use of the FieldToColumn_ function to take
-  // all of the properties we need (water, heat, ect) and pass them to each
-  // column
   auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_depth = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_dz = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -366,7 +325,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(fluid_den_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(ice_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(gas_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -558,7 +517,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   const auto& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", true);
   const auto& water_content = *S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", true);
   const auto& relative_permeability = *S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", true);
-  const auto& fluid_density = *S_->Get<CompositeVector>(fluid_den_key_, water_tag).ViewComponent("cell", true);
+  const auto& liquid_density = *S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", true);
   const auto& ice_density = *S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", true);
   const auto& gas_density = *S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", true);
   const auto& rock_density = *S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", true);
@@ -588,7 +547,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   //Format is:
   //FieldToColumn_(column index, dataset to copy from, vector to put the data in)
 
-  FieldToColumn_(col,tcc,col_tcc.ptr());
+  //FieldToColumn_(col,tcc,col_tcc.ptr());
   FieldToColumn_(col,porosity,col_poro.ptr());
   FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
   FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
@@ -596,7 +555,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,elevation,col_elev.ptr());
   FieldToColumn_(col,water_content,col_wc.ptr());
   FieldToColumn_(col,relative_permeability,col_rel_perm.ptr());
-  FieldToColumn_(col,fluid_density,col_f_dens.ptr());
+  FieldToColumn_(col,liquid_density,col_f_dens.ptr());
   FieldToColumn_(col,ice_density,col_i_dens.ptr());
   FieldToColumn_(col,gas_density,col_g_dens.ptr());
   FieldToColumn_(col,rock_density,col_r_dens.ptr());
@@ -604,31 +563,29 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,conductivity,col_cond.ptr());
   FieldToColumn_(col,cell_volume,col_vol.ptr());
 
-  //For now I'm just gonna guess what is modified and what isn't
-  //
-  // modified:
-  // saturation, tcc, water content?
-  //
-  // not modified:
-  // everything else?
+  // I think I need to loop over the column data and save it to the data
+  // structures. Eventually I could probably rewrite FieldToColumn_ to do this
+  // automatically, but I just want to test this for now
 
-  bgc_state.fluid_density = col_f_dens;
-  bgc_state.gas_density = col_g_dens;
-  bgc_state.ice_density = col_i_dens;
-  bgc_state.porosity = col_poro;
-  bgc_state.water_content = col_wc;
-  bgc_state.temperature = col_temp;
+  for (int i=0; i < ncells_per_col_; ++i) {
+    bgc_state.liquid_density.data[i] = col_f_dens[i];
+    bgc_state.gas_density.data[i] = col_g_dens[i];
+    bgc_state.ice_density.data[i] = col_i_dens[i];
+    bgc_state.porosity.data[i] = col_poro[i];
+    bgc_state.water_content.data[i] = col_wc[i];
+    bgc_state.temperature.data[i] = col_temp[i];
 
+    bgc_props.liquid_saturation.data[i] = col_l_sat[i];
+    bgc_props.gas_saturation.data[i] = col_g_sat[i];
+    bgc_props.ice_saturation.data[i] = col_i_sat[i];
+    bgc_props.elevation.data[i] = col_elev[i];
+    bgc_props.relative_permeability.data[i] = col_rel_perm[i];
+    bgc_props.conductivity.data[i] = col_cond[i];
+    bgc_props.volume.data[i] = col_vol[i];
+
+  }
   //mat_props.volume = mesh_->cell_volume(cell;
   //mat_props.saturation = water_saturation[0][cell];
-
-  bgc_props.liquid_saturation = col_l_sat;
-  bgc_props.gas_saturation = col_g_sat;
-  bgc_props.ice_saturation = col_i_sat;
-  bgc_props.elevation = col_elev;
-  bgc_props.relative_permeability = col_rel_perm;
-  bgc_props.conductivity = col_cond;
-  bgc_props.volume = col_vol;
 
   num_components = tcc.NumVectors();
 
@@ -640,9 +597,9 @@ void EcoSIM::CopyToEcoSIM(int col,
   //    the components
   // For #2 I think I just need to change the serieal dense vector call to
   // a different data type (are these always 1d?) What is the 2d version?
-  for (int i = 0; i < num_components; i++) {
-    bgc_state.total_mobile.data[i] = (*col_tcc)[i];
-  }
+  //for (int i = 0; i < num_components; i++) {
+  //  bgc_state.total_mobile.data[i] = (*col_tcc)[i];
+  //}
 
   // Auxiliary data -- block copy.
   if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
@@ -679,25 +636,28 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   // be updated here.
   // (this->water_density())[cell] = state.water_density;
   // (this->porosity())[cell] = state.porosity;
+  //I probably need to copy the columns cell by cell in a loop
+  //Can I do this in the field to column function?
 
-  col_f_dens = bgc_state.fluid_density;
-  col_g_dens = bgc_state.gas_density;
-  col_i_dnes = bgc_state.ice_density;
-  col_poro = bgc_state.porosity;
-  col_wc = bgc_state.water_content;
-  col_temp = bgc_state.temperature;
+  for (int i=0; i < ncells_per_col_; ++i) {
+    col_f_dens[i] = bgc_state.liquid_density.data[i];
+    col_g_dens[i] = bgc_state.gas_density.data[i];
+    col_i_dnes[i] = bgc_state.ice_density.data[i];
+    col_poro[i] = bgc_state.porosity.data[i];
+    col_wc[i] = bgc_state.water_content.data[i];
+    col_temp[i] = bgc_state.temperature.data[i];
 
-  col_l_sat = bgc_props.liquid_saturation;
-  col_g_sat = bgc_props.gas_saturation;
-  col_i_sat = bgc_props.ice_saturation;
-  col_elev = bgc_props.elevation;
-  col_rel_perm = bgc_props.relative_permeability;
-  col_cond = bgc_props.conductivity;
-  col_vol = bgc_props.volume;
-
-  for (int i = 0; i < num_components; i++) {
-    bgc_state.total_mobile.data[i] = (*col_tcc)[i];
+    col_l_sat[i] = bgc_props.liquid_saturation.data[i];
+    col_g_sat[i] = bgc_props.gas_saturation.data[i];
+    col_i_sat[i] = bgc_props.ice_saturation.data[i];
+    col_elev[i] = bgc_props.elevation.data[i];
+    col_rel_perm[i] = bgc_props.relative_permeability.data[i];
+    col_cond[i] = bgc_props.conductivity.data[i];
+    col_vol[i] = bgc_props.volume.data[i];
   }
+  /*for (int i = 0; i < num_components; i++) {
+    bgc_state.total_mobile.data[i] = (*col_tcc)[i];
+  }*/
 
   //Here is where the auxiliary data is filled need to try to change this to columns
   //This may not be trivial
@@ -718,7 +678,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   }*/
 
   //pack this data back into the num_columns
-  ColumnToField_(col,tcc,col_tcc.ptr());
+  //ColumnToField_(col,tcc,col_tcc.ptr());
   ColumnToField_(col,porosity,col_poro.ptr());
   ColumnToField_(col,liquid_saturation,col_l_sat.ptr());
   ColumnToField_(col,gas_saturation,col_g_sat.ptr());
@@ -726,7 +686,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,elevation,col_elev.ptr());
   ColumnToField_(col,water_content,col_wc.ptr());
   ColumnToField_(col,relative_permeability,col_rel_perm.ptr());
-  ColumnToField_(col,fluid_density,col_f_dens.ptr());
+  ColumnToField_(col,liquid_density,col_f_dens.ptr());
   ColumnToField_(col,ice_density,col_i_dens.ptr());
   ColumnToField_(col,gas_density,col_g_dens.ptr());
   ColumnToField_(col,rock_density,col_r_dens.ptr());
@@ -746,8 +706,8 @@ int EcoSIM::InitializeSingleColumn(int col, const std::string& condition)
   // should use the same tag as transport.  See #673
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_);
 
-  bgc_engine_->EnforceCondition(condition, current_time_, bgc_props_,
-          bgc_state_, bgc_aux_data_);
+  //bgc_engine_->EnforceCondition(condition, current_time_, bgc_props_,
+  //        bgc_state_, bgc_aux_data_);
 
   CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_);
 
@@ -780,6 +740,10 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
   int num_iterations = 0;
 
   //Think a bit about what to do with this
+  /*****************************************************************
+   ADVANCE CALL GOES HERE
+  ******************************************************************
+
   if (ecosim_mat_props_.saturation > saturation_tolerance_) {
     bool success = bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
                                          bgc_aux_data_, num_iterations);
@@ -791,6 +755,7 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
       return -1;
     }
   }
+  */
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
   CopyEcoSIMStateToAmanzi(col,

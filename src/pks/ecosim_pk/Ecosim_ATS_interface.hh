@@ -149,7 +149,7 @@ class EcoSIM : public PK_Physical_Default {
   Key elev_key_;
   Key water_content_key_;
   Key rel_perm_key_;
-  Key fluid_den_key_;
+  Key liquid_den_key_;
   Key ice_den_key_;
   Key gas_den_key_;
   Key rock_den_key_;

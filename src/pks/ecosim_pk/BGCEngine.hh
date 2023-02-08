@@ -52,29 +52,28 @@ class BGCEngine {
   const BGCSizes& Sizes() const;
 
   // Initializes the data structures that hold the chemical state information.
-  void InitState(BGCProperties& mat_props,
-                 BGCState& chem_state,
+  void InitState(BGCProperties& props,
+                 BGCState& state,
                  BGCAuxiliaryData& aux_data);
 
   // Frees the data structures that hold the chemical state information.
-  void FreeState(BGCProperties& mat_props,
-                 BGCState& chem_state,
+  void FreeState(BGCProperties& props,
+                 BGCState& state,
                  BGCAuxiliaryData& aux_data);
 
   void EnforceCondition(const std::string& condition_name,
                         const double time,
-                        const AlquimiaProperties& mat_props,
-                        AlquimiaState& chem_state,
-                        AlquimiaAuxiliaryData& aux_data,
-                        AlquimiaAuxiliaryOutputData& aux_output);
+                        const AlquimiaProperties& props,
+                        AlquimiaState& state,
+                        AlquimiaAuxiliaryData& aux_data);
 
   // Advances the species represented by the given array of concentrations, replacing old values
   // with new values. The order of the concentrations in the array matches that of the species names
   // returned by GetSpeciesNames. Returns true if the advance is successful,
   // false if it fails.
   bool Advance(const double delta_time,
-               const BGCProperties& mat_props,
-               BGCState& chem_state,
+               const BGCProperties& props,
+               BGCState& state,
                BGCAuxiliaryData& aux_data,
                int& num_iterations);
 

@@ -33,35 +33,34 @@ namespace {
 
 //Here are the major function that the engine will need
 
-void CopyEcoSIMState(EcoSIMState* dest, EcoSIMState* src)
+void CopyBGCState(BGCState* dest, BGCState* src)
 {
-  //NEED TO EDIT STILL
-  dest->water_density = src->water_density;
-  dest->porosity = src->porosity;
-  dest->temperature = src->temperature;
-  dest->aqueous_pressure = src->aqueous_pressure;
-  memcpy(dest->total_mobile.data, src->total_mobile.data, sizeof(double) * src->total_mobile.size);
-  memcpy(dest->total_immobile.data, src->total_immobile.data, sizeof(double) * src->total_immobile.size);
-  memcpy(dest->mineral_volume_fraction.data, src->mineral_volume_fraction.data, sizeof(double) * src->mineral_volume_fraction.size);
-  memcpy(dest->mineral_specific_surface_area.data, src->mineral_specific_surface_area.data, sizeof(double) * src->mineral_specific_surface_area.size);
-  memcpy(dest->surface_site_density.data, src->surface_site_density.data, sizeof(double) * src->surface_site_density.size);
-  memcpy(dest->cation_exchange_capacity.data, src->cation_exchange_capacity.data, sizeof(double) * src->cation_exchange_capacity.size);
+  memcpy(dest->liquid_density.size = src->liquid_density.size, sizeof(double) * src->liquid_density.size);
+  memcpy(dest->gas_density.size = src->gas_density.size, sizeof(double) * src->gas_density.size);
+  memcpy(dest->ice_density.size = src->ice_density.size, sizeof(double) * src->ice_density.size);
+  memcpy(dest->porosity.size = src->porosity.size, sizeof(double) * src->porosity.size);
+  memcpy(dest->water_content.size = src->water_content.size, sizeof(double) * src->water_content.size);
+  memcpy(dest->temperature.size = src->temperature.size, sizeof(double) * src->temperature.size);
+  //memcpy(dest->total_mobile.data, src->total_mobile.data, sizeof(double) * src->total_mobile.size);
+
+  //dest->water_density = src->water_density;
+  //memcpy(dest->total_mobile.data, src->total_mobile.data, sizeof(double) * src->total_mobile.size);
 }
 
 // These functions are going into the next release of Alquimia.
-void CopyEcoSIMProperties(EcoSIMProperties* dest, EcoSIMProperties* src)
+void CopyBGCProperties(BGCProperties* dest, BGCProperties* src)
 {
   //NEED TO EDIT STILL
-  dest->volume = src->saturation;
-  dest->saturation = src->saturation;
-  memcpy(dest->aqueous_kinetic_rate_cnst.data, src->aqueous_kinetic_rate_cnst.data, sizeof(double) * src->aqueous_kinetic_rate_cnst.size);
-  memcpy(dest->mineral_rate_cnst.data, src->mineral_rate_cnst.data, sizeof(double) * src->mineral_rate_cnst.size);
-  memcpy(dest->isotherm_kd.data, src->isotherm_kd.data, sizeof(double) * src->isotherm_kd.size);
-  memcpy(dest->freundlich_n.data, src->freundlich_n.data, sizeof(double) * src->freundlich_n.size);
-  memcpy(dest->langmuir_b.data, src->langmuir_b.data, sizeof(double) * src->langmuir_b.size);
+  memcpy(dest->liquid_saturation.size = src->liquid_saturation.size, sizeof(double) * src->liquid_saturation.size);
+  memcpy(dest->gas_saturation.size = src->gas_saturation.size, sizeof(double) * src->gas_saturation.size);
+  memcpy(dest->ice_saturation.size = src->ice_saturation.size, sizeof(double) * src->ice_saturation.size);
+  memcpy(dest->elevation.size = src->elevation.size, sizeof(double) * src->elevation.size);
+  memcpy(dest->relative_permeability.size = src->relative_permeability.size, sizeof(double) * src->relative_permeability.size);
+  memcpy(dest->conductivity.size = src->conductivity.size, sizeof(double) * src->conductivity.size);
+  memcpy(dest->volume.size = src->volume.size, sizeof(double) * src->volume.size);
 }
 
-void CopyEcoSIMAuxiliaryData(EcoSIMAuxiliaryData* dest, EcoSIMAuxiliaryData* src)
+void CopyBGCAuxiliaryData(BGCAuxiliaryData* dest, bgcAuxiliaryData* src)
 {
   memcpy(dest->aux_ints.data, src->aux_ints.data, sizeof(int) * src->aux_ints.size);
   memcpy(dest->aux_doubles.data, src->aux_doubles.data, sizeof(double) * src->aux_doubles.size);
