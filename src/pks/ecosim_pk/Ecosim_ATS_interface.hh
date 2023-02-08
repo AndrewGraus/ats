@@ -106,7 +106,7 @@ class EcoSIM : public PK_Physical_Default {
                 const BGCState& state,
                 const BGCAuxiliaryData& aux_data);
 
-   int InitializeSingleColumn(int col, const std::string& condition);
+   int InitializeSingleColumn(int col);
 
    int AdvanceSingleColumn(double dt, int col);
 
@@ -130,10 +130,12 @@ class EcoSIM : public PK_Physical_Default {
 
   void FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
                                          double* col_vec, int ncol);
-  void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID col,
+  void ColDepthDz_(AmanziMesh::Entity_ID col,
                               Teuchos::Ptr<Epetra_SerialDenseVector> depth,
                               Teuchos::Ptr<Epetra_SerialDenseVector> dz);
 
+  void ColumnToField_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
+                                 double* col_vec, int ncol)
   //evaluator for transpiration;
   //I don't think I need this anymore
   //Teuchos::RCP<PrimaryVariableFieldEvaluator> p_root_eval_;

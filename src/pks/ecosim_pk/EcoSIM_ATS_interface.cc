@@ -233,46 +233,28 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  // init root carbon
-  auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_depth = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_dz = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-
   int num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
   //This is the main set up code in alquimia it loops over times and chemical conditions
   //I don't know that we need the two initial loops. I'm just including them because we might
+  for (int col=0; col!=num_cols_; ++col) {
+  //FieldToColumn_(col, temp, col_temp.ptr());
+  //ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
 
-  if (fabs(initial_conditions_time_ - S_->get_time()) < 1e-8 * (1.0 + fabs(S_->get_time()))) {
-    for (auto it = chem_initial_conditions_.begin(); it != chem_initial_conditions_.end(); ++it) {
-      std::string region = it->first;
-      std::string condition = it->second;
+  //We're going to need to write an InitializeSingleColumn code
+  //ierr = InitializeSingleCell(cell, condition);
 
-      if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
-        Teuchos::OSTab tab = vo_->getOSTab();
-        *vo_->os() << "enforcing geochemical condition \"" << condition
-                   << "\" in region \"" << region << "\"\n";
-            }
-            for (int col=0; col!=num_cols_; ++col) {
-              //FieldToColumn_(col, temp, col_temp.ptr());
-              //ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
-
-              //We're going to need to write an InitializeSingleColumn code
-              //ierr = InitializeSingleCell(cell, condition);
-
-              ierr = InitializeSingleColumn(col, condition);
-              //In Alquimia this function simply calls CopyToAlquimia, then
-              //Calls the chemistry engine and enforces condition, then copies
-              //From Alquimia to Amanzi
-              //
-              //The copy to alquimia function takes the cell index, because it
-              //is assigning things cell by cell in state. For colums this will
-              //be a bit trickier I THINK we could use the FieldToColumn_ function
-              //To do this, but I think I will actually need to figure out a test
-              //for this before I actually code it up
-            }
-          }
-        }
+  ierr = InitializeSingleColumn(col);
+  //In Alquimia this function simply calls CopyToAlquimia, then
+  //Calls the chemistry engine and enforces condition, then copies
+  //From Alquimia to Amanzi
+  //
+  //The copy to alquimia function takes the cell index, because it
+  //is assigning things cell by cell in state. For colums this will
+  //be a bit trickier I THINK we could use the FieldToColumn_ function
+  //To do this, but I think I will actually need to figure out a test
+  //for this before I actually code it up
+}
 
   // verbose message
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
@@ -342,20 +324,74 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   AmanziMesh::Entity_ID num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
   // grab the required fields
+  /*
   Epetra_MultiVector& sc_pools = *S_->GetW<CompositeVector>(key_, tag_next_, name_)
       .ViewComponent("cell",false);
   Epetra_MultiVector& co2_decomp = *S_->GetW<CompositeVector>("co2_decomposition", tag_next_, name_)
       .ViewComponent("cell",false);
   Epetra_MultiVector& trans = *S_->GetW<CompositeVector>(trans_key_, tag_next_, name_)
+      .ViewComponent("cell",false);*/
+  //Do I need to update everything here?
+
+  S_->GetEvaluator("porosity", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& porosity = *S_->Get<CompositeVector>("porosity", tag_next_)
       .ViewComponent("cell",false);
+
+  S_->GetEvaluator("saturation_liquid", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& liquid_saturation = *S_->Get<CompositeVector>("saturation_liquid", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("saturation_gas", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& gas_saturation = *S_->Get<CompositeVector>("saturation_gas", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("saturation_ice", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& ice_saturation = *S_->Get<CompositeVector>("saturation_ice", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("elevation", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("elevation", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("water_content", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& water_content = *S_->Get<CompositeVector>("water_content", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("relatiive_permeabiilty", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& relative_permeability = *S_->Get<CompositeVector>("relative_permeabiilty", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("mass_density_liquid", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& liquid_density = *S_->Get<CompositeVector>("mass_density_liquid", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("mass_density_gas", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& gas_density = *S_->Get<CompositeVector>("mass_density_gas", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("mass_density_ice", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& ice_density = *S_->Get<CompositeVector>("mass_density_ice", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("density_rock", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& rock_density = *S_->Get<CompositeVector>("density_rock", tag_next_)
+          .ViewComponent("cell",false);
 
   S_->GetEvaluator("temperature", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& temp = *S_->Get<CompositeVector>("temperature", tag_next_)
       .ViewComponent("cell",false);
 
-  S_->GetEvaluator("pressure", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& pres = *S_->Get<CompositeVector>("pressure", tag_next_)
-      .ViewComponent("cell",false);
+  S_->GetEvaluator("thermal_conductivity", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& conductivity = *S_->Get<CompositeVector>("thermal_conductivity", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("cell_volume", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& cell_volume = *S_->Get<CompositeVector>("cell_volume", tag_next_)
+          .ViewComponent("cell",false);
+
+  //S_->GetEvaluator("pressure", tag_next_).Update(*S_, name_);
+  //const Epetra_MultiVector& pres = *S_->Get<CompositeVector>("pressure", tag_next_)
+  //    .ViewComponent("cell",false);
 
   // note that this is used as the column area, which is maybe not always
   // right.  Likely correct for soil carbon calculations and incorrect for
@@ -365,13 +401,8 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& scv = *S_->Get<CompositeVector>("surface-cell_volume", tag_next_)
       .ViewComponent("cell", false);
 
-
   // loop over columns and apply the model
   for (AmanziMesh::Entity_ID col=0; col!=num_cols_; ++col) {
-    // update the various soil arrays
-    FieldToColumn_(col, *temp(0), temp_c.ptr());
-    FieldToColumn_(col, *pres(0), pres_c.ptr());
-    ColDepthDz_(col, depth_c.ptr(), dz_c.ptr());
 
     auto& col_iter = mesh_->cells_of_column(col);
     ncells_per_col_ = col_iter.size();
@@ -392,16 +423,12 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   } // end loop over columns
 
   // mark primaries as changed
-  changedEvaluatorPrimary(trans_key_, tag_next_, *S_);
-  changedEvaluatorPrimary(shaded_sw_key_, tag_next_, *S_);
-  changedEvaluatorPrimary(total_lai_key_, tag_next_, *S_);
-  return false;
 
   // Compute the next time step.
   // * will we need to do this? *
   ComputeNextTimeStep();
 
-  return failed;
+  //return failed;
 
   std::cout << "\nEnd Advance\n";
 }
@@ -700,7 +727,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 * This helper performs initialization on a single cell within Amanzi's state.
 * It returns an error code that indicates success (0) or failure (1).
 ******************************************************************* */
-int EcoSIM::InitializeSingleColumn(int col, const std::string& condition)
+int EcoSIM::InitializeSingleColumn(int col)
 {
   // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
   // should use the same tag as transport.  See #673
@@ -718,9 +745,9 @@ int EcoSIM::InitializeSingleColumn(int col, const std::string& condition)
   // overwritten as 0 to get expected output.  Therefore we manually overwrite
   // this now.  Previously this happened due to a bug in ATS's reactive
   // transport coupler -- happy accidents.
-  if (alq_mat_props_.saturation <= saturation_tolerance_)
-    for (int i=0; i!=aqueous_components_->NumVectors(); ++i) (*aqueous_components_)[i][cell] = 0.;
-  return 0;
+  //if (alq_mat_props_.saturation <= saturation_tolerance_)
+  //  for (int i=0; i!=aqueous_components_->NumVectors(); ++i) (*aqueous_components_)[i][cell] = 0.;
+  //return 0;
 }
 
 /* *******************************************************************
