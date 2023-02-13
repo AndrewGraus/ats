@@ -25,3 +25,4 @@
 #ifdef ALQUIMIA_ENABLED
 #  include "pks_chemistry_registration.hh"
 #endif
+#include "ats_ecosim_registration.hh"
