@@ -13,10 +13,12 @@ include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk)
 
 set(ats_ecosim_src_files
     Ecosim_ATS_interface.cc
+    BGCEngine.cc
   )
 
 set(ats_ecosim_inc_files
     Ecosim_interface_test.hh
+    BGCEngine.hh
   )
 
 set(ats_ecosim_link_libs
@@ -36,7 +38,7 @@ set(ats_ecosim_link_libs
   ats_pks
   ats_eos
   ats_operators
-  ecosim_relations
+  ats_ecosim_data
   )
 
 
@@ -49,8 +51,8 @@ add_amanzi_library(ats_ecosim
 # register evaluators/factories/pks
 
 register_evaluator_with_factory(
-  HEADERFILE Ecosim_interface_reg.hh
-  LISTNAME ATS_ECOSIM_REG
+  HEADERFILE ats_ecosim_data_registration.hh
+  LISTNAME ATS_ECOSIM_DATA_REG
 )
 
   HEADERFILE ats_ecosim_registration.hh
