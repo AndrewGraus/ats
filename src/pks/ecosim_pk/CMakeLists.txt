@@ -5,7 +5,9 @@ add_subdirectory(data)
 
 include_directories(${ATS_SOURCE_DIR}/src/pks)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk)
-#include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/root_storage)
+include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/data)
+include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/bulk_density)
+include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/hydraulic_conductivity)
 
 # ATS EcoSIM pk
 # For adding F90 files add the F90 file to the ecosim source files and
@@ -39,6 +41,7 @@ set(ats_ecosim_link_libs
   ats_eos
   ats_operators
   ats_ecosim_data
+  ats_ecosim_relations
   )
 
 
