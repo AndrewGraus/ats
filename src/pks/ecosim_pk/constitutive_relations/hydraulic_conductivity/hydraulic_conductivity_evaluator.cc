@@ -1,0 +1,145 @@
+/*
+  The hydraulic conductivity evaluator is an algebraic evaluator of a given model.
+Richards water content evaluator: the standard form as a function of liquid saturation.  
+  Generated via evaluator_generator.
+*/
+
+#include "hydraulic_conductivity_evaluator.hh"
+#include "hydraulic_conductivity_model.hh"
+
+namespace Amanzi {
+namespace Ecosim_pk {
+namespace Relations {
+
+// Constructor from ParameterList
+HydraulicConductivityEvaluator::HydraulicConductivityEvaluator(Teuchos::ParameterList& plist) :
+    EvaluatorSecondaryMonotypeCV(plist)
+{
+  Teuchos::ParameterList& sublist = plist_.sublist("hydraulic_conductivity parameters");
+  model_ = Teuchos::rcp(new HydraulicConductivityModel(sublist));
+  InitializeFromPlist_();
+}
+
+
+// Copy constructor
+HydraulicConductivityEvaluator::HydraulicConductivityEvaluator(const HydraulicConductivityEvaluator& other) :
+    EvaluatorSecondaryMonotypeCV(other),
+    k_key_(other.k_key_),
+    rho_key_(other.rho_key_),
+    mu_key_(other.mu_key_),    
+    model_(other.model_) {}
+
+
+// Virtual copy constructor
+Teuchos::RCP<Evaluator>
+HydraulicConductivityEvaluator::Clone() const
+{
+  return Teuchos::rcp(new HydraulicConductivityEvaluator(*this));
+}
+
+
+// Initialize by setting up dependencies
+void
+HydraulicConductivityEvaluator::InitializeFromPlist_()
+{
+  // Set up my dependencies
+  // - defaults to prefixed via domain
+  Key domain_name = Keys::getDomain(my_key_);
+
+  // - pull Keys from plist
+  // dependency: permeabiilty
+  k_key_ = Keys::readKey(plist_, domain_name, "permeabiilty", "permeabiilty");
+  dependencies_.insert(k_key_);
+
+  // dependency: mass_density_liquid
+  rho_key_ = Keys::readKey(plist_, domain_name, "mass density liquid", "mass_density_liquid");
+  dependencies_.insert(rho_key_);
+
+  // dependency: viscosity_liquid
+  mu_key_ = Keys::readKey(plist_, domain_name, "viscosity liquid", "viscosity_liquid");
+  dependencies_.insert(mu_key_);
+}
+
+
+void
+HydraulicConductivityEvaluator::EvaluateField_(const Teuchos::Ptr<State>& S,
+        const Teuchos::Ptr<CompositeVector>& result)
+{
+Teuchos::RCP<const CompositeVector> k = S->GetFieldData(k_key_);
+Teuchos::RCP<const CompositeVector> rho = S->GetFieldData(rho_key_);
+Teuchos::RCP<const CompositeVector> mu = S->GetFieldData(mu_key_);
+
+  for (CompositeVector::name_iterator comp=result->begin();
+       comp!=result->end(); ++comp) {
+    const Epetra_MultiVector& k_v = *k->ViewComponent(*comp, false);
+    const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
+    const Epetra_MultiVector& mu_v = *mu->ViewComponent(*comp, false);
+    Epetra_MultiVector& result_v = *result->ViewComponent(*comp,false);
+
+    int ncomp = result->size(*comp, false);
+    for (int i=0; i!=ncomp; ++i) {
+      result_v[0][i] = model_->HydraulicConductivity(k_v[0][i], rho_v[0][i], mu_v[0][i]);
+    }
+  }
+}
+
+
+void
+HydraulicConductivityEvaluator::EvaluateFieldPartialDerivative_(const Teuchos::Ptr<State>& S,
+        Key wrt_key, const Teuchos::Ptr<CompositeVector>& result)
+{
+Teuchos::RCP<const CompositeVector> k = S->GetFieldData(k_key_);
+Teuchos::RCP<const CompositeVector> rho = S->GetFieldData(rho_key_);
+Teuchos::RCP<const CompositeVector> mu = S->GetFieldData(mu_key_);
+
+  if (wrt_key == k_key_) {
+    for (CompositeVector::name_iterator comp=result->begin();
+         comp!=result->end(); ++comp) {
+      const Epetra_MultiVector& k_v = *k->ViewComponent(*comp, false);
+      const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
+      const Epetra_MultiVector& mu_v = *mu->ViewComponent(*comp, false);
+      Epetra_MultiVector& result_v = *result->ViewComponent(*comp,false);
+
+      int ncomp = result->size(*comp, false);
+      for (int i=0; i!=ncomp; ++i) {
+        result_v[0][i] = model_->DHydraulicConductivityDPermeabiilty(k_v[0][i], rho_v[0][i], mu_v[0][i]);
+      }
+    }
+
+  } else if (wrt_key == rho_key_) {
+    for (CompositeVector::name_iterator comp=result->begin();
+         comp!=result->end(); ++comp) {
+      const Epetra_MultiVector& k_v = *k->ViewComponent(*comp, false);
+      const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
+      const Epetra_MultiVector& mu_v = *mu->ViewComponent(*comp, false);
+      Epetra_MultiVector& result_v = *result->ViewComponent(*comp,false);
+
+      int ncomp = result->size(*comp, false);
+      for (int i=0; i!=ncomp; ++i) {
+        result_v[0][i] = model_->DHydraulicConductivityDMassDensityLiquid(k_v[0][i], rho_v[0][i], mu_v[0][i]);
+      }
+    }
+
+  } else if (wrt_key == mu_key_) {
+    for (CompositeVector::name_iterator comp=result->begin();
+         comp!=result->end(); ++comp) {
+      const Epetra_MultiVector& k_v = *k->ViewComponent(*comp, false);
+      const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
+      const Epetra_MultiVector& mu_v = *mu->ViewComponent(*comp, false);
+      Epetra_MultiVector& result_v = *result->ViewComponent(*comp,false);
+
+      int ncomp = result->size(*comp, false);
+      for (int i=0; i!=ncomp; ++i) {
+        result_v[0][i] = model_->DHydraulicConductivityDViscosityLiquid(k_v[0][i], rho_v[0][i], mu_v[0][i]);
+      }
+    }
+
+  } else {
+    ASSERT(0);
+  }
+}
+
+
+} //namespace
+} //namespace
+} //namespace
