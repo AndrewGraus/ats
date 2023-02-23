@@ -26,3 +26,5 @@
 #  include "pks_chemistry_registration.hh"
 #endif
 #include "ats_ecosim_registration.hh"
+#include "ats_ecosim_relations_registration.hh"
+#include "ats_ecosim_data_registration.hh"

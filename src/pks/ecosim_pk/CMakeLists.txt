@@ -58,6 +58,17 @@ register_evaluator_with_factory(
   LISTNAME ATS_ECOSIM_DATA_REG
 )
 
+register_evaluator_with_factory(
+  HEADERFILE bulk_density_evaluator_reg.hh
+  LISTNAME ATS_ECOSIM_REG
+)
+
+register_evaluator_with_factory(
+  HEADERFILE hydraulic_conductivity_evaluator_reg.hh
+  LISTNAME ATS_ECOSIM_REG
+)
+
+generate_evaluators_registration_header(
   HEADERFILE ats_ecosim_registration.hh
   LISTNAME   ATS_ECOSIM_REG
   INSTALL    True
