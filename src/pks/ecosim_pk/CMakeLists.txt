@@ -14,12 +14,12 @@ include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/h
 # inc files. The inc file also needs a header
 
 set(ats_ecosim_src_files
-    Ecosim_ATS_interface.cc
+    EcoSIM_ATS_interface.cc
     BGCEngine.cc
   )
 
 set(ats_ecosim_inc_files
-    Ecosim_interface_test.hh
+    EcoSIM_interface_test.hh
     BGCEngine.hh
   )
 
@@ -58,15 +58,15 @@ register_evaluator_with_factory(
   LISTNAME ATS_ECOSIM_DATA_REG
 )
 
-register_evaluator_with_factory(
-  HEADERFILE bulk_density_evaluator_reg.hh
-  LISTNAME ATS_ECOSIM_REG
-)
+#register_evaluator_with_factory(
+#  HEADERFILE bulk_density_evaluator_reg.hh
+#  LISTNAME ATS_ECOSIM_REG
+#)
 
-register_evaluator_with_factory(
-  HEADERFILE hydraulic_conductivity_evaluator_reg.hh
-  LISTNAME ATS_ECOSIM_REG
-)
+#register_evaluator_with_factory(
+#  HEADERFILE hydraulic_conductivity_evaluator_reg.hh
+#  LISTNAME ATS_ECOSIM_REG
+#)
 
 generate_evaluators_registration_header(
   HEADERFILE ats_ecosim_registration.hh

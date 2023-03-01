@@ -7,7 +7,7 @@
  *
  * ------------------------------------------------------------------------- */
 
-#include "Ecosim_interface.hh"
+#include "EcoSIM_interface.hh"
 
 namespace Amanzi {
 namespace EcoSIM {

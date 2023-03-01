@@ -9,7 +9,7 @@
 
   --------------------------------------------------------------------------*/
 
-#include "Ecosim_ATS_interface.hh"
+#include "EcoSIM_ATS_interface.hh"
 #include "pk_helpers.hh"
 
 namespace Amanzi {
