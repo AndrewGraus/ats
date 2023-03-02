@@ -65,8 +65,8 @@ HydraulicConductivityEvaluator::InitializeFromPlist_()
 
 
 void
-HydraulicConductivityEvaluator::EvaluateField_(const Teuchos::Ptr<State>& S,
-        const Teuchos::Ptr<CompositeVector>& result)
+HydraulicConductivityEvaluator::Evaluate_(const State& S,
+        const std::vector<CompositeVector*>& result)
 {
   Tag tag = my_keys_.front().second;
   Teuchos::RCP<const CompositeVector> k = S.GetPtr<CompositeVector>(k_key_, tag);
@@ -89,8 +89,8 @@ HydraulicConductivityEvaluator::EvaluateField_(const Teuchos::Ptr<State>& S,
 
 
 void
-HydraulicConductivityEvaluator::EvaluateFieldPartialDerivative_(const Teuchos::Ptr<State>& S,
-        Key wrt_key, const Teuchos::Ptr<CompositeVector>& result)
+HydraulicConductivityEvaluator::EvaluatePartialDerivative_(const State& S,
+        const Key& wrt_key, const Tag& wrt_tag, const std::vector<CompositeVector*>& result)
 {
   Tag tag = my_keys_.front().second;
   Teuchos::RCP<const CompositeVector> k = S.GetPtr<CompositeVector>(k_key_, tag);

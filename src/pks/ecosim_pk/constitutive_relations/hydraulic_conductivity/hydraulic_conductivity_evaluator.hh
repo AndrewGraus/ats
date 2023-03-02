@@ -3,7 +3,7 @@
 
   Generated via evaluator_generator with:
 Richards water content evaluator: the standard form as a function of liquid saturation.
-    
+
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
@@ -20,23 +20,20 @@ namespace Relations {
 class HydraulicConductivityModel;
 
 class HydraulicConductivityEvaluator : public EvaluatorSecondaryMonotypeCV {
-
  public:
-  explicit
-  HydraulicConductivityEvaluator(Teuchos::ParameterList& plist);
-  HydraulicConductivityEvaluator(const HydraulicConductivityEvaluator& other);
-
-  virtual Teuchos::RCP<Evaluator> Clone() const;
-
-  // Required methods from EvaluatorSecondaryMonotypeCV
-  virtual void EvaluateField_(const Teuchos::Ptr<State>& S,
-          const Teuchos::Ptr<CompositeVector>& result);
-  virtual void EvaluateFieldPartialDerivative_(const Teuchos::Ptr<State>& S,
-          Key wrt_key, const Teuchos::Ptr<CompositeVector>& result);
+  explicit HydraulicConductivityEvaluator(Teuchos::ParameterList& plist);
+  HydraulicConductivityEvaluator(const HydraulicConductivityEvaluator& other) = default;
+  virtual Teuchos::RCP<Evaluator> Clone() const override;
 
   Teuchos::RCP<HydraulicConductivityModel> get_model() { return model_; }
 
  protected:
+   // Required methods from EvaluatorSecondaryMonotypeCV
+   virtual void Evaluate_(const State& S,
+           const std::vector<CompositeVector*>& result) override;
+   virtual void EvaluatePartialDerivative_(const State& S,
+           const Key& wrt_key, const Tag& wrt_tag, const std::vector<CompositeVector*>& result) override;
+
   void InitializeFromPlist_();
 
   Key k_key_;

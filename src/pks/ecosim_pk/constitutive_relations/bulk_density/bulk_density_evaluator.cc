@@ -91,8 +91,8 @@ BulkDensityEvaluator::InitializeFromPlist_()
 
 
 void
-BulkDensityEvaluator::Evaluate_(const Teuchos::Ptr<State>& S,
-        const Teuchos::Ptr<CompositeVector>& result)
+BulkDensityEvaluator::Evaluate_(const State& S,
+        const std::vector<CompositeVector*>& result)
 {
   Tag tag = my_keys_.front().second;
   Teuchos::RCP<const CompositeVector> phi = S.GetPtr<CompositeVector>(phi_key_, tag);
@@ -125,8 +125,8 @@ BulkDensityEvaluator::Evaluate_(const Teuchos::Ptr<State>& S,
 
 
 void
-BulkDensityEvaluator::EvaluateFieldPartialDerivative_(const Teuchos::Ptr<State>& S,
-        Key wrt_key, const Tag& wrt_tag, const Teuchos::Ptr<CompositeVector>& result)
+BulkDensityEvaluator::EvaluatePartialDerivative_(const State& S,
+        const Key& wrt_key, const Tag& wrt_tag, const std::vector<CompositeVector*>& result)
 {
   Tag tag = my_keys_.front().second;
   Teuchos::RCP<const CompositeVector> phi = S.GetPtr<CompositeVector>(phi_key_, tag);
