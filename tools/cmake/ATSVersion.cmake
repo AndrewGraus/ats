@@ -98,7 +98,7 @@ if ( (EXISTS ${ATS_SUBMODULE_DIR}/.git) AND (GIT_FOUND) )
                   ERROR_STRIP_TRAILING_WHITESPACE)
 
    # Put the tags in a list
-   STRING(REPLACE "\n" ";" ATS_GIT_LATEST_TAG_LIST ${ATS_GIT_LATEST_TAG})
+   #STRING(REPLACE "\n" ";" ATS_GIT_LATEST_TAG_LIST ${ATS_GIT_LATEST_TAG})
    # Extract the lastest tag of the form ats-*
    IF ( ${ATS_GIT_BRANCH} MATCHES "master" )
      FOREACH(atag ${ATS_GIT_LATEST_TAG_LIST})
