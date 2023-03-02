@@ -140,7 +140,7 @@ HydraulicConductivityEvaluator::EvaluatePartialDerivative_(const State& S,
     }
 
   } else {
-    ASSERT(0);
+    AMANZI_ASSERT(0);
   }
 }
 

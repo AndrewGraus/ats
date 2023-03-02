@@ -150,7 +150,7 @@ BulkDensityEvaluator::EvaluatePartialDerivative_(const State& S,
       const Epetra_MultiVector& ni_v = *ni->ViewComponent(*comp, false);
       const Epetra_MultiVector& sg_v = *sg->ViewComponent(*comp, false);
       const Epetra_MultiVector& ng_v = *ng->ViewComponent(*comp, false);
-      Epetra_MultiVector& result_v = *result->ViewComponent(*comp,false);
+      Epetra_MultiVector& result_v = *result[0]->ViewComponent(*comp,false);
 
       int ncomp = result[0]->size(*comp, false);
       for (int i=0; i!=ncomp; ++i) {
@@ -292,7 +292,7 @@ BulkDensityEvaluator::EvaluatePartialDerivative_(const State& S,
     }
 
   } else {
-    ASSERT(0);
+    AMANZI_ASSERT(0);
   }
 }
 
