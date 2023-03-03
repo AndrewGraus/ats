@@ -40,6 +40,8 @@
  ******************************************************************************/
 
 //#include "alquimia/alquimia.h"
+#include <cstddef>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -95,8 +97,8 @@ extern "C" {
   } BGCProperties;
 
   typedef struct {
-    AlquimiaVectorInt aux_ints;  /* [-] */
-    AlquimiaVectorDouble aux_doubles;  /* [-] */
+    BGCVectorInt aux_ints;  /* [-] */
+    BGCVectorDouble aux_doubles;  /* [-] */
   } BGCAuxiliaryData;
   /*
   typedef struct {

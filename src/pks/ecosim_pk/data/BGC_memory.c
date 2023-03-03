@@ -71,7 +71,7 @@ void AllocateBGCVectorDouble(const int size, BGCVectorDouble* vector) {
     vector->size = size;
     vector->capacity = nearest_power_of_2(size);
     vector->data = (double*) calloc((size_t)vector->capacity, sizeof(double));
-    ALQUIMIA_ASSERT(NULL != vector->data);
+    //ALQUIMIA_ASSERT(NULL != vector->data);
   } else {
     vector->size = 0;
     vector->capacity = 0;
@@ -93,7 +93,7 @@ void AllocateBGCVectorInt(const int size, BGCVectorInt* vector) {
     vector->size = size;
     vector->capacity = nearest_power_of_2(size);
     vector->data = (int*) calloc((size_t)vector->capacity, sizeof(int));
-    ALQUIMIA_ASSERT(NULL != vector->data);
+    //ALQUIMIA_ASSERT(NULL != vector->data);
   } else {
     vector->size = 0;
     vector->capacity = 0;
@@ -116,10 +116,10 @@ void AllocateBGCVectorString(const int size, BGCVectorString* vector) {
     vector->size = size;
     vector->capacity = nearest_power_of_2(size);
     vector->data = (char**) calloc((size_t)vector->capacity, sizeof(char*));
-    ALQUIMIA_ASSERT(NULL != vector->data);
+    //ALQUIMIA_ASSERT(NULL != vector->data);
     for (i = 0; i < vector->size; ++i) {
-      vector->data[i] = (char*) calloc((size_t)kAlquimiaMaxStringLength, sizeof(char));
-      ALQUIMIA_ASSERT(NULL != vector->data[i]);
+      vector->data[i] = (char*) calloc((size_t)kBGCMaxStringLength, sizeof(char));
+      //ALQUIMIA_ASSERT(NULL != vector->data[i]);
     }
   } else {
     vector->size = 0;
