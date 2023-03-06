@@ -37,7 +37,6 @@ const int kBGCMaxWordLength = 32;
 /* Geochemistry Engine Strings */
 const char* kBGCStringPFloTran = "PFloTran";
 const char* kBGCStringCrunchFlow = "CrunchFlow";
-const char* kBGCStringEcoSIM = "EcoSIM";
 const char* kBGCStringTotal = "total_aqueous";
 const char* kBGCStringTotalSorbed = "total_sorbed";
 const char* kBGCStringTotalAqueousPlusSorbed = "total_aqueous_plus_sorbed";

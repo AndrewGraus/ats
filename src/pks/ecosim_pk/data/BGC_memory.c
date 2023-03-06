@@ -47,6 +47,7 @@
 
 #include "BGC_memory.h"
 #include "BGC_containers.h"
+#include "BGC_constants.h"
 //#include "alquimia/alquimia_interface.h"
 //#include "alquimia/alquimia_constants.h"
 //#include "alquimia/alquimia_containers.h"
@@ -213,7 +214,7 @@ void AllocateBGCProperties(BGCProperties* props) {
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->total_mobile));
 }  /* end AllocateAlquimiaProperties() */
 
-void FreeBGCProperties(AlquimiaProperties* props) {
+void FreeBGCProperties(BGCProperties* props) {
   if (props != NULL) {
     FreeBGCVectorDouble(&(props->liquid_saturation));
     FreeBGCVectorDouble(&(props->gas_saturation));
