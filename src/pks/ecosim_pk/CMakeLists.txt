@@ -19,7 +19,7 @@ set(ats_ecosim_src_files
   )
 
 set(ats_ecosim_inc_files
-    EcoSIM_interface_test.hh
+    EcoSIM_ATS_interface.hh
     BGCEngine.hh
   )
 
