@@ -49,16 +49,18 @@ extern "C" {
   void FreeBGCVectorString(BGCVectorString* vector);
 
   /* State */
-  void AllocateBGCState(BGCState* state);
-
+  void AllocateBGCState(const BGCSizes* const sizes,
+                        BGCState* state);
   void FreeBGCState(BGCState* state);
 
   /* Auxiliary Data */
-  void AllocateBGCAuxiliaryData(BGCAuxiliaryData* aux_data);
+  void AllocateBGCAuxiliaryData(const BGCSizes* const sizes,
+                                BGCAuxiliaryData* aux_data);
   void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data);
 
   /* Properties */
-  void AllocateBGCProperties(BGCProperties* props);
+  void AllocateBGCProperties(const BGCSizes* const sizes,
+                             BGCProperties* props);
   void FreeBGCProperties(BGCProperties* props);
 
   // Problem Meta Data
