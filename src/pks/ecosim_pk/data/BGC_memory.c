@@ -153,7 +153,7 @@ For reference the old function call was:
 void AllocateBGCState(const BGCSizes* const sizes,
                            BGCState* state)*/
 
-void AllocateBGCState(BGCState* state) {
+void AllocateBGCState(const BGCSizes* const sizes, BGCState* state) {
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->fluid_density));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->gas_density));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->ice_density));
@@ -181,7 +181,7 @@ void FreeBGCState(BGCState* state) {
  **
  *******************************************************************************/
 
-void AllocateBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
+void AllocateBGCAuxiliaryData(const BGCSizes* const sizes, BGCAuxiliaryData* aux_data) {
   AllocateBGCVectorInt(sizes->ncells_per_col_,
                             &(aux_data->aux_ints));
 
@@ -203,7 +203,7 @@ void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
  **
  *******************************************************************************/
 
-void AllocateBGCProperties(BGCProperties* props) {
+void AllocateBGCProperties(const BGCSizes* const sizes, BGCProperties* props) {
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->liquid_saturation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->gas_saturation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->ice_saturation));
