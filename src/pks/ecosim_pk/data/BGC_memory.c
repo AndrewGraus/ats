@@ -204,14 +204,14 @@ void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
  *******************************************************************************/
 
 void AllocateBGCProperties(const BGCSizes* const sizes, BGCProperties* props) {
-  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->liquid_saturation));
-  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->gas_saturation));
-  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->ice_saturation));
-  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->elevation));
-  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->relative_permeability));
-  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->conductivity));
-  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->volume));
-  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->total_mobile));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->liquid_saturation));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->gas_saturation));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->ice_saturation));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->elevation));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->relative_permeability));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->conductivity));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->volume));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->total_mobile));
 }  /* end AllocateAlquimiaProperties() */
 
 void FreeBGCProperties(BGCProperties* props) {
