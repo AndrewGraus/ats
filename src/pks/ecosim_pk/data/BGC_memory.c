@@ -211,7 +211,6 @@ void AllocateBGCProperties(const BGCSizes* const sizes, BGCProperties* props) {
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->relative_permeability));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->conductivity));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->volume));
-  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->total_mobile));
 }  /* end AllocateAlquimiaProperties() */
 
 void FreeBGCProperties(BGCProperties* props) {
