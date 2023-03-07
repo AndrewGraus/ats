@@ -190,7 +190,7 @@ void AllocateBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
 
 }  /* end AllocateAlquimiaAuxiliaryData() */
 
-void FreeBGCAuxiliaryData(AlquimiaAuxiliaryData* aux_data) {
+void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
   if (aux_data != NULL) {
     FreeBGCVectorInt(&(aux_data->aux_ints));
     FreeBGCVectorDouble(&(aux_data->aux_doubles));
