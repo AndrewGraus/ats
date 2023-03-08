@@ -9,8 +9,25 @@
 
   --------------------------------------------------------------------------*/
 
-#include "EcoSIM_ATS_interface.hh"
+#include <algorithm>
+#include <set>
+#include <string>
+
+// TPLs
+#include "Epetra_MultiVector.h"
+#include "Epetra_Vector.h"
+#include "Epetra_SerialDenseVector.h"
+#include "Teuchos_RCPDecl.hpp"
+#include "Teuchos_ParameterList.hpp"
+
+// Amanzi
+#include "errors.hh"
+#include "exceptions.hh"
+#include "Mesh.hh"
+
 #include "pk_helpers.hh"
+
+#include "EcoSIM_ATS_interface.hh"
 
 namespace Amanzi {
 namespace EcoSIM {
