@@ -68,10 +68,10 @@ add_amanzi_library(ats_ecosim
 #  LISTNAME ATS_ECOSIM_REG
 #)
 
-register_evaluator_with_factory(
-  HEADERFILE EcoSIM_interface_reg.hh
-  LISTNAME ATS_ECOSIM_REG
-)
+#register_evaluator_with_factory(
+#  HEADERFILE EcoSIM_interface_reg.hh
+#  LISTNAME ATS_ECOSIM_REG
+#)
 
 generate_evaluators_registration_header(
   HEADERFILE ats_ecosim_registration.hh
