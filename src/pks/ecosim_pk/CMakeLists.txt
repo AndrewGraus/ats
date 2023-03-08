@@ -21,6 +21,7 @@ set(ats_ecosim_src_files
 set(ats_ecosim_inc_files
     EcoSIM_ATS_interface.hh
     BGCEngine.hh
+    EcoSIM_interface_reg.hh
   )
 
 set(ats_ecosim_link_libs
@@ -58,15 +59,20 @@ register_evaluator_with_factory(
   LISTNAME ATS_ECOSIM_DATA_REG
 )
 
-#register_evaluator_with_factory(
-#  HEADERFILE bulk_density_evaluator_reg.hh
-#  LISTNAME ATS_ECOSIM_REG
-#)
+register_evaluator_with_factory(
+  HEADERFILE bulk_density_evaluator_reg.hh
+  LISTNAME ATS_ECOSIM_REG
+)
 
-#register_evaluator_with_factory(
-#  HEADERFILE hydraulic_conductivity_evaluator_reg.hh
-#  LISTNAME ATS_ECOSIM_REG
-#)
+register_evaluator_with_factory(
+  HEADERFILE hydraulic_conductivity_evaluator_reg.hh
+  LISTNAME ATS_ECOSIM_REG
+)
+
+register_evaluator_with_factory(
+  HEADERFILE EcoSIM_ATS_interface_reg.hh
+  LISTNAME ATS_ECOSIM_REG
+)
 
 generate_evaluators_registration_header(
   HEADERFILE ats_ecosim_registration.hh
