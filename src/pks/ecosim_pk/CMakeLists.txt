@@ -60,12 +60,12 @@ register_evaluator_with_factory(
 )
 
 register_evaluator_with_factory(
-  HEADERFILE bulk_density_evaluator_reg.hh
+  HEADERFILE constitutive_relations/bulk_density/_evaluator_reg.hh
   LISTNAME ATS_ECOSIM_REG
 )
 
 register_evaluator_with_factory(
-  HEADERFILE hydraulic_conductivity_evaluator_reg.hh
+  HEADERFILE constitutive_relations/hydraulic_conductivity/_evaluator_reg.hh
   LISTNAME ATS_ECOSIM_REG
 )
 
