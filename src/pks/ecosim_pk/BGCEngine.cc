@@ -142,7 +142,6 @@ BGCEngine::BGCEngine(const std::string& engineName,
   // Allocate storage for additional Alquimia data.
   // Below this sets up Alquimia metadata I don't think we
   //need this
-  }
 }
 
 BGCEngine::~BGCEngine()
