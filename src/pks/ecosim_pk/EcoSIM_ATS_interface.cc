@@ -25,7 +25,7 @@
 
 #include "pk_helpers.hh"
 
-#include "EcoSIM_ATS_interface.hh"
+//#include "EcoSIM_ATS_interface.hh"
 
 namespace Amanzi {
 namespace EcoSIM {
