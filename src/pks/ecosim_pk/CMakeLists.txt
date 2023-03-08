@@ -70,7 +70,7 @@ register_evaluator_with_factory(
 )
 
 register_evaluator_with_factory(
-  HEADERFILE EcoSIM_ATS_interface_reg.hh
+  HEADERFILE EcoSIM_interface_reg.hh
   LISTNAME ATS_ECOSIM_REG
 )
 
