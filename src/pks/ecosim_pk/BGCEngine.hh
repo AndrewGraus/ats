@@ -32,7 +32,6 @@ namespace Amanzi {
 namespace EcoSIM {
 
 class BGCEngine {
-
  public:
 
   // Constructs a chemistry engine using the given engine (backend) name and input file.
@@ -60,12 +59,12 @@ class BGCEngine {
   void FreeState(BGCProperties& props,
                  BGCState& state,
                  BGCAuxiliaryData& aux_data);
-
+  /* Don't need for now
   void EnforceCondition(const std::string& condition_name,
                         const double time,
                         const AlquimiaProperties& props,
                         AlquimiaState& state,
-                        AlquimiaAuxiliaryData& aux_data);
+                        AlquimiaAuxiliaryData& aux_data);*/
 
   // Advances the species represented by the given array of concentrations, replacing old values
   // with new values. The order of the concentrations in the array matches that of the species names

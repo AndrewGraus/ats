@@ -35,7 +35,7 @@ namespace {
 
 void CopyBGCState(BGCState* dest, BGCState* src)
 {
-  memcpy(dest->liquid_density.size = src->liquid_density.size, sizeof(double) * src->liquid_density.size);
+  memcpy(dest->fluid_density.size = src->fluid_density.size, sizeof(double) * src->fluid_density.size);
   memcpy(dest->gas_density.size = src->gas_density.size, sizeof(double) * src->gas_density.size);
   memcpy(dest->ice_density.size = src->ice_density.size, sizeof(double) * src->ice_density.size);
   memcpy(dest->porosity.size = src->porosity.size, sizeof(double) * src->porosity.size);
@@ -60,7 +60,7 @@ void CopyBGCProperties(BGCProperties* dest, BGCProperties* src)
   memcpy(dest->volume.size = src->volume.size, sizeof(double) * src->volume.size);
 }
 
-void CopyBGCAuxiliaryData(BGCAuxiliaryData* dest, bgcAuxiliaryData* src)
+void CopyBGCAuxiliaryData(BGCAuxiliaryData* dest, BGCAuxiliaryData* src)
 {
   memcpy(dest->aux_ints.data, src->aux_ints.data, sizeof(int) * src->aux_ints.size);
   memcpy(dest->aux_doubles.data, src->aux_doubles.data, sizeof(double) * src->aux_doubles.size);
@@ -134,7 +134,10 @@ BGCEngine::BGCEngine(const std::string& engineName,
   */
   //We don't need the chem interface call
   //Place the call to the EcoSIM setup driver here:
+
+  /********************************
   EcoSIMSetup();
+  *********************************/
 
   // Allocate storage for additional Alquimia data.
   // Below this sets up Alquimia metadata I don't think we
@@ -207,8 +210,10 @@ bool BGCEngine::Advance(const double delta_time,
   */
   //This is alquimia's advance function which we won't need
   //calling EcoSIM advance driver
-  EcoSIMAdvance();
 
+  /*************************
+  EcoSIMAdvance();
+  *************************/
 }
 
 
