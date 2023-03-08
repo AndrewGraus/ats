@@ -53,20 +53,20 @@ add_amanzi_library(ats_ecosim
 #================================================
 # register evaluators/factories/pks
 
-register_evaluator_with_factory(
-  HEADERFILE ats_ecosim_data_registration.hh
-  LISTNAME ATS_ECOSIM_DATA_REG
-)
+#register_evaluator_with_factory(
+#  HEADERFILE ats_ecosim_data_registration.hh
+#  LISTNAME ATS_ECOSIM_DATA_REG
+#)
 
-register_evaluator_with_factory(
-  HEADERFILE constitutive_relations/bulk_density/bulk_density_evaluator_reg.hh
-  LISTNAME ATS_ECOSIM_REG
-)
+#register_evaluator_with_factory(
+#  HEADERFILE constitutive_relations/bulk_density/bulk_density_evaluator_reg.hh
+#  LISTNAME ATS_ECOSIM_REG
+#)
 
-register_evaluator_with_factory(
-  HEADERFILE constitutive_relations/hydraulic_conductivity/hydraulic_conductivity_evaluator_reg.hh
-  LISTNAME ATS_ECOSIM_REG
-)
+#register_evaluator_with_factory(
+#  HEADERFILE constitutive_relations/hydraulic_conductivity/hydraulic_conductivity_evaluator_reg.hh
+#  LISTNAME ATS_ECOSIM_REG
+#)
 
 register_evaluator_with_factory(
   HEADERFILE EcoSIM_interface_reg.hh
