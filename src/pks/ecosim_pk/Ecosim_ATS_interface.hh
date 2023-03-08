@@ -20,8 +20,8 @@
 //#ifndef PKS_BGC_SIMPLE_HH_
 //#define PKS_BGC_SIMPLE_HH_
 
-#ifndef PKS_ECOSIM_HH_
-#define PKS_ECOSIM_HH_
+//#ifndef PKS_ECOSIM_HH_
+//#define PKS_ECOSIM_HH_
 
 #include <vector>
 
@@ -173,4 +173,4 @@ class EcoSIM : public PK_Physical_Default {
 } // namespace EcoSIM
 } // namespace Amanzi
 
-#endif
+//#endif
