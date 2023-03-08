@@ -44,6 +44,7 @@ set(ats_ecosim_link_libs
   ats_ecosim_relations
   )
 
+message(inc_files="${ats_ecosim_inc_files}")
 
 add_amanzi_library(ats_ecosim
                    SOURCE ${ats_ecosim_src_files}
