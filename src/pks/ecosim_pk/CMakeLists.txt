@@ -20,7 +20,6 @@ set(ats_ecosim_src_files
 
 set(ats_ecosim_inc_files
     EcoSIM_ATS_interface.hh
-    BGCEngine.hh
   )
 
 set(ats_ecosim_link_libs
