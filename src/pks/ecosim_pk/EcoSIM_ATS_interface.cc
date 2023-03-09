@@ -23,9 +23,8 @@
 #include "exceptions.hh"
 #include "Mesh.hh"
 
-#include "pk_helpers.hh"
-
-#include "EcoSIM_ATS_interface.hh"*/
+#include "pk_helpers.hh"*/
+#include "EcoSIM_ATS_interface.hh"
 
 namespace Amanzi {
 namespace EcoSIM {
