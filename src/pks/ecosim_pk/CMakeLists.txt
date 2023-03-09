@@ -70,7 +70,7 @@ add_amanzi_library(ats_ecosim
 #)
 
 register_evaluator_with_factory(
-  HEADERFILE EcoSIM_interface_reg.hh
+  HEADERFILE EcoSIM_ATS_interface_reg.hh
   LISTNAME ATS_ECOSIM_REG
 )
 
