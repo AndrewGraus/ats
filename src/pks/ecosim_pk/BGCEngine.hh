@@ -76,6 +76,13 @@ class BGCEngine {
                BGCAuxiliaryData& aux_data,
                int& num_iterations);
 
+  //Functions from the alquimia util section, I don't think I need the full code so I think
+  //I can just copy these functions over
+  void CopyBGCState(const BGCState* const source,
+                         BGCState* destination);
+  void CopyBGCProperties(const BGCProperties* const source,
+                              BGCProperties* destination);                                 
+
  private:
 
   // bgc data structures.

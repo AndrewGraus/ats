@@ -86,10 +86,10 @@ class EcoSIM : public PK_Physical_Default {
 
   virtual std::string name(){return "EcoSIM for ATS";};
 
-  void CopyToEcoSIM(int col,
+  /*void CopyToEcoSIM(int col,
           BGCProperties& props,
           BGCState& state,
-          BGCAuxiliaryData& aux_data);
+          BGCAuxiliaryData& aux_data);*/
 
  private:
 
