@@ -35,12 +35,12 @@ namespace {
 
 void CopyBGCState(BGCState* dest, BGCState* src)
 {
-  memcpy(dest->fluid_density.size, src->fluid_density.size, sizeof(double) * src->fluid_density.size);
-  memcpy(dest->gas_density.size, src->gas_density.size, sizeof(double) * src->gas_density.size);
-  memcpy(dest->ice_density.size, src->ice_density.size, sizeof(double) * src->ice_density.size);
-  memcpy(dest->porosity.size, src->porosity.size, sizeof(double) * src->porosity.size);
-  memcpy(dest->water_content.size, src->water_content.size, sizeof(double) * src->water_content.size);
-  memcpy(dest->temperature.size, src->temperature.size, sizeof(double) * src->temperature.size);
+  memcpy(dest->fluid_density.data, src->fluid_density.data, sizeof(double) * src->fluid_density.size);
+  memcpy(dest->gas_density.data, src->gas_density.data, sizeof(double) * src->gas_density.size);
+  memcpy(dest->ice_density.data, src->ice_density.data, sizeof(double) * src->ice_density.size);
+  memcpy(dest->porosity.data, src->porosity.data, sizeof(double) * src->porosity.size);
+  memcpy(dest->water_content.data, src->water_content.data, sizeof(double) * src->water_content.size);
+  memcpy(dest->temperature.data, src->temperature.data, sizeof(double) * src->temperature.size);
   //memcpy(dest->total_mobile.data, src->total_mobile.data, sizeof(double) * src->total_mobile.size);
 
   //dest->water_density = src->water_density;
@@ -51,13 +51,13 @@ void CopyBGCState(BGCState* dest, BGCState* src)
 void CopyBGCProperties(BGCProperties* dest, BGCProperties* src)
 {
   //NEED TO EDIT STILL
-  memcpy(dest->liquid_saturation.size, src->liquid_saturation.size, sizeof(double) * src->liquid_saturation.size);
-  memcpy(dest->gas_saturation.size, src->gas_saturation.size, sizeof(double) * src->gas_saturation.size);
-  memcpy(dest->ice_saturation.size, src->ice_saturation.size, sizeof(double) * src->ice_saturation.size);
-  memcpy(dest->elevation.size, src->elevation.size, sizeof(double) * src->elevation.size);
-  memcpy(dest->relative_permeability.size, src->relative_permeability.size, sizeof(double) * src->relative_permeability.size);
-  memcpy(dest->conductivity.size, src->conductivity.size, sizeof(double) * src->conductivity.size);
-  memcpy(dest->volume.size, src->volume.size, sizeof(double) * src->volume.size);
+  memcpy(dest->liquid_saturation.data, src->liquid_saturation.data, sizeof(double) * src->liquid_saturation.size);
+  memcpy(dest->gas_saturation.data, src->gas_saturation.data, sizeof(double) * src->gas_saturation.size);
+  memcpy(dest->ice_saturation.data, src->ice_saturation.data, sizeof(double) * src->ice_saturation.size);
+  memcpy(dest->elevation.data, src->elevation.data, sizeof(double) * src->elevation.size);
+  memcpy(dest->relative_permeability.data, src->relative_permeability.data, sizeof(double) * src->relative_permeability.size);
+  memcpy(dest->conductivity.data, src->conductivity.data, sizeof(double) * src->conductivity.size);
+  memcpy(dest->volume.data, src->volume.data, sizeof(double) * src->volume.size);
 }
 
 void CopyBGCAuxiliaryData(BGCAuxiliaryData* dest, BGCAuxiliaryData* src)
