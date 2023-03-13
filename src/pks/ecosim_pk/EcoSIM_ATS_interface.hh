@@ -155,7 +155,7 @@ class EcoSIM : public PK_Physical_Default {
   Key rock_den_key_;
   Key T_key_;
   Key conductivity_key_;
-  Key cv_key;
+  Key cv_key_;
   Key ecosim_aux_data_key_;
 
  private:
