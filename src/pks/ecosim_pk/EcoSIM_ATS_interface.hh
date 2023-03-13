@@ -133,7 +133,7 @@ class EcoSIM : public PK_Physical_Default {
                               Teuchos::Ptr<Epetra_SerialDenseVector> dz);
 
   void ColumnToField_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
-                                 double* col_vec, int ncol)
+                                 double* col_vec, int ncol);
   //evaluator for transpiration;
   //I don't think I need this anymore
   //Teuchos::RCP<PrimaryVariableFieldEvaluator> p_root_eval_;

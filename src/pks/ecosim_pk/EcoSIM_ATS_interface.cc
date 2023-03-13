@@ -70,16 +70,16 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // f_ice = S_ice * porosity
 
     liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
-    ice_den_key_ = Keys::readKey(plist_, domain, "ice mass density", "mass_density_ice");
-    gas_den_key_ = Keys::readKey(plist_,domain,"gas mass density", "mass_density_gas")
-    rock_den_key_ = Keys::readKey(plist_, domain_name, "density rock", "density_rock");
+    ice_den_key_ = Keys::readKey(*plist_, domain, "ice mass density", "mass_density_ice");
+    gas_den_key_ = Keys::readKey(*plist_,domain,"gas mass density", "mass_density_gas")
+    rock_den_key_ = Keys::readKey(*plist_, domain_name, "density rock", "density_rock");
 
     //energy
-    T_key_ = Keys::readKey(plist_, domain_name, "temperature", "temperature");
+    T_key_ = Keys::readKey(*plist_, domain_, "temperature", "temperature");
     conductivity_key_ = = Keys::readKey(*plist_, domain_, "thermal conductivity", "thermal_conductivity");
 
     //Other
-    cv_key_ = Keys::readKey(plist_, domain_name, "cell volume", "cell_volume");
+    cv_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
     min_vol_frac_key_ = Keys::readKey(*plist_, domain_, "mineral volume fractions", "mineral_volume_fractions");
     ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
 
