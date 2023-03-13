@@ -81,7 +81,7 @@ class BGCEngine {
   void CopyBGCState(const BGCState* const source,
                          BGCState* destination);
   void CopyBGCProperties(const BGCProperties* const source,
-                              BGCProperties* destination);                                 
+                              BGCProperties* destination);
 
  private:
 
@@ -89,6 +89,7 @@ class BGCEngine {
   bool bgc_initialized_;
   void* engine_state_;
 
+  BGCSizes sizes_;
   /*AlquimiaEngineFunctionality functionality_;
   AlquimiaSizes sizes_;
   AlquimiaInterface chem_;
