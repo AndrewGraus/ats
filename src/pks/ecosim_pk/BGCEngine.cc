@@ -193,7 +193,7 @@ void BGCEngine::FreeState(BGCProperties& props,
 {
   FreeBGCProperties(&props);
   FreeBGCState(&state);
-  FreeBGCAuxiliaryData(&data);
+  FreeBGCAuxiliaryData(&aux_data);
   //FreeAlquimiaAuxiliaryOutputData(&aux_output);
 }
 
@@ -201,7 +201,6 @@ bool BGCEngine::Advance(const double delta_time,
                               const BGCProperties& props,
                               BGCState& state,
                               BGCAuxiliaryData& aux_data,
-                              BGCAuxiliaryOutputData& aux_output,
                               int& num_iterations)
 {
 
