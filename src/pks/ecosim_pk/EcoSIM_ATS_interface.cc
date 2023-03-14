@@ -682,6 +682,21 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   // (this->porosity())[cell] = state.porosity;
   //I probably need to copy the columns cell by cell in a loop
   //Can I do this in the field to column function?
+  const auto& tcc = *S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", true);
+  const auto& porosity = *S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", true);
+  const auto& liquid_saturation = *S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", true);
+  const auto& gas_saturation = *S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", true);
+  const auto& ice_saturation = *S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", true);
+  const auto& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", true);
+  const auto& water_content = *S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", true);
+  const auto& relative_permeability = *S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", true);
+  const auto& liquid_density = *S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", true);
+  const auto& ice_density = *S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", true);
+  const auto& gas_density = *S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", true);
+  const auto& rock_density = *S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", true);
+  const auto& temp = *S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", true);
+  const auto& conductivity = *S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", true);
+  const auto& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", true);
 
   //I think I need to redefine this here?
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -702,7 +717,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 
 
   for (int i=0; i < ncells_per_col_; ++i) {
-    col_f_dens[i] = state.liquid_density.data[i];
+    col_f_dens[i] = state.fluid_density.data[i];
     col_g_dens[i] = state.gas_density.data[i];
     col_i_dnes[i] = state.ice_density.data[i];
     col_poro[i] = state.porosity.data[i];
