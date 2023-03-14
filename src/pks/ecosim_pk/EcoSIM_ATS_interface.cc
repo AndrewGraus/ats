@@ -719,19 +719,19 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 
   for (int i=0; i < ncells_per_col_; ++i) {
     (*col_f_dens)[i] = state.fluid_density.data[i];
-    col_g_dens[i] = state.gas_density.data[i];
-    col_i_dens[i] = state.ice_density.data[i];
-    col_poro[i] = state.porosity.data[i];
-    col_wc[i] = state.water_content.data[i];
-    col_temp[i] = state.temperature.data[i];
+    (*col_g_dens)[i] = state.gas_density.data[i];
+    (*col_i_dens)[i] = state.ice_density.data[i];
+    (*col_poro)[i] = state.porosity.data[i];
+    (*col_wc)[i] = state.water_content.data[i];
+    (*col_temp)[i] = state.temperature.data[i];
 
-    col_l_sat[i] = props.liquid_saturation.data[i];
-    col_g_sat[i] = props.gas_saturation.data[i];
-    col_i_sat[i] = props.ice_saturation.data[i];
-    col_elev[i] = props.elevation.data[i];
-    col_rel_perm[i] = props.relative_permeability.data[i];
-    col_cond[i] = props.conductivity.data[i];
-    col_vol[i] = props.volume.data[i];
+    (*col_l_sat)[i] = props.liquid_saturation.data[i];
+    (*col_g_sat)[i] = props.gas_saturation.data[i];
+    (*col_i_sat)[i] = props.ice_saturation.data[i];
+    (*col_elev)[i] = props.elevation.data[i];
+    (*col_rel_perm)[i] = props.relative_permeability.data[i];
+    (*col_cond)[i] = props.conductivity.data[i];
+    (*col_vol)[i] = props.volume.data[i];
   }
 
   /*for (int i = 0; i < num_components; i++) {
