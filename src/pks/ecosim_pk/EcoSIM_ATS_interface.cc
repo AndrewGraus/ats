@@ -717,9 +717,10 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 
   /*Can't save cell by cell doesn't seem to work like this*/
 
-  col_f_dens.Import(state.fluid_density.data, ncells_per_col_);
+  //col_f_dens.Import(state.fluid_density.data, ncells_per_col_);
 
   for (int i=0; i < ncells_per_col_; ++i) {
+    col_f_dens(i) = state.fluid_density.data[i];
     col_f_dens[i] = state.fluid_density.data[i];
     col_g_dens[i] = state.gas_density.data[i];
     col_i_dens[i] = state.ice_density.data[i];
