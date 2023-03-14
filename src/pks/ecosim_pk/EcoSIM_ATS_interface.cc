@@ -35,10 +35,11 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
                const Teuchos::RCP<TreeVector>& solution):
   PK_Physical_Default(pk_tree, global_list, S, solution),
   PK(pk_tree, global_list, S, solution),
-  ncells_per_col_(-1)
+  ncells_per_col_(-1),
+  saved_time_(0.0)
   {
     domain_ = plist_->get<std::string>("domain name", "domain");
-    domain_surf = Keys::readDomainHint(*plist_, domain_, "subsurface", "surface");
+    domain_surf_ = Keys::readDomainHint(*plist_, domain_, "subsurface", "surface");
 
     // obtain key of fields
     // What fields will we need to pass to EcoSIM, presumably fields relating to
@@ -72,7 +73,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
 
     liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
     ice_den_key_ = Keys::readKey(*plist_, domain_, "ice mass density", "mass_density_ice");
-    gas_den_key_ = Keys::readKey(*plist_, domain_,"gas mass density", "mass_density_gas")
+    gas_den_key_ = Keys::readKey(*plist_, domain_,"gas mass density", "mass_density_gas");
     rock_den_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
 
     //energy
@@ -230,6 +231,7 @@ void EcoSIM::Initialize() {
   // over between runs but ATS doesn't need
   // AllocateAlquimiaAuxiliaryOutputData - Allocates variables that ATS will eventually
   // output (probably don't need for now)
+  int ierr = 0;
 
   // Ensure dependencies are filled
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -610,20 +612,20 @@ void EcoSIM::CopyToEcoSIM(int col,
   // automatically, but I just want to test this for now
 
   for (int i=0; i < ncells_per_col_; ++i) {
-    bgc_state.liquid_density.data[i] = col_f_dens[i];
-    bgc_state.gas_density.data[i] = col_g_dens[i];
-    bgc_state.ice_density.data[i] = col_i_dens[i];
-    bgc_state.porosity.data[i] = col_poro[i];
-    bgc_state.water_content.data[i] = col_wc[i];
-    bgc_state.temperature.data[i] = col_temp[i];
+    state.liquid_density.data[i] = col_f_dens[i];
+    state.gas_density.data[i] = col_g_dens[i];
+    state.ice_density.data[i] = col_i_dens[i];
+    state.porosity.data[i] = col_poro[i];
+    state.water_content.data[i] = col_wc[i];
+    state.temperature.data[i] = col_temp[i];
 
-    bgc_props.liquid_saturation.data[i] = col_l_sat[i];
-    bgc_props.gas_saturation.data[i] = col_g_sat[i];
-    bgc_props.ice_saturation.data[i] = col_i_sat[i];
-    bgc_props.elevation.data[i] = col_elev[i];
-    bgc_props.relative_permeability.data[i] = col_rel_perm[i];
-    bgc_props.conductivity.data[i] = col_cond[i];
-    bgc_props.volume.data[i] = col_vol[i];
+    props.liquid_saturation.data[i] = col_l_sat[i];
+    props.gas_saturation.data[i] = col_g_sat[i];
+    props.ice_saturation.data[i] = col_i_sat[i];
+    props.elevation.data[i] = col_elev[i];
+    props.relative_permeability.data[i] = col_rel_perm[i];
+    props.conductivity.data[i] = col_cond[i];
+    props.volume.data[i] = col_vol[i];
 
   }
   //mat_props.volume = mesh_->cell_volume(cell;
@@ -681,21 +683,39 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   //I probably need to copy the columns cell by cell in a loop
   //Can I do this in the field to column function?
 
-  for (int i=0; i < ncells_per_col_; ++i) {
-    col_f_dens[i] = bgc_state.liquid_density.data[i];
-    col_g_dens[i] = bgc_state.gas_density.data[i];
-    col_i_dnes[i] = bgc_state.ice_density.data[i];
-    col_poro[i] = bgc_state.porosity.data[i];
-    col_wc[i] = bgc_state.water_content.data[i];
-    col_temp[i] = bgc_state.temperature.data[i];
+  //I think I need to redefine this here?
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_elev = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_f_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_i_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
-    col_l_sat[i] = bgc_props.liquid_saturation.data[i];
-    col_g_sat[i] = bgc_props.gas_saturation.data[i];
-    col_i_sat[i] = bgc_props.ice_saturation.data[i];
-    col_elev[i] = bgc_props.elevation.data[i];
-    col_rel_perm[i] = bgc_props.relative_permeability.data[i];
-    col_cond[i] = bgc_props.conductivity.data[i];
-    col_vol[i] = bgc_props.volume.data[i];
+
+  for (int i=0; i < ncells_per_col_; ++i) {
+    col_f_dens[i] = state.liquid_density.data[i];
+    col_g_dens[i] = state.gas_density.data[i];
+    col_i_dnes[i] = state.ice_density.data[i];
+    col_poro[i] = state.porosity.data[i];
+    col_wc[i] = state.water_content.data[i];
+    col_temp[i] = state.temperature.data[i];
+
+    col_l_sat[i] = props.liquid_saturation.data[i];
+    col_g_sat[i] = props.gas_saturation.data[i];
+    col_i_sat[i] = props.ice_saturation.data[i];
+    col_elev[i] = props.elevation.data[i];
+    col_rel_perm[i] = props.relative_permeability.data[i];
+    col_cond[i] = props.conductivity.data[i];
+    col_vol[i] = props.volume.data[i];
   }
   /*for (int i = 0; i < num_components; i++) {
     bgc_state.total_mobile.data[i] = (*col_tcc)[i];

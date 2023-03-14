@@ -141,6 +141,9 @@ class EcoSIM : public PK_Physical_Default {
 
   int number_aqueous_components_;
   int ncells_per_col_;
+  int num_cols_;
+  double saved_time_;
+  double current_time_;
 
   // keys
   Key tcc_key_;
