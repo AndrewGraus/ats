@@ -38,6 +38,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
   ncells_per_col_(-1)
   {
     domain_ = plist_->get<std::string>("domain name", "domain");
+    domain_surf = Keys::readDomainHint(*plist_, domain_, "subsurface", "surface");
 
     // obtain key of fields
     // What fields will we need to pass to EcoSIM, presumably fields relating to
@@ -87,7 +88,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // initial timestep
     dt_ = plist_->get<double>("initial time step", 1.);
     //Heat capacity looks like the default units are molar heat capacity
-    c_m = plist_.get<double>("heat capacity [J mol^-1 K^-1]");
+    c_m_ = plist_.get<double>("heat capacity [J mol^-1 K^-1]");
     //They also sometimes use a version of heat capacity that is just this
     //quantity times 1e-6:
     //ka_ = 1.e-6 * plist_.get<double>("heat capacity [J kg^-1 K^-1]");

@@ -53,7 +53,7 @@ class EcoSIM : public PK_Physical_Default {
               const Teuchos::RCP<TreeVector>& solution);
 
   // Virtual destructor
-  virtual ~EcoSIM() override {}
+  ~EcoSIM();
 
   // is a PK
   // -- Setup data
@@ -118,8 +118,9 @@ class EcoSIM : public PK_Physical_Default {
 
  protected:
   double dt_;
+  double c_m_;
   Teuchos::RCP<const AmanziMesh::Mesh> mesh_surf_; //might need this?
-  //Key domain_surf_;
+  Key domain_surf_;
 
   //The helper functions from BGC are protected not private (unclear why)
   //I don't think I need this here, probably in the engine
@@ -139,6 +140,7 @@ class EcoSIM : public PK_Physical_Default {
   //Teuchos::RCP<PrimaryVariableFieldEvaluator> p_root_eval_;
 
   int number_aqueous_components_;
+  int ncells_per_col_;
 
   // keys
   Key tcc_key_;
@@ -156,6 +158,7 @@ class EcoSIM : public PK_Physical_Default {
   Key T_key_;
   Key conductivity_key_;
   Key cv_key_;
+  Key min_vol_frac_key_;
   Key ecosim_aux_data_key_;
 
  private:
