@@ -89,7 +89,22 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // initial timestep
     dt_ = plist_->get<double>("initial time step", 1.);
     //Heat capacity looks like the default units are molar heat capacity
-    c_m_ = plist_.get<double>("heat capacity [J mol^-1 K^-1]");
+    //c_m_ = plist_.get<double>("heat capacity [J mol^-1 K^-1]");
+
+    if (plist_.isParameter("heat capacity [J kg^-1 K^-1]")) {
+      Cv_ = 1.e-6 * plist_.get<double>("heat capacity [J kg^-1 K^-1]");
+      molar_basis_ = false;
+    } else if (plist_.isParameter("heat capacity [MJ kg^-1 K^-1]")) {
+      Cv_ = plist_.get<double>("heat capacity [MJ kg^-1 K^-1]");
+      molar_basis_ = false;
+    } else if (plist_.isParameter("heat capacity [MJ mol^-1 K^-1]")) {
+      Cv_ = plist_.get<double>("heat capacity [MJ mol^-1 K^-1]");
+      molar_basis_ = true;
+    } else {
+      Cv_ = 1.e-6 * plist_.get<double>("heat capacity [J mol^-1 K^-1]");
+      molar_basis_ = true;
+    }
+
     //They also sometimes use a version of heat capacity that is just this
     //quantity times 1e-6:
     //ka_ = 1.e-6 * plist_.get<double>("heat capacity [J kg^-1 K^-1]");
@@ -538,18 +553,19 @@ void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID col,
 //---------------------------------------------------------------------------
 //Alquimia Helper functions
 //---------------------------------------------------------------------------
-void EcoSIM::CopyToEcoSIM(int col,
+/*void EcoSIM::CopyToEcoSIM(int col,
         BGCProperties& props,
         BGCState& state,
         BGCAuxiliaryData& aux_data)
 {
   CopyToEcoSIM(col, props, state, aux_data);
-}
+}*/
 
 void EcoSIM::CopyToEcoSIM(int col,
                                  BGCProperties& props,
                                  BGCState& state,
-                                 BGCAuxiliaryData& aux_data)
+                                 BGCAuxiliaryData& aux_data,
+                               const Tag& water_tag)
 {
   //Fill state with ATS variables that are going to be changed by EcoSIM
   //NEED TO DECIDE WHICH PROPERTIES GO WHERE
@@ -666,15 +682,17 @@ void EcoSIM::CopyEcoSIMStateToAmanzi(
     const int col,
     const BGCProperties& props,
     const BGCState& state,
-    const BGCAuxiliaryData& aux_data)
+    const BGCAuxiliaryData& aux_data
+    const Tag& water_tag)
 {
-  CopyFromEcoSIM(col, props, state, aux_data);
+  CopyFromEcoSIM(col, props, state, aux_data, water_tag);
 }
 
 void EcoSIM::CopyFromEcoSIM(const int col,
                                    const BGCProperties& props,
                                    const BGCState& state,
-                                   const BGCAuxiliaryData& aux_data)
+                                   const BGCAuxiliaryData& aux_data,
+                                  const Tag& water_tag)
 {
   // If the chemistry has modified the porosity and/or density, it needs to
   // be updated here.
@@ -783,12 +801,12 @@ int EcoSIM::InitializeSingleColumn(int col)
 {
   // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
   // should use the same tag as transport.  See #673
-  CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_);
+  CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   //bgc_engine_->EnforceCondition(condition, current_time_, bgc_props_,
   //        bgc_state_, bgc_aux_data_);
 
-  CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_);
+  CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
 
   // ETC: hacking to get consistent solution -- if there is no water
@@ -814,7 +832,7 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
   //
   // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
   // should use the same tag as transport.  See #673
-  CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_);
+  CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   int num_iterations = 0;
 
@@ -838,7 +856,7 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
   CopyEcoSIMStateToAmanzi(col,
-                            bgc_props_, bgc_state_, bgc_aux_data_);
+                            bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   return num_iterations;
 }
