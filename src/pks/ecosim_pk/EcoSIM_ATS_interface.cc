@@ -715,11 +715,14 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
+  /*Can't save cell by cell doesn't seem to work like this*/
+
+  col_f_dens.Import(state.fluid_density.data, ncells_per_col_);
 
   for (int i=0; i < ncells_per_col_; ++i) {
     col_f_dens[i] = state.fluid_density.data[i];
     col_g_dens[i] = state.gas_density.data[i];
-    col_i_dnes[i] = state.ice_density.data[i];
+    col_i_dens[i] = state.ice_density.data[i];
     col_poro[i] = state.porosity.data[i];
     col_wc[i] = state.water_content.data[i];
     col_temp[i] = state.temperature.data[i];
@@ -732,6 +735,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     col_cond[i] = props.conductivity.data[i];
     col_vol[i] = props.volume.data[i];
   }
+
   /*for (int i = 0; i < num_components; i++) {
     bgc_state.total_mobile.data[i] = (*col_tcc)[i];
   }*/
