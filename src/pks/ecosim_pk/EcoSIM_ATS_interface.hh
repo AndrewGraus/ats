@@ -167,7 +167,7 @@ class EcoSIM : public PK_Physical_Default {
   Key min_vol_frac_key_;
   Key ecosim_aux_data_key_;
 
-  Teuchos::RCP<EcoSIM::BGCEngine> bgc_engine_;
+  //Teuchos::RCP<EcoSIM::BGCEngine> bgc_engine_;
 
  private:
   BGCState bgc_state_;

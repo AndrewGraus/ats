@@ -100,6 +100,8 @@ class BGCEngine {
   std::string bgc_engine_name_;
   std::string bgc_engine_inputfile_;
 
+  Teuchos::RCP<EcoSIM::BGCEngine> bgc_engine_;
+
   // forbidden.
   BGCEngine();
   BGCEngine(const BGCEngine&);
