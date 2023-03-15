@@ -45,7 +45,7 @@
 namespace Amanzi {
 namespace EcoSIM {
 
-class EcoSIM : public PK_Physical_Default {
+class EcoSIM : public EcoSIM {
 
  public:
 
@@ -100,12 +100,14 @@ class EcoSIM : public PK_Physical_Default {
    void CopyToEcoSIM(int col,
            BGCProperties& props,
            BGCState& state,
-           BGCAuxiliaryData& aux_data);
+           BGCAuxiliaryData& aux_data,
+         const Tag& water_tag);
 
    void CopyFromEcoSIM(const int cell,
                 const BGCProperties& props,
                 const BGCState& state,
-                const BGCAuxiliaryData& aux_data);
+                const BGCAuxiliaryData& aux_data,
+              const Tag& water_tag);
 
    int InitializeSingleColumn(int col);
 
@@ -115,7 +117,8 @@ class EcoSIM : public PK_Physical_Default {
        const int cell,
        const BGCProperties& props,
        const BGCState& state,
-       const BGCAuxiliaryData& aux_data);
+       const BGCAuxiliaryData& aux_data,
+     const Tag& water_tag);
 
    void ComputeNextTimeStep();
 
@@ -173,6 +176,8 @@ class EcoSIM : public PK_Physical_Default {
   BGCState bgc_state_;
   BGCProperties bgc_props_;
   BGCAuxiliaryData bgc_aux_data_;
+
+  bool bgc_initialized_;
 
  private:
   //factory registration
