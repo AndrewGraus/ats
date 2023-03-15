@@ -21,7 +21,9 @@
 #ifndef PKS_ECOSIM_HH_
 #define PKS_ECOSIM_HH_
 
+#include <map>
 #include <vector>
+#include <string>
 
 #include "Epetra_MultiVector.h"
 #include "Teuchos_ParameterList.hpp"
@@ -38,6 +40,7 @@
 #include "PK_Factory.hh"
 #include "pk_physical_default.hh"
 #include "PK_Physical.hh"
+
 
 namespace Amanzi {
 namespace EcoSIM {

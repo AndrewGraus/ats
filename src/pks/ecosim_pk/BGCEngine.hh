@@ -13,8 +13,8 @@
   conditions and to integrate reactions given a chemical configuration.
 */
 
-//#ifndef AMANZI_CHEMISTRY_ENGINE_HH_
-//#define AMANZI_CHEMISTRY_ENGINE_HH_
+#ifndef BGC_ENGINE_HH_
+#define BGC_ENGINE_HH_
 
 #include <string>
 #include <vector>
@@ -110,4 +110,4 @@ class BGCEngine {
 } // namespace
 } // namespace
 
-//#endif
+#endif
