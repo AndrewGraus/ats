@@ -464,7 +464,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
 
   auto& col_iter = mesh_->cells_of_column(col);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
-    (*col_vec)[i] = vec[col_iter[i]];
+    (*col_vec)[i] = *vec[col_iter[i]];
   }
 }
 
