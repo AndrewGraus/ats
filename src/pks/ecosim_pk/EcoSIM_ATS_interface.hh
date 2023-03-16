@@ -89,7 +89,7 @@ class EcoSIM : public EcoSIM {
 
   virtual std::string name(){return "EcoSIM for ATS";};
 
-  Teuchos::RCP<EcoSIM::BGCEngine> bgc_engine() { return chem_engine_; }
+  Teuchos::RCP<EcoSIM::BGCEngine> bgc_engine() { return bgc_engine_; }
 
   /*void CopyToEcoSIM(int col,
           BGCProperties& props,
