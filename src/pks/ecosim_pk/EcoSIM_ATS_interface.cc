@@ -470,7 +470,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
 }
 
 // helper function for pushing field to column
-void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
+void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
                                double* col_vec)
 {
   auto& col_iter = mesh_->cells_of_column(col);
@@ -483,7 +483,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
 // with any luck it's just the reverse of the above similar to how it's done
 // cell by cell in alquimia
 
-void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
+void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
                                double* col_vec)
 {
   auto& col_iter = mesh_->cells_of_column(col);
@@ -630,7 +630,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     props.volume.data[i] = col_vol[i];
 
   }
-  //mat_props.volume = mesh_->cell_volume(cell;
+  //mat_props.volume = mesh_->cell_volume(cell;z
   //mat_props.saturation = water_saturation[0][cell];
 
   num_components = tcc.NumVectors();

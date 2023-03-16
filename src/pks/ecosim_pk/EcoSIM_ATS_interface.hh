@@ -132,7 +132,7 @@ class EcoSIM : public PK_Physical {
 
   //The helper functions from BGC are protected not private (unclear why)
   //I don't think I need this here, probably in the engine
-  void FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
+  void FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
           Teuchos::Ptr<Epetra_SerialDenseVector> col_vec);
 
   //void FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
@@ -141,7 +141,7 @@ class EcoSIM : public PK_Physical {
                               Teuchos::Ptr<Epetra_SerialDenseVector> depth,
                               Teuchos::Ptr<Epetra_SerialDenseVector> dz);
 
-  void ColumnToField_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
+  void ColumnToField_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
                                  double* col_vec);
   //evaluator for transpiration;
   //I don't think I need this anymore
