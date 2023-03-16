@@ -138,7 +138,7 @@ EcoSIM::~EcoSIM()
 // now the PK setup
 void EcoSIM::Setup() {
   std::cout << "beginning Ecosim setup\n";
-  PK_Physical_Default::Setup();
+  //PK_Physical_Default::Setup();
 
   /*This is for setting up the Auxiliary Output data which I'm not sure we need
   chem_engine_->GetAuxiliaryOutputNames(aux_names_, aux_subfield_names_);
@@ -205,8 +205,7 @@ void EcoSIM::Setup() {
 // -- Initialize owned (dependent) variables.
 void EcoSIM::Initialize() {
   std::cout << "\nBegin Initialize\n";
-  //PK_Physical_Default::Initialize(S);
-  PK_Physical_Default::Initialize();
+  //PK_Physical_Default::Initialize();
 
   //Now we have to initalize the variables (i.e. give them initial values)
   //In our PK it will only be done for variables owned by the PK so the aux_names
@@ -457,7 +456,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
 // helper function for pushing field to column
 void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
-        Teuchos::Ptr<Epetra_SerialDenseVector> col_vec, bool copy)
+        Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
   if (col_vec == Teuchos::null) {
     col_vec = Teuchos::ptr(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -470,14 +469,14 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
 }
 
 // helper function for pushing field to column
-void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
+/*void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
                                Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
   auto& col_iter = mesh_->cells_of_column(col);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     col_vec[i] = vec[col_iter[i]];
   }
-}
+}*/
 
 // I think I need a function for pushing from the column back to the field
 // with any luck it's just the reverse of the above similar to how it's done
@@ -488,7 +487,7 @@ void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
 {
   auto& col_iter = mesh_->cells_of_column(col);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
-    vec[col_iter[i]] = col_vec[i];
+    vec[col_iter[i]] = (*col_vec)[i];
   }
 }
 
