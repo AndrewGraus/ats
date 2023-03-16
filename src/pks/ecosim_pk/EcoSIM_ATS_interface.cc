@@ -114,7 +114,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     }
     std::string engine_name = plist_->get<std::string>("engine");
     std::string engine_inputfile = plist_->get<std::string>("engine input file");
-    bgc_engine_ = Teuchos::rcp(new EcoSIM::BGCEngine(engine_name, engine_inputfile));
+    bgc_engine_ = Teuchos::rcp(new BGCEngine(engine_name, engine_inputfile));
 
     //comp_names_.clear();
     //bgc_engine_->GetPrimarySpeciesNames(comp_names_);
