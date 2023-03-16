@@ -61,31 +61,31 @@ class EcoSIM : public EcoSIM {
   // is a PK
   // -- Setup data
   //virtual void Setup(const Teuchos::Ptr<State>&S);
-  virtual void Setup() override;
+  virtual void Setup() final;
 
   // -- initalize owned (dependent) variables
   //virtual void Initialize(const Teuchos::Ptr<State>& S);
-  virtual void Initialize() override;
+  virtual void Initialize() final;
 
   // --provide timestep size
-  virtual double get_dt() override {
+  virtual double get_dt() final {
     return dt_;
   }
 
-  virtual void set_dt(double dt) override {
+  virtual void set_dt(double dt) final {
     dt_ = dt;
   }
 
   // -- commit the model
   //virtual void CommitStep(double t_old, double t_new, const Teuchos::RCP<State>& S);
-  virtual void CommitStep(double t_old, double t_new, const Tag& tag) override;
+  virtual void CommitStep(double t_old, double t_new, const Tag& tag) final;
 
   // -- Update diagnostics for vis.
   //virtual void CalculateDiagnostics(const Teuchos::RCP<State>& S) {}
   //virtual void CalculateDiagnostics(const Tag& tag) override;
 
   // -- advance the model
-  virtual bool AdvanceStep(double t_old, double t_new, bool reinit) override;
+  virtual bool AdvanceStep(double t_old, double t_new, bool reinit) final;
 
   virtual std::string name(){return "EcoSIM for ATS";};
 
