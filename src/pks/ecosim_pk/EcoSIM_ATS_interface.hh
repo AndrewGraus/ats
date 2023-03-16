@@ -101,13 +101,13 @@ class EcoSIM : public EcoSIM {
            BGCProperties& props,
            BGCState& state,
            BGCAuxiliaryData& aux_data,
-         const Tag& water_tag);
+         const Tag& water_tag = Tags::DEFAULT);
 
    void CopyFromEcoSIM(const int cell,
                 const BGCProperties& props,
                 const BGCState& state,
                 const BGCAuxiliaryData& aux_data,
-              const Tag& water_tag);
+              const Tag& water_tag = Tags::DEFAULT);
 
    int InitializeSingleColumn(int col);
 
@@ -118,7 +118,7 @@ class EcoSIM : public EcoSIM {
        const BGCProperties& props,
        const BGCState& state,
        const BGCAuxiliaryData& aux_data,
-     const Tag& water_tag);
+     const Tag& water_tag = Tags::DEFAULT);
 
    void ComputeNextTimeStep();
 
