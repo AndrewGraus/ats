@@ -129,6 +129,7 @@ class EcoSIM : public PK_Physical {
   double c_m_;
   Teuchos::RCP<const AmanziMesh::Mesh> mesh_surf_; //might need this?
   Key domain_surf_;
+  std::string passwd_ = "state";
 
   //The helper functions from BGC are protected not private (unclear why)
   //I don't think I need this here, probably in the engine
