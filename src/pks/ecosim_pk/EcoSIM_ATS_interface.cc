@@ -7,7 +7,7 @@
 
   --------------------------------------------------------------------------*/
 
-/*#include <algorithm>
+#include <algorithm>
 #include <set>
 #include <string>
 
@@ -23,7 +23,7 @@
 #include "exceptions.hh"
 #include "Mesh.hh"
 
-#include "pk_helpers.hh"*/
+#include "pk_helpers.hh"
 #include "EcoSIM_ATS_interface.hh"
 
 namespace Amanzi {
