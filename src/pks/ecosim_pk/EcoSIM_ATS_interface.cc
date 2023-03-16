@@ -471,7 +471,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
 
 // helper function for pushing field to column
 void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
-                               double* col_vec)
+                               Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
   auto& col_iter = mesh_->cells_of_column(col);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
@@ -484,7 +484,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
 // cell by cell in alquimia
 
 void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
-                               double* col_vec)
+                               Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
   auto& col_iter = mesh_->cells_of_column(col);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
