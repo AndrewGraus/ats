@@ -89,6 +89,8 @@ class EcoSIM : public EcoSIM {
 
   virtual std::string name(){return "EcoSIM for ATS";};
 
+  Teuchos::RCP<EcoSIM::BGCEngine> bgc_engine() { return chem_engine_; }
+
   /*void CopyToEcoSIM(int col,
           BGCProperties& props,
           BGCState& state,
@@ -170,7 +172,7 @@ class EcoSIM : public EcoSIM {
   Key min_vol_frac_key_;
   Key ecosim_aux_data_key_;
 
-  //Teuchos::RCP<EcoSIM::BGCEngine> bgc_engine_;
+  Teuchos::RCP<EcoSIM::BGCEngine> bgc_engine_;
 
  private:
   BGCState bgc_state_;
