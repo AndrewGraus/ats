@@ -148,6 +148,7 @@ class EcoSIM : public PK_Physical {
   //Teuchos::RCP<PrimaryVariableFieldEvaluator> p_root_eval_;
 
   int number_aqueous_components_;
+  int num_components_;  
   int ncells_per_col_;
   int num_cols_;
   double saved_time_;

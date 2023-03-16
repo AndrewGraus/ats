@@ -614,26 +614,26 @@ void EcoSIM::CopyToEcoSIM(int col,
   // automatically, but I just want to test this for now
 
   for (int i=0; i < ncells_per_col_; ++i) {
-    state.liquid_density.data[i] = col_f_dens[i];
-    state.gas_density.data[i] = col_g_dens[i];
-    state.ice_density.data[i] = col_i_dens[i];
-    state.porosity.data[i] = col_poro[i];
-    state.water_content.data[i] = col_wc[i];
-    state.temperature.data[i] = col_temp[i];
+    state.fluid_density.data[i] = (*col_f_dens)[i];
+    state.gas_density.data[i] = (*col_g_dens)[i];
+    state.ice_density.data[i] = (*col_i_dens)[i];
+    state.porosity.data[i] = (*col_poro)[i];
+    state.water_content.data[i] = (*col_wc)[i];
+    state.temperature.data[i] = (*col_temp)[i];
 
-    props.liquid_saturation.data[i] = col_l_sat[i];
-    props.gas_saturation.data[i] = col_g_sat[i];
-    props.ice_saturation.data[i] = col_i_sat[i];
-    props.elevation.data[i] = col_elev[i];
-    props.relative_permeability.data[i] = col_rel_perm[i];
-    props.conductivity.data[i] = col_cond[i];
-    props.volume.data[i] = col_vol[i];
+    props.liquid_saturation.data[i] = (*col_l_sat)[i];
+    props.gas_saturation.data[i] = (*col_g_sat)[i];
+    props.ice_saturation.data[i] = (*col_i_sat)[i];
+    props.elevation.data[i] = (*col_elev)[i];
+    props.relative_permeability.data[i] = (*col_rel_perm)[i];
+    props.conductivity.data[i] = (*col_cond)[i];
+    props.volume.data[i] = (*col_vol)[i];
 
   }
   //mat_props.volume = mesh_->cell_volume(cell;z
   //mat_props.saturation = water_saturation[0][cell];
 
-  num_components = tcc.NumVectors();
+  num_components_ = tcc.NumVectors();
 
   //This probably isn't going to work. I think I either need to think
   //of a way to do this
@@ -648,10 +648,10 @@ void EcoSIM::CopyToEcoSIM(int col,
   //}
 
   // Auxiliary data -- block copy.
-  if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
+  /*if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
     aux_data_ = S_->GetW<CompositeVector>(bgc_aux_data_key_, tag_next_, passwd_).ViewComponent("cell");
-    int num_aux_ints = chem_engine_->Sizes().num_aux_integers;
-    int num_aux_doubles = chem_engine_->Sizes().num_aux_doubles;
+    int num_aux_ints = bgc_engine_->Sizes().num_aux_integers;
+    int num_aux_doubles = bgc_engine_->Sizes().num_aux_doubles;
 
     for (int i = 0; i < num_aux_ints; i++) {
       double* cell_aux_ints = (*aux_data_)[i];
@@ -661,14 +661,14 @@ void EcoSIM::CopyToEcoSIM(int col,
       double* cell_aux_doubles = (*aux_data_)[i + num_aux_ints];
       aux_data.aux_doubles.data[i] = cell_aux_doubles[cell];
     }
-  }
+  }*/
 }
 
 void EcoSIM::CopyEcoSIMStateToAmanzi(
     const int col,
     const BGCProperties& props,
     const BGCState& state,
-    const BGCAuxiliaryData& aux_data
+    const BGCAuxiliaryData& aux_data,
     const Tag& water_tag)
 {
   CopyFromEcoSIM(col, props, state, aux_data, water_tag);
