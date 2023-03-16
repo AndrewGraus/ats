@@ -114,7 +114,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     }
     std::string engine_name = plist_->get<std::string>("engine");
     std::string engine_inputfile = plist_->get<std::string>("engine input file");
-    bgc_engine_ = Teuchos::rcp(new BGCEngine::BGCEngine(engine_name, engine_inputfile));
+    bgc_engine_ = Teuchos::rcp(new EcoSIM::BGCEngine(engine_name, engine_inputfile));
 
     //comp_names_.clear();
     //bgc_engine_->GetPrimarySpeciesNames(comp_names_);
@@ -455,7 +455,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 //---------------------------------------------------------------------------
 
 // helper function for pushing field to column
-void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
+void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
         Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
   if (col_vec == Teuchos::null) {
