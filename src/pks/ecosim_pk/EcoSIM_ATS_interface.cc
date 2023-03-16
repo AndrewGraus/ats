@@ -33,7 +33,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
                const Teuchos::RCP<Teuchos::ParameterList>& global_list,
                const Teuchos::RCP<State>& S,
                const Teuchos::RCP<TreeVector>& solution):
-  PK_Physical_Default(pk_tree, global_list, S, solution),
+  PK_Physical(pk_tree, global_list, S, solution),
   PK(pk_tree, global_list, S, solution),
   ncells_per_col_(-1),
   saved_time_(0.0)
