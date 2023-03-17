@@ -443,7 +443,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
   // Compute the next time step.
   // * will we need to do this? *
-  ComputeNextTimeStep();
+  //ComputeNextTimeStep();
 
   //return failed;
 
