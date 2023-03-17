@@ -126,7 +126,7 @@ set(ats_link_libs
   ats_mpc_relations
   ats_ecosim
   ats_ecosim_data
-  ats_ecisim_relations
+  ats_ecosim_relations
   )
 
 
