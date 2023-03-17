@@ -702,7 +702,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   const auto& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", true);*/
 
   //auto& tcc = *S_->GetW<CompositeVector>(tcc_key_, water_tag, passwd_).ViewComponent("cell");
-  auto& porosity = *S_->GetPtrW<CompositeVector>(poro_key_, water_tag, passwd_).ViewComponent("cell");
+  auto& porosity = *S_->GetW<CompositeVector>(poro_key_, water_tag, passwd_).ViewComponent("cell");
   auto& liquid_saturation = *S_->GetW<CompositeVector>(saturation_liquid_key_, water_tag, passwd_).ViewComponent("cell");
   auto& gas_saturation = *S_->GetW<CompositeVector>(saturation_gas_key_, water_tag, passwd_).ViewComponent("cell");
   auto& ice_saturation = *S_->GetW<CompositeVector>(saturation_ice_key_, water_tag, passwd_).ViewComponent("cell");
