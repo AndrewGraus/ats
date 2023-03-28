@@ -222,7 +222,9 @@ void EcoSIM::Initialize() {
   }*/
 
   //Now we call the engine's init state function which allocates the data
+  std::cout << "\ninitializing BGC engine\n";
   bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_);
+  std::cout << "\engine initialized\n";
   //This function calls four separate functions from the interface:
   // AllocateAlquimiaProperties - Allocates the properties which are things
   // chemistry doesn't change
@@ -233,7 +235,8 @@ void EcoSIM::Initialize() {
   // output (probably don't need for now)
   int ierr = 0;
 
-  // Ensure dependencies are filled
+  // Ensure dependencies are fille
+  std::cout << "\nfilling dependencies\n";
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(poro_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -249,18 +252,20 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
+  std::cout << "\ndependencies filled\n";
 
   int num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
   //This is the main set up code in alquimia it loops over times and chemical conditions
   //I don't know that we need the two initial loops. I'm just including them because we might
+  std::cout << "\ninitializing column loop\n";
   for (int col=0; col!=num_cols_; ++col) {
   //FieldToColumn_(col, temp, col_temp.ptr());
   //ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
 
   //We're going to need to write an InitializeSingleColumn code
   //ierr = InitializeSingleCell(cell, condition);
-
+  std::cout << "\ninitializing column "<< col <<" \n";
   ierr = InitializeSingleColumn(col);
   //In Alquimia this function simply calls CopyToAlquimia, then
   //Calls the chemistry engine and enforces condition, then copies
@@ -272,7 +277,7 @@ void EcoSIM::Initialize() {
   //To do this, but I think I will actually need to figure out a test
   //for this before I actually code it up
 }
-
+  std::cout << "\nfinishing initialize\n";
   // verbose message
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
