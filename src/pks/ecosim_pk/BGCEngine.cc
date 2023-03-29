@@ -177,8 +177,11 @@ void BGCEngine::InitState(BGCProperties& props,
                                 BGCState& state,
                                 BGCAuxiliaryData& aux_data)
 {
+  *vo_->os() << "Allocating prop" << std::endl;
   AllocateBGCProperties(&sizes_, &props);
+  *vo_->os() << "Allocating state" << std::endl;
   AllocateBGCState(&sizes_, &state);
+  *vo_->os() << "Allocating aux" << std::endl;
   AllocateBGCAuxiliaryData(&sizes_, &aux_data);
   //AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);
 

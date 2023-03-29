@@ -33,6 +33,7 @@
 //#include "alquimia/alquimia_interface.h"
 //#include "alquimia/alquimia_containers.h"
 #include "BGC_containers.h"
+#include "VerboseObject.hh"
 
 #ifdef __cplusplus
 extern "C" {
