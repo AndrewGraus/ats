@@ -6,13 +6,13 @@
 
 # collect all sources
 set(ats_ecosim_data_src_files
-  BGC_constants.c
-  BGC_memory.c
+  BGC_constants.cc
+  BGC_memory.cc
 )
 set(ats_ecosim_data_inc_files
-  BGC_constants.h
-  BGC_containers.h
-  BGC_memory.h
+  BGC_constants.hh
+  BGC_containers.hh
+  BGC_memory.hh
 )
 
 set(ats_ecosim_data_link_libs

@@ -28,7 +28,7 @@
 */
 
 
-#include "BGC_constants.h"
+#include "BGC_constants.hh"
 
 /* String lengths */
 const int kBGCMaxStringLength = 512;

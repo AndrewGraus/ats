@@ -20,9 +20,9 @@
 #include <vector>
 #include <map>
 
-#include "BGC_memory.h"
-#include "BGC_containers.h"
-#include "BGC_constants.h"
+#include "BGC_memory.hh"
+#include "BGC_containers.hh"
+#include "BGC_constants.hh"
 /*#include "alquimia/alquimia_util.h"
 #include "alquimia/alquimia_constants.h"
 #include "alquimia/alquimia_containers.h"
