@@ -30,7 +30,6 @@
 #ifndef BGC_C_MEMORY_H_
 #define BGC_C_MEMORY_H_
 
-#include <string>
 //#include "alquimia/alquimia_interface.h"
 //#include "alquimia/alquimia_containers.h"
 #include "BGC_containers.h"
