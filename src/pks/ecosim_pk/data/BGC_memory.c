@@ -154,17 +154,17 @@ void AllocateBGCState(const BGCSizes* const sizes,
                            BGCState* state)*/
 
 void AllocateBGCState(const BGCSizes* const sizes, BGCState* state) {
-  *vo_->os() << "Allocating State vectors with size" << ncells_per_col_ << std::endl;
+  std::cout << "Allocating State vectors with size" << ncells_per_col_ << std::endl;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->fluid_density));
 
-  *vo_->os() << "Finish fluid density" << std::endl;
+  std::cout << "Finish fluid density" << std::endl;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->gas_density));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->ice_density));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->porosity));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->water_content));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->temperature));
 
-  *vo_->os() << "Finished state allocation" <<  std::endl;
+  std::cout << "Finished state allocation" <<  std::endl;
   //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
 }  /* end AllocateAlquimiaState() */
@@ -209,16 +209,16 @@ void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
  *******************************************************************************/
 
 void AllocateBGCProperties(const BGCSizes* const sizes, BGCProperties* props) {
-  *vo_->os() << "Allocating Prop vectors with size" << ncells_per_col_ << std::endl;
+  std::cout << "Allocating Prop vectors with size" << ncells_per_col_ << std::endl;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->liquid_saturation));
-  *vo_->os() << "finished liquid sat" << std::endl;
+  std::cout << "finished liquid sat" << std::endl;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->gas_saturation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->ice_saturation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->elevation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->relative_permeability));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->conductivity));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->volume));
-  *vo_->os() << "prop alloc" << std::endl;
+  std::cout << "prop alloc" << std::endl;
 }  /* end AllocateAlquimiaProperties() */
 
 void FreeBGCProperties(BGCProperties* props) {
