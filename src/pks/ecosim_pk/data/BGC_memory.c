@@ -44,7 +44,8 @@
  **   we set it to NULL.
  **
  *******************************************************************************/
-
+ 
+#include <iostream>
 #include "BGC_memory.h"
 #include "BGC_containers.h"
 #include "BGC_constants.h"
