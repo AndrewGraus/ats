@@ -180,7 +180,7 @@ void BGCEngine::InitState(BGCProperties& props,
 {
   std::cout << "Allocating prop" << std::endl;
   std::cout << "size: " << ncells_per_col_ << std::endl;
-  AllocateBGCProperties(&sizes_, &props, &ncells_per_col_);
+  AllocateBGCProperties(&sizes_, &props, ncells_per_col_);
   std::cout << "Allocating state" << std::endl;
   AllocateBGCState(&sizes_, &state, &ncells_per_col_);
   std::cout << "Allocating aux" << std::endl;
