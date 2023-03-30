@@ -155,8 +155,8 @@ void AllocateBGCState(const BGCSizes* const sizes,
                            BGCState* state)*/
 
 void AllocateBGCState(const BGCSizes* const sizes, BGCState* state,
-                      int ncells_per_col_) {
-  std::cout << "Allocating State vectors with size " << ncells_per_col_ << std::endl;
+                      int* ncells_per_col_) {
+  std::cout << "Allocating State vectors with size " << *ncells_per_col_ << std::endl;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->fluid_density));
 
   std::cout << "Finish fluid density" << std::endl;

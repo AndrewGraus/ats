@@ -51,7 +51,7 @@ extern "C" {
   /* State */
   void AllocateBGCState(const BGCSizes* const sizes,
                         BGCState* state,
-                        int ncells_per_col_);
+                        int* ncells_per_col_);
   void FreeBGCState(BGCState* state);
 
   /* Auxiliary Data */
