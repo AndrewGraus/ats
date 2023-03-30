@@ -53,7 +53,8 @@ class BGCEngine {
   // Initializes the data structures that hold the chemical state information.
   void InitState(BGCProperties& props,
                  BGCState& state,
-                 BGCAuxiliaryData& aux_data);
+                 BGCAuxiliaryData& aux_data
+                int& ncells_per_col_);
 
   // Frees the data structures that hold the chemical state information.
   void FreeState(BGCProperties& props,

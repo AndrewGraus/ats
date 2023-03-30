@@ -223,7 +223,7 @@ void EcoSIM::Initialize() {
 
   //Now we call the engine's init state function which allocates the data
   std::cout << "\ninitializing BGC engine\n";
-  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_);
+  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_);
   std::cout << "\engine initialized\n";
   //This function calls four separate functions from the interface:
   // AllocateAlquimiaProperties - Allocates the properties which are things
