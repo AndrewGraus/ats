@@ -189,7 +189,7 @@ void FreeBGCState(BGCState* state) {
  *******************************************************************************/
 
 void AllocateBGCAuxiliaryData(const BGCSizes* const sizes, BGCAuxiliaryData* aux_data,
-                              const int* const ncells_per_col_) {
+                              int* ncells_per_col_) {
   AllocateBGCVectorInt(sizes->ncells_per_col_,
                             &(aux_data->aux_ints));
 
