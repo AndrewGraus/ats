@@ -176,7 +176,7 @@ BGCEngine::Sizes() const
 void BGCEngine::InitState(BGCProperties& props,
                                 BGCState& state,
                                 BGCAuxiliaryData& aux_data,
-                                int& ncells_per_col_)
+                                int ncells_per_col_)
 {
   std::cout << "Allocating prop" << std::endl;
   std::cout << "size: " << ncells_per_col_ << std::endl;
