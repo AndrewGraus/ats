@@ -70,7 +70,12 @@ static inline int nearest_power_of_2(int n)
  *******************************************************************************/
 void AllocateBGCVectorDouble(const int size, BGCVectorDouble* vector) {
   std::cout << "Allocating vector double size: " << size << std::endl;
-  std::cout << "vector" << *vector << std::endl;
+  std::cout << "vector" << vector << std::endl;
+
+  for (int j = 0; i < *vector.size(); i++){
+    std::cout << "element " << j << ": " << *vector[j] << std::endl;
+  }
+
   if (size > 0) {
     std::cout << "Allocating size" << std::endl;
     vector->size = size;
