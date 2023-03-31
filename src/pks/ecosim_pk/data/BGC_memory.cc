@@ -69,9 +69,14 @@ static inline int nearest_power_of_2(int n)
  **
  *******************************************************************************/
 void AllocateBGCVectorDouble(const int size, BGCVectorDouble* vector) {
+  std::cout << "Allocating vector double size: " << size << std::endl;
+  std::cout << "vector" << vector << std::endl;
   if (size > 0) {
+    std::cout << "Allocating size" << std::endl;
     vector->size = size;
+    std::cout << "Allocating capacity" << std::endl;
     vector->capacity = nearest_power_of_2(size);
+    std::cout << "setting data" << std::endl;
     vector->data = (double*) calloc((size_t)vector->capacity, sizeof(double));
     //ALQUIMIA_ASSERT(NULL != vector->data);
   } else {
