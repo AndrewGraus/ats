@@ -51,19 +51,19 @@ extern "C" {
   /* State */
   void AllocateBGCState(const BGCSizes* const sizes,
                         BGCState* state,
-                        int* ncells_per_col_);
+                        int ncells_per_col_);
   void FreeBGCState(BGCState* state);
 
   /* Auxiliary Data */
   void AllocateBGCAuxiliaryData(const BGCSizes* const sizes,
                                 BGCAuxiliaryData* aux_data,
-                                int* ncells_per_col_);
+                                int ncells_per_col_);
   void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data);
 
   /* Properties */
   void AllocateBGCProperties(const BGCSizes* const sizes,
                              BGCProperties* props,
-                             int* ncells_per_col_);
+                             int ncells_per_col_);
   void FreeBGCProperties(BGCProperties* props);
 
   // Problem Meta Data
