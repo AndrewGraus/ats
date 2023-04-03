@@ -569,7 +569,7 @@ void EcoSIM::CopyToEcoSIM(int col,
 {
   //Fill state with ATS variables that are going to be changed by EcoSIM
   //NEED TO DECIDE WHICH PROPERTIES GO WHERE
-  std::cout << "\viewing components\n";
+  std::cout << "\nviewing components\n";
   const auto& tcc = *S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", true);
   const auto& porosity = *S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", true);
   const auto& liquid_saturation = *S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", true);
@@ -587,7 +587,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   const auto& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", true);
 
   //Define the column vectors to hold the data
-  std::cout << "\ncreating column vectors\n";
+  std::cout << "\ncreating column vectors with size: "<< ncells_per_col_ <<\n";
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
