@@ -49,7 +49,7 @@ extern "C" {
   void FreeBGCVectorString(BGCVectorString* vector);
 
   /* State */
-  void AllocateBGCState(const BGCSizes* const sizes,
+  void AllocateBGCState(BGCSizes* sizes,
                         BGCState* state,
                         int ncells_per_col_);
   void FreeBGCState(BGCState* state);
@@ -61,7 +61,7 @@ extern "C" {
   void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data);
 
   /* Properties */
-  void AllocateBGCProperties(const BGCSizes* const sizes,
+  void AllocateBGCProperties(BGCSizes* sizes,
                              BGCProperties* props,
                              int ncells_per_col_);
   void FreeBGCProperties(BGCProperties* props);

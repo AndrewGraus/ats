@@ -71,11 +71,11 @@ static inline int nearest_power_of_2(int n)
 void AllocateBGCVectorDouble(const int size, BGCVectorDouble* vector) {
   std::cout << "Allocating vector double size: " << size << std::endl;
   std::cout << "vector" << vector << std::endl;
-
+  /*
   for (int j = 0; j < *vector->size; j++){
     std::cout << "element " << j << ": " << *vector[j] << std::endl;
   }
-
+  */
   if (size > 0) {
     std::cout << "Allocating size" << std::endl;
     vector->size = size;
@@ -164,7 +164,7 @@ For reference the old function call was:
 void AllocateBGCState(const BGCSizes* const sizes,
                            BGCState* state)*/
 
-void AllocateBGCState(const BGCSizes* const sizes, BGCState* state,
+void AllocateBGCState(BGCSizes* sizes, BGCState* state,
                       int ncells_per_col_) {
   std::cout << "Allocating State vectors with size " << ncells_per_col_ << std::endl;
   sizes.ncells_per_col_ = ncells_per_col_;
@@ -222,9 +222,11 @@ void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
  **
  *******************************************************************************/
 
-void AllocateBGCProperties(const BGCSizes* const sizes, BGCProperties* props,
+void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* props,
                           int ncells_per_col_) {
   std::cout << "Allocating Prop vectors with size" << ncells_per_col_ << std::endl;
+  sizes.ncells_per_col_ = ncells_per_col_;
+
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->liquid_saturation));
   std::cout << "finished liquid sat" << std::endl;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->gas_saturation));
