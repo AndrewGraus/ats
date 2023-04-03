@@ -167,7 +167,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
 void AllocateBGCState(BGCSizes* sizes, BGCState* state,
                       int ncells_per_col_) {
   std::cout << "Allocating State vectors with size " << ncells_per_col_ << std::endl;
-  sizes.ncells_per_col_ = ncells_per_col_;
+  sizes->ncells_per_col_ = ncells_per_col_;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->fluid_density));
 
   std::cout << "Finish fluid density" << std::endl;
@@ -225,7 +225,7 @@ void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
 void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* props,
                           int ncells_per_col_) {
   std::cout << "Allocating Prop vectors with size" << ncells_per_col_ << std::endl;
-  sizes.ncells_per_col_ = ncells_per_col_;
+  sizes->ncells_per_col_ = ncells_per_col_;
 
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->liquid_saturation));
   std::cout << "finished liquid sat" << std::endl;
