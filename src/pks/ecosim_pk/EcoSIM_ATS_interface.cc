@@ -57,6 +57,9 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     //exist:
     //
     // mass_density_ice
+    // mass_gas_density
+    //
+    //
     // transport
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
 
@@ -79,7 +82,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
 
     liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
     ice_den_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
-    gas_den_key_ = Keys::readKey(*plist_, domain_,"gas mass density", "mass_density_gas");
+    gas_den_key_ = Keys::readKey(*plist_, domain_,"porosity", "porosity");
     rock_den_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
 
     //energy
