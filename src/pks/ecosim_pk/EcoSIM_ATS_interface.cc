@@ -51,6 +51,12 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // /src/constitutive_relations/column_integrators/ but I don't see it used
     // anywhere can we just use it here?
 
+
+    //For now a few of the evaluators don't work because they are no initialized
+    // I've commented out elevation and replaced others with something that does
+    //exist:
+    //
+    // mass_density_ice
     // transport
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
 
@@ -72,7 +78,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // f_ice = S_ice * porosity
 
     liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
-    ice_den_key_ = Keys::readKey(*plist_, domain_, "ice mass density", "mass_density_ice");
+    ice_den_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
     gas_den_key_ = Keys::readKey(*plist_, domain_,"gas mass density", "mass_density_gas");
     rock_den_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
 
