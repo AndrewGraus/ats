@@ -72,7 +72,7 @@ void AllocateBGCVectorDouble(const int size, BGCVectorDouble* vector) {
   std::cout << "Allocating vector double size: " << size << std::endl;
   std::cout << "vector" << vector << std::endl;
 
-  for (int j = 0; i < *vector.size(); i++){
+  for (int j = 0; j < *vector->size; j++){
     std::cout << "element " << j << ": " << *vector[j] << std::endl;
   }
 
@@ -167,6 +167,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
 void AllocateBGCState(const BGCSizes* const sizes, BGCState* state,
                       int ncells_per_col_) {
   std::cout << "Allocating State vectors with size " << ncells_per_col_ << std::endl;
+  sizes.ncells_per_col_ = ncells_per_col_;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->fluid_density));
 
   std::cout << "Finish fluid density" << std::endl;
