@@ -613,6 +613,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   //FieldToColumn_(col,tcc,col_tcc.ptr());
   std::cout << "\nCopying Amanzi field to column vector\n";
   FieldToColumn_(col,porosity,col_poro.ptr());
+  std::cout << "\npushed first column\n";
   FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
   FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
   FieldToColumn_(col,ice_saturation,col_i_sat.ptr());
