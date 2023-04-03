@@ -476,9 +476,12 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
   if (col_vec == Teuchos::null) {
     col_vec = Teuchos::ptr(new Epetra_SerialDenseVector(ncells_per_col_));
   }
-
+  std::cout << "\ncol: "<< col <<""\n";
   auto& col_iter = mesh_->cells_of_column(col);
+  std::cout << "\ncol_iter: "<< col_iter.size() <<""\n";
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
+    std::cout << "\col_vec: "<< col_vec[i] <<""\n";
+    std::cout << "\vec col_vec: "<< vec[col_iter[i]] <<""\n";
     (*col_vec)[i] = *vec[col_iter[i]];
   }
 }
