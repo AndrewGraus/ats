@@ -59,7 +59,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     saturation_liquid_key_ = Keys::readKey(*plist_, domain_, "saturation liquid", "saturation_liquid");
     saturation_gas_key_ = Keys::readKey(*plist_,domain_,"saturation gas", "saturation_gas");
     saturation_ice_key_ = Keys::readKey(*plist_,domain_,"saturation ice", "saturation_ice");
-    elev_key_ = Keys::readKey(*plist_, domain_, "elevation", "elevation");
+    //elev_key_ = Keys::readKey(*plist_, domain_, "elevation", "elevation");
     water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
     rel_perm_key_ = Keys::readKey(*plist_,domain_,"relative permeabiilty","relative_permeability");
 
@@ -243,7 +243,7 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_ice_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -327,7 +327,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_ice_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -372,9 +372,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& ice_saturation = *S_->Get<CompositeVector>("saturation_ice", tag_next_)
           .ViewComponent("cell",false);
 
-  S_->GetEvaluator("elevation", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("elevation", tag_next_)
-          .ViewComponent("cell",false);
+  //S_->GetEvaluator("elevation", tag_next_).Update(*S_, name_);
+  //const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("elevation", tag_next_)
+  //        .ViewComponent("cell",false);
 
   S_->GetEvaluator("water_content", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& water_content = *S_->Get<CompositeVector>("water_content", tag_next_)
@@ -565,7 +565,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   const auto& liquid_saturation = *S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", true);
   const auto& gas_saturation = *S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", true);
   const auto& ice_saturation = *S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", true);
-  const auto& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", true);
+  //const auto& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", true);
   const auto& water_content = *S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", true);
   const auto& relative_permeability = *S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", true);
   const auto& liquid_density = *S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", true);
@@ -582,7 +582,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_elev = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  //auto col_elev = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_f_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -603,7 +603,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
   FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
   FieldToColumn_(col,ice_saturation,col_i_sat.ptr());
-  FieldToColumn_(col,elevation,col_elev.ptr());
+  //FieldToColumn_(col,elevation,col_elev.ptr());
   FieldToColumn_(col,water_content,col_wc.ptr());
   FieldToColumn_(col,relative_permeability,col_rel_perm.ptr());
   FieldToColumn_(col,liquid_density,col_f_dens.ptr());
@@ -629,7 +629,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     props.liquid_saturation.data[i] = (*col_l_sat)[i];
     props.gas_saturation.data[i] = (*col_g_sat)[i];
     props.ice_saturation.data[i] = (*col_i_sat)[i];
-    props.elevation.data[i] = (*col_elev)[i];
+    //props.elevation.data[i] = (*col_elev)[i];
     props.relative_permeability.data[i] = (*col_rel_perm)[i];
     props.conductivity.data[i] = (*col_cond)[i];
     props.volume.data[i] = (*col_vol)[i];
@@ -712,7 +712,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto& liquid_saturation = *S_->GetW<CompositeVector>(saturation_liquid_key_, water_tag, passwd_).ViewComponent("cell");
   auto& gas_saturation = *S_->GetW<CompositeVector>(saturation_gas_key_, water_tag, passwd_).ViewComponent("cell");
   auto& ice_saturation = *S_->GetW<CompositeVector>(saturation_ice_key_, water_tag, passwd_).ViewComponent("cell");
-  auto& elevation = *S_->GetW<CompositeVector>(elev_key_, water_tag, passwd_).ViewComponent("cell");
+  //auto& elevation = *S_->GetW<CompositeVector>(elev_key_, water_tag, passwd_).ViewComponent("cell");
   auto& water_content = *S_->GetW<CompositeVector>(water_content_key_, water_tag, passwd_).ViewComponent("cell");
   auto& relative_permeability = *S_->GetW<CompositeVector>(rel_perm_key_, water_tag, passwd_).ViewComponent("cell");
   auto& liquid_density = *S_->GetW<CompositeVector>(liquid_den_key_, water_tag, passwd_).ViewComponent("cell");
@@ -729,7 +729,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_elev = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  //auto col_elev = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_f_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -753,7 +753,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_l_sat)[i] = props.liquid_saturation.data[i];
     (*col_g_sat)[i] = props.gas_saturation.data[i];
     (*col_i_sat)[i] = props.ice_saturation.data[i];
-    (*col_elev)[i] = props.elevation.data[i];
+    //(*col_elev)[i] = props.elevation.data[i];
     (*col_rel_perm)[i] = props.relative_permeability.data[i];
     (*col_cond)[i] = props.conductivity.data[i];
     (*col_vol)[i] = props.volume.data[i];
@@ -787,7 +787,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,liquid_saturation,col_l_sat.ptr());
   ColumnToField_(col,gas_saturation,col_g_sat.ptr());
   ColumnToField_(col,ice_saturation,col_i_sat.ptr());
-  ColumnToField_(col,elevation,col_elev.ptr());
+  //ColumnToField_(col,elevation,col_elev.ptr());
   ColumnToField_(col,water_content,col_wc.ptr());
   ColumnToField_(col,relative_permeability,col_rel_perm.ptr());
   ColumnToField_(col,liquid_density,col_f_dens.ptr());
