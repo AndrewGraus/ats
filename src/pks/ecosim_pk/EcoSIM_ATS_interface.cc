@@ -569,6 +569,7 @@ void EcoSIM::CopyToEcoSIM(int col,
 {
   //Fill state with ATS variables that are going to be changed by EcoSIM
   //NEED TO DECIDE WHICH PROPERTIES GO WHERE
+  std::cout << "\viewing components\n";
   const auto& tcc = *S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", true);
   const auto& porosity = *S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", true);
   const auto& liquid_saturation = *S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", true);
@@ -586,6 +587,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   const auto& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", true);
 
   //Define the column vectors to hold the data
+  std::cout << "\ncreating column vectors\n";
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -608,6 +610,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   //FieldToColumn_(column index, dataset to copy from, vector to put the data in)
 
   //FieldToColumn_(col,tcc,col_tcc.ptr());
+  std::cout << "\nCopying Amanzi field to column vector\n";
   FieldToColumn_(col,porosity,col_poro.ptr());
   FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
   FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
@@ -627,7 +630,9 @@ void EcoSIM::CopyToEcoSIM(int col,
   // structures. Eventually I could probably rewrite FieldToColumn_ to do this
   // automatically, but I just want to test this for now
 
+  std::cout << "\nlooping over cells and copying to EcoSIM data structure\n";
   for (int i=0; i < ncells_per_col_; ++i) {
+    std::cout << "\nlooping through cell " << i << "\n";
     state.fluid_density.data[i] = (*col_f_dens)[i];
     state.gas_density.data[i] = (*col_g_dens)[i];
     state.ice_density.data[i] = (*col_i_dens)[i];
@@ -644,6 +649,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     props.volume.data[i] = (*col_vol)[i];
 
   }
+  std::cout << "\nFinished loop\n";
   //mat_props.volume = mesh_->cell_volume(cell;z
   //mat_props.saturation = water_saturation[0][cell];
 
@@ -817,13 +823,15 @@ int EcoSIM::InitializeSingleColumn(int col)
 {
   // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
   // should use the same tag as transport.  See #673
+  std::cout << "\nCopying to EcoSIM\n";
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+  std::cout << "\nFinished Copying to EcoSIM\n";
 
   //bgc_engine_->EnforceCondition(condition, current_time_, bgc_props_,
   //        bgc_state_, bgc_aux_data_);
-
+  std::cout << "\nCopying back to Amanzi\n";
   CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
-
+  std::cout << "\nFinished copying to Amanzi\n";
 
   // ETC: hacking to get consistent solution -- if there is no water
   // (e.g. surface system, we still need to call EnforceCondition() as it also
