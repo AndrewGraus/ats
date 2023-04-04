@@ -480,17 +480,9 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
   auto& col_iter = mesh_->cells_of_column(col);
   std::cout << "\ncol_iter: "<< col_iter.size() <<"\n";
 
-  if (col_vec == nullptr) {
-    std::cout << "Error col_vec pointer is null\n";
-  }
-
-  if (vec == nullptr) {
-    std::cout << "Error vec pointer is null\n";
-  }
-
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
 
-    if (i >= col_vec->size()) {
+    if (i >= col_vec->Size()) {
       std::cout << "Error: index " << i << " is out of bounds for col_vec\n";
     }
 
