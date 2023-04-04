@@ -482,7 +482,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
 
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
 
-    if (i >= col_vec->Size()) {
+    if (i >= col_vec->Length()) {
       std::cout << "Error: index " << i << " is out of bounds for col_vec\n";
     }
 
