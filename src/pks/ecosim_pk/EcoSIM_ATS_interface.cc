@@ -598,6 +598,8 @@ void EcoSIM::CopyToEcoSIM(int col,
   const auto& gas_density = *S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", true);
   const auto& rock_density = *S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", true);
   const auto& temp = *S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", true);
+  //const Epetra_MultiVector& temp = *S_->Get<CompositeVector>("temperature", tag_next_).ViewComponent("cell", false);
+
   const auto& conductivity = *S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", true);
   const auto& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", true);
 
@@ -627,21 +629,21 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   //FieldToColumn_(col,tcc,col_tcc.ptr());
   std::cout << "\nCopying Amanzi field to column vector\n";
-  FieldToColumn_(col,porosity,col_poro.ptr());
+  FieldToColumn_(col,*porosity(0),col_poro.ptr());
   std::cout << "\npushed first column\n";
-  FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
-  FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
-  FieldToColumn_(col,ice_saturation,col_i_sat.ptr());
+  FieldToColumn_(col,*liquid_saturation(0),col_l_sat.ptr());
+  FieldToColumn_(col,*gas_saturation(0),col_g_sat.ptr());
+  FieldToColumn_(col,*ice_saturation(0),col_i_sat.ptr());
   //FieldToColumn_(col,elevation,col_elev.ptr());
-  FieldToColumn_(col,water_content,col_wc.ptr());
-  FieldToColumn_(col,relative_permeability,col_rel_perm.ptr());
-  FieldToColumn_(col,liquid_density,col_f_dens.ptr());
-  FieldToColumn_(col,ice_density,col_i_dens.ptr());
-  FieldToColumn_(col,gas_density,col_g_dens.ptr());
-  FieldToColumn_(col,rock_density,col_r_dens.ptr());
-  FieldToColumn_(col,temp, col_temp.ptr());
-  FieldToColumn_(col,conductivity,col_cond.ptr());
-  FieldToColumn_(col,cell_volume,col_vol.ptr());
+  FieldToColumn_(col,*water_content(0),col_wc.ptr());
+  FieldToColumn_(col,*relative_permeability(0),col_rel_perm.ptr());
+  FieldToColumn_(col,*liquid_density(0),col_f_dens.ptr());
+  FieldToColumn_(col,*ice_density(0),col_i_dens.ptr());
+  FieldToColumn_(col,*gas_density(0),col_g_dens.ptr());
+  FieldToColumn_(col,*rock_density(0),col_r_dens.ptr());
+  FieldToColumn_(col,*temp(0), col_temp.ptr());
+  FieldToColumn_(col,*conductivity(0),col_cond.ptr());
+  FieldToColumn_(col,*cell_volume(0),col_vol.ptr());
 
   // I think I need to loop over the column data and save it to the data
   // structures. Eventually I could probably rewrite FieldToColumn_ to do this
