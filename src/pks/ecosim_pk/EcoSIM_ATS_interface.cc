@@ -270,23 +270,23 @@ void EcoSIM::Initialize() {
   //I don't know that we need the two initial loops. I'm just including them because we might
   std::cout << "\ninitializing column loop\n";
   for (int col=0; col!=num_cols_; ++col) {
-  //FieldToColumn_(col, temp, col_temp.ptr());
-  //ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
+    //FieldToColumn_(col, temp, col_temp.ptr());
+    //ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
 
-  //We're going to need to write an InitializeSingleColumn code
-  //ierr = InitializeSingleCell(cell, condition);
-  std::cout << "\ninitializing column "<< col <<" \n";
-  ierr = InitializeSingleColumn(col);
-  //In Alquimia this function simply calls CopyToAlquimia, then
-  //Calls the chemistry engine and enforces condition, then copies
-  //From Alquimia to Amanzi
-  //
-  //The copy to alquimia function takes the cell index, because it
-  //is assigning things cell by cell in state. For colums this will
-  //be a bit trickier I THINK we could use the FieldToColumn_ function
-  //To do this, but I think I will actually need to figure out a test
-  //for this before I actually code it up
-}
+    //We're going to need to write an InitializeSingleColumn code
+    //ierr = InitializeSingleCell(cell, condition);
+    std::cout << "\ninitializing column "<< col <<" \n";
+    ierr = InitializeSingleColumn(col);
+    //In Alquimia this function simply calls CopyToAlquimia, then
+    //Calls the chemistry engine and enforces condition, then copies
+    //From Alquimia to Amanzi
+    //
+    //The copy to alquimia function takes the cell index, because it
+    //is assigning things cell by cell in state. For colums this will
+    //be a bit trickier I THINK we could use the FieldToColumn_ function
+    //To do this, but I think I will actually need to figure out a test
+    //for this before I actually code it up
+  }
   std::cout << "\nfinishing initialize\n";
   // verbose message
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
@@ -470,12 +470,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 //---------------------------------------------------------------------------
 
 // helper function for pushing field to column
-void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
-       Epetra_SerialDenseVector& col_vec)
+void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
+       Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
-  if (col_vec == Teuchos::null) {
-    col_vec = Teuchos::ptr(new Epetra_SerialDenseVector(ncells_per_col_));
-  }
   std::cout << "\ncol: "<< col <<"\n";
   auto& col_iter = mesh_->cells_of_column(col);
   std::cout << "\ncol_iter: "<< col_iter.size() <<"\n";
@@ -489,7 +486,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
 
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
 
-    if (i >= col_vec->Length()) {
+    if (i >= col_vec.Length()) {
       std::cout << "Error: index " << i << " is out of bounds for col_vec\n";
     }
 
@@ -499,11 +496,11 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
       std::cout << "Error: index " << vec_index << " is out of bounds for vec\n";
     }
 
-    std::cout << "col_vec[" << i << "]: " << (*col_vec)[i] << "\n";
+    std::cout << "col_vec[" << i << "]: " << col_vec[i] << "\n";
     std::cout << "vec[" << vec_index << "]: " << vec[vec_index] << "\n";
 
     //(*col_vec)[i] = vec[vec_index];
-    col_vec[i] = vec[vec_index];
+    (*col_vec)[i] = vec[vec_index];
   }
 }
 
@@ -596,24 +593,23 @@ void EcoSIM::CopyToEcoSIM(int col,
   std::cout << "\nviewing components\n";
   //Might need to switch
   //const Epetra_MultiVector& temp also set ViewComponent to false
-  const Epetra_Vector& porosity = S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& tcc = *(*S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_Vector& water_content = *(*S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& relative_permeability = *(*S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& liquid_density = *(*S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& rock_density = *(*S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& temp = *S_->Get<CompositeVector>("temperature", tag_next_).ViewComponent("cell", false);
 
-  const Epetra_MultiVector& tcc = *(*S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
-  //const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& liquid_density = *(*S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& gas_density = *(*S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& rock_density = *(*S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
-  //const Epetra_MultiVector& temp = *S_->Get<CompositeVector>("temperature", tag_next_).ViewComponent("cell", false);
-
-  const Epetra_MultiVector& conductivity = *(*S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& cell_volume = *(*S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& conductivity = *(*S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false))(0);
 
   //Define the column vectors to hold the data
   std::cout << "\ncreating column vectors with size: "<< ncells_per_col_ << "\n";
@@ -641,7 +637,7 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   //FieldToColumn_(col,tcc,col_tcc.ptr());
   std::cout << "\nCopying Amanzi field to column vector\n";
-  FieldToColumn_(col,porosity,col_poro);
+  FieldToColumn_(col,porosity,col_poro.ptr());
   std::cout << "\npushed first column\n";
   FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
   FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
