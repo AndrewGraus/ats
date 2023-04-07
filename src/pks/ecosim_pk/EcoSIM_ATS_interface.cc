@@ -366,60 +366,60 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   //Do I need to update everything here?
 
   S_->GetEvaluator("porosity", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& porosity = *S_->Get<CompositeVector>("porosity", tag_next_)
-      .ViewComponent("cell",false);
+  const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>("porosity", tag_next_)
+      .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("saturation_liquid", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& liquid_saturation = *S_->Get<CompositeVector>("saturation_liquid", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& *(liquid_saturation = *(*S_->Get<CompositeVector>("saturation_liquid", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("saturation_gas", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& gas_saturation = *S_->Get<CompositeVector>("saturation_gas", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& gas_saturation = *(*S_->Get<CompositeVector>("saturation_gas", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("saturation_ice", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& ice_saturation = *S_->Get<CompositeVector>("saturation_ice", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& ice_saturation = *(*S_->Get<CompositeVector>("saturation_ice", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   //S_->GetEvaluator("elevation", tag_next_).Update(*S_, name_);
   //const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("elevation", tag_next_)
   //        .ViewComponent("cell",false);
 
   S_->GetEvaluator("water_content", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& water_content = *S_->Get<CompositeVector>("water_content", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>("water_content", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("relatiive_permeabiilty", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& relative_permeability = *S_->Get<CompositeVector>("relative_permeabiilty", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>("relative_permeabiilty", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("mass_density_liquid", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& liquid_density = *S_->Get<CompositeVector>("mass_density_liquid", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& liquid_density = *(*S_->Get<CompositeVector>("mass_density_liquid", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("mass_density_gas", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& gas_density = *S_->Get<CompositeVector>("mass_density_gas", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& gas_density = *(*S_->Get<CompositeVector>("mass_density_gas", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("mass_density_ice", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& ice_density = *S_->Get<CompositeVector>("mass_density_ice", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& ice_density = *(*S_->Get<CompositeVector>("mass_density_ice", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("density_rock", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& rock_density = *S_->Get<CompositeVector>("density_rock", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& rock_density = *(*S_->Get<CompositeVector>("density_rock", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("temperature", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& temp = *S_->Get<CompositeVector>("temperature", tag_next_)
-      .ViewComponent("cell",false);
+  const Epetra_MultiVector& temp = *(*S_->Get<CompositeVector>("temperature", tag_next_)
+      .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("thermal_conductivity", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& conductivity = *S_->Get<CompositeVector>("thermal_conductivity", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& conductivity = *(*S_->Get<CompositeVector>("thermal_conductivity", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("cell_volume", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& cell_volume = *S_->Get<CompositeVector>("cell_volume", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& cell_volume = *(*S_->Get<CompositeVector>("cell_volume", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   //S_->GetEvaluator("pressure", tag_next_).Update(*S_, name_);
   //const Epetra_MultiVector& pres = *S_->Get<CompositeVector>("pressure", tag_next_)
@@ -430,8 +430,8 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   // surface vegetation calculations (where the subsurface's face area is more
   // correct?)
   S_->GetEvaluator("surface-cell_volume", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& scv = *S_->Get<CompositeVector>("surface-cell_volume", tag_next_)
-      .ViewComponent("cell", false);
+  const Epetra_MultiVector& scv = *(*S_->Get<CompositeVector>("surface-cell_volume", tag_next_)
+      .ViewComponent("cell", false))(0);
 
   // loop over columns and apply the model
   for (AmanziMesh::Entity_ID col=0; col!=num_cols_; ++col) {
@@ -596,23 +596,23 @@ void EcoSIM::CopyToEcoSIM(int col,
   std::cout << "\nviewing components\n";
   //Might need to switch
   //const Epetra_MultiVector& temp also set ViewComponent to false
-  const Epetra_MultiVector& tcc = *S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& porosity = *S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& liquid_saturation = *S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& gas_saturation = *S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& ice_saturation = *S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& tcc = *(*S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
   //const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& water_content = *S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& relative_permeability = *S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& liquid_density = *S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& ice_density = *S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& gas_density = *S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& rock_density = *S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& temp = *S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& liquid_density = *(*S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& gas_density = *(*S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& rock_density = *(*S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
   //const Epetra_MultiVector& temp = *S_->Get<CompositeVector>("temperature", tag_next_).ViewComponent("cell", false);
 
-  const Epetra_MultiVector& conductivity = *S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", false);
-  const Epetra_MultiVector& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& conductivity = *(*S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& cell_volume = *(*S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false))(0);
 
   //Define the column vectors to hold the data
   std::cout << "\ncreating column vectors with size: "<< ncells_per_col_ << "\n";
@@ -640,21 +640,21 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   //FieldToColumn_(col,tcc,col_tcc.ptr());
   std::cout << "\nCopying Amanzi field to column vector\n";
-  FieldToColumn_(col,*porosity(0),col_poro.ptr());
+  FieldToColumn_(col,porosity,col_poro.ptr());
   std::cout << "\npushed first column\n";
-  FieldToColumn_(col,*liquid_saturation(0),col_l_sat.ptr());
-  FieldToColumn_(col,*gas_saturation(0),col_g_sat.ptr());
-  FieldToColumn_(col,*ice_saturation(0),col_i_sat.ptr());
+  FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
+  FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
+  FieldToColumn_(col,ice_saturation,col_i_sat.ptr());
   //FieldToColumn_(col,elevation,col_elev.ptr());
-  FieldToColumn_(col,*water_content(0),col_wc.ptr());
-  FieldToColumn_(col,*relative_permeability(0),col_rel_perm.ptr());
-  FieldToColumn_(col,*liquid_density(0),col_f_dens.ptr());
-  FieldToColumn_(col,*ice_density(0),col_i_dens.ptr());
-  FieldToColumn_(col,*gas_density(0),col_g_dens.ptr());
-  FieldToColumn_(col,*rock_density(0),col_r_dens.ptr());
-  FieldToColumn_(col,*temp(0), col_temp.ptr());
-  FieldToColumn_(col,*conductivity(0),col_cond.ptr());
-  FieldToColumn_(col,*cell_volume(0),col_vol.ptr());
+  FieldToColumn_(col,water_content,col_wc.ptr());
+  FieldToColumn_(col,relative_permeability,col_rel_perm.ptr());
+  FieldToColumn_(col,liquid_density,col_f_dens.ptr());
+  FieldToColumn_(col,ice_density,col_i_dens.ptr());
+  FieldToColumn_(col,gas_density,col_g_dens.ptr());
+  FieldToColumn_(col,rock_density,col_r_dens.ptr());
+  FieldToColumn_(col,temp, col_temp.ptr());
+  FieldToColumn_(col,conductivity,col_cond.ptr());
+  FieldToColumn_(col,cell_volume,col_vol.ptr());
 
   // I think I need to loop over the column data and save it to the data
   // structures. Eventually I could probably rewrite FieldToColumn_ to do this
