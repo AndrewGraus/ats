@@ -750,20 +750,20 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   const auto& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", true);*/
 
   //auto& tcc = S_->GetPtrW<CompositeVector>(tcc_key_, water_tag, passwd_).ViewComponent("cell");
-  auto& porosity = S_->GetPtrW<CompositeVector>(poro_key_, water_tag, passwd_)->ViewComponent("cell");
-  auto& liquid_saturation = S_->GetPtrW<CompositeVector>(saturation_liquid_key_, water_tag, passwd_)->ViewComponent("cell");
-  auto& gas_saturation = S_->GetPtrW<CompositeVector>(saturation_gas_key_, water_tag, passwd_)->ViewComponent("cell");
-  auto& ice_saturation = S_->GetPtrW<CompositeVector>(saturation_ice_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector&  porosity = S_->GetPtrW<CompositeVector>(poro_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector&  liquid_saturation = S_->GetPtrW<CompositeVector>(saturation_liquid_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector& gas_saturation = S_->GetPtrW<CompositeVector>(saturation_gas_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector& ice_saturation = S_->GetPtrW<CompositeVector>(saturation_ice_key_, water_tag, passwd_)->ViewComponent("cell");
   //auto& elevation = S_->GetPtrW<CompositeVector>(elev_key_, water_tag, passwd_).ViewComponent("cell");
-  auto& water_content = S_->GetPtrW<CompositeVector>(water_content_key_, water_tag, passwd_)->ViewComponent("cell");
-  auto& relative_permeability = S_->GetPtrW<CompositeVector>(rel_perm_key_, water_tag, passwd_)->ViewComponent("cell");
-  auto& liquid_density = S_->GetPtrW<CompositeVector>(liquid_den_key_, water_tag, passwd_)->ViewComponent("cell");
-  auto& ice_density = S_->GetPtrW<CompositeVector>(ice_den_key_, water_tag, passwd_)->LViewComponent("cell");
-  auto& gas_density = S_->GetPtrW<CompositeVector>(gas_den_key_, water_tag, passwd_)->ViewComponent("cell");
-  auto& rock_density = S_->GetPtrW<CompositeVector>(rock_den_key_, water_tag, passwd_)->ViewComponent("cell");
-  auto& temp = S_->GetPtrW<CompositeVector>(T_key_, water_tag, passwd_)->ViewComponent("cell");
-  auto& conductivity = S_->GetPtrW<CompositeVector>(conductivity_key_, water_tag, passwd_)->ViewComponent("cell");
-  auto& cell_volume = S_->GetPtrW<CompositeVector>(cv_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector& water_content = S_->GetPtrW<CompositeVector>(water_content_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector& relative_permeability = S_->GetPtrW<CompositeVector>(rel_perm_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector& liquid_density = S_->GetPtrW<CompositeVector>(liquid_den_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector& ice_density = S_->GetPtrW<CompositeVector>(ice_den_key_, water_tag, passwd_)->LViewComponent("cell");
+  Epetra_Vector& gas_density = S_->GetPtrW<CompositeVector>(gas_den_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector& rock_density = S_->GetPtrW<CompositeVector>(rock_den_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector& temp = S_->GetPtrW<CompositeVector>(T_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector& conductivity = S_->GetPtrW<CompositeVector>(conductivity_key_, water_tag, passwd_)->ViewComponent("cell");
+  Epetra_Vector& cell_volume = S_->GetPtrW<CompositeVector>(cv_key_, water_tag, passwd_)->ViewComponent("cell");
 
   //I think I need to redefine this here?
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
