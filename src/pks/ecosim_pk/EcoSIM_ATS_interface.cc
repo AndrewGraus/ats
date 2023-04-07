@@ -483,6 +483,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     std::size_t vec_index = col_iter[i];
     std::cout << "for i: " << i << "vec_index: " << vec_index << "\n";
+    std::cout << "vec[" << vec_index << "]: " << vec[vec_index] << "\n";
   }
 
 
@@ -499,9 +500,10 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
     }
 
     std::cout << "col_vec[" << i << "]: " << (*col_vec)[i] << "\n";
-    std::cout << "vec[" << vec_index << "]: " << *vec[vec_index] << "\n";
+    std::cout << "vec[" << vec_index << "]: " << vec[vec_index] << "\n";
 
-    (*col_vec)[i] = *vec[vec_index];
+    //(*col_vec)[i] = vec[vec_index];
+    (*col_vec)[i] = vec[vec_index];
   }
 }
 
@@ -592,6 +594,8 @@ void EcoSIM::CopyToEcoSIM(int col,
   //Fill state with ATS variables that are going to be changed by EcoSIM
   //NEED TO DECIDE WHICH PROPERTIES GO WHERE
   std::cout << "\nviewing components\n";
+  //Might need to switch
+  //const Epetra_MultiVector& temp also set ViewComponent to false
   const auto& tcc = *S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", true);
   const auto& porosity = *S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", true);
   const auto& liquid_saturation = *S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", true);
