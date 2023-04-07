@@ -596,23 +596,23 @@ void EcoSIM::CopyToEcoSIM(int col,
   std::cout << "\nviewing components\n";
   //Might need to switch
   //const Epetra_MultiVector& temp also set ViewComponent to false
-  const auto& tcc = *S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", true);
-  const auto& porosity = *S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", true);
-  const auto& liquid_saturation = *S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", true);
-  const auto& gas_saturation = *S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", true);
-  const auto& ice_saturation = *S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", true);
-  //const auto& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", true);
-  const auto& water_content = *S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", true);
-  const auto& relative_permeability = *S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", true);
-  const auto& liquid_density = *S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", true);
-  const auto& ice_density = *S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", true);
-  const auto& gas_density = *S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", true);
-  const auto& rock_density = *S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", true);
-  const auto& temp = *S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", true);
+  const Epetra_MultiVector& tcc = *S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& porosity = *S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& liquid_saturation = *S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& gas_saturation = *S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& ice_saturation = *S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false);
+  //const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& water_content = *S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& relative_permeability = *S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& liquid_density = *S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& ice_density = *S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& gas_density = *S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& rock_density = *S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& temp = *S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false);
   //const Epetra_MultiVector& temp = *S_->Get<CompositeVector>("temperature", tag_next_).ViewComponent("cell", false);
 
-  const auto& conductivity = *S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", true);
-  const auto& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", true);
+  const Epetra_MultiVector& conductivity = *S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", false);
+  const Epetra_MultiVector& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false);
 
   //Define the column vectors to hold the data
   std::cout << "\ncreating column vectors with size: "<< ncells_per_col_ << "\n";
