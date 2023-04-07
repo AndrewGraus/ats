@@ -497,7 +497,6 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
     }
 
     std::cout << "col_vec[" << i << "]: " << (*col_vec)[i] << "\n";
-    std::cout << "col_vec[" << i << "]: " << (*col_vec)->operator[](i) << "\n";
     std::cout << "vec[" << vec_index << "]: " << vec[vec_index] << "\n";
 
     //(*col_vec)[i] = vec[vec_index];
