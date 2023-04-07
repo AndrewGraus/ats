@@ -481,12 +481,19 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
   std::cout << "\ncol_iter: "<< col_iter.size() <<"\n";
 
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
+    std::size_t vec_index = col_iter[i];
+    std::cout << "for i: " << i << "vec_index: " << vec_index << "\n";
+  }
+
+
+  for (std::size_t i=0; i!=col_iter.size(); ++i) {
 
     if (i >= col_vec->Length()) {
       std::cout << "Error: index " << i << " is out of bounds for col_vec\n";
     }
 
     std::size_t vec_index = col_iter[i];
+
     if (vec_index >= vec.MyLength()) {
       std::cout << "Error: index " << vec_index << " is out of bounds for vec\n";
     }
@@ -494,7 +501,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
     std::cout << "col_vec[" << i << "]: " << (*col_vec)[i] << "\n";
     std::cout << "vec[" << vec_index << "]: " << *vec[vec_index] << "\n";
 
-    (*col_vec)[i] = *vec[col_iter[i]];
+    (*col_vec)[i] = *vec[vec_index];
   }
 }
 
