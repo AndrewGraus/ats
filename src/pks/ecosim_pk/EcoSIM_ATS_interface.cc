@@ -370,7 +370,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
       .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("saturation_liquid", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& *(liquid_saturation = *(*S_->Get<CompositeVector>("saturation_liquid", tag_next_)
+  const Epetra_MultiVector& liquid_saturation = *(*S_->Get<CompositeVector>("saturation_liquid", tag_next_)
           .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("saturation_gas", tag_next_).Update(*S_, name_);
@@ -471,7 +471,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
 // helper function for pushing field to column
 void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
-        Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
+       Epetra_SerialDenseVector& col_vec)
 {
   if (col_vec == Teuchos::null) {
     col_vec = Teuchos::ptr(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -503,7 +503,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector&
     std::cout << "vec[" << vec_index << "]: " << vec[vec_index] << "\n";
 
     //(*col_vec)[i] = vec[vec_index];
-    (*col_vec)[i] = vec[vec_index];
+    col_vec[i] = vec[vec_index];
   }
 }
 
@@ -596,8 +596,9 @@ void EcoSIM::CopyToEcoSIM(int col,
   std::cout << "\nviewing components\n";
   //Might need to switch
   //const Epetra_MultiVector& temp also set ViewComponent to false
+  const Epetra_Vector& porosity = S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false);
+
   const Epetra_MultiVector& tcc = *(*S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_MultiVector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_MultiVector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_MultiVector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
@@ -616,9 +617,9 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   //Define the column vectors to hold the data
   std::cout << "\ncreating column vectors with size: "<< ncells_per_col_ << "\n";
-  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  std::cout << "\ncreated first column\n";
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  std::cout << "\ncreated first column\n";
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -640,7 +641,7 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   //FieldToColumn_(col,tcc,col_tcc.ptr());
   std::cout << "\nCopying Amanzi field to column vector\n";
-  FieldToColumn_(col,porosity,col_poro.ptr());
+  FieldToColumn_(col,porosity,col_poro);
   std::cout << "\npushed first column\n";
   FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
   FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
