@@ -331,6 +331,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   // Ensure dependencies are filled
   // Fix this from DEFAULT, see amanzi/amanzi#646 --etc
   // Update all dependencies again
+  std::cout << "\nupdating dependencies\n";
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(poro_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -364,7 +365,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   Epetra_MultiVector& trans = *S_->GetW<CompositeVector>(trans_key_, tag_next_, name_)
       .ViewComponent("cell",false);*/
   //Do I need to update everything here?
-
+  std::cout << "\nGrabbing evaluators\n";
   S_->GetEvaluator("porosity", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>("porosity", tag_next_)
       .ViewComponent("cell",false))(0);
@@ -434,6 +435,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
       .ViewComponent("cell", false))(0);
 
   // loop over columns and apply the model
+  std::cout << "\nBegining advance loop\n";
   for (AmanziMesh::Entity_ID col=0; col!=num_cols_; ++col) {
 
     auto& col_iter = mesh_->cells_of_column(col);
@@ -447,8 +449,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
     //           *temp_c, *pres_c, *depth_c, *dz_c,
     //           pfts_[col], soil_carbon_pools_[col],
     //           co2_decomp_c, trans_c, sw_c);
-
+    std::cout << "\nAdvancing col "<< col <<"\n";
     AdvanceSingleColumn(dt, col);
+    std::cout << "\nfinished advancing column\n";
 
     //Copy back to Amanzi
 
