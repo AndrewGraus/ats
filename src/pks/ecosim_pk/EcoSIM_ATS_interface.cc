@@ -750,7 +750,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   //Teuchos::RCP<Epetra_MultiVector> porosity = S_->GetW<CompositeVector>(poro_key_, water_tag, passwd_).ViewComponent("cell", true);
 
   //Attempt 5 (ELM; this should work)
-  auto& porosity = *S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, passwd_).ViewComponent("cell",false);
+  auto& porosity = *S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false);
 
   auto& liquid_saturation = *S_->GetW<CompositeVector>(saturation_liquid_key_, water_tag, passwd_).ViewComponent("cell",false);
   auto& gas_saturation = *S_->GetW<CompositeVector>(saturation_gas_key_, water_tag, passwd_).ViewComponent("cell",false);
