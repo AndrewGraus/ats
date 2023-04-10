@@ -762,7 +762,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto& ice_density = *S_->GetW<CompositeVector>(ice_den_key_, Amanzi::Tags::NEXT, ice_den_key_).ViewComponent("cell",false);
   auto& gas_density = *S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell",false);
   auto& rock_density = *S_->GetW<CompositeVector>(rock_den_key_, Amanzi::Tags::NEXT, rock_den_key_).ViewComponent("cell",false);
-  auto& temp = *S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, name()).ViewComponent("cell",false);
+  //auto& temp = *S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, name()).ViewComponent("cell",false);
   auto& conductivity = *S_->GetW<CompositeVector>(conductivity_key_, Amanzi::Tags::NEXT, conductivity_key_).ViewComponent("cell",false);
   auto& cell_volume = *S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false);
 
@@ -779,7 +779,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_i_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  //auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
@@ -791,7 +791,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_i_dens)[i] = state.ice_density.data[i];
     (*col_poro)[i] = state.porosity.data[i];
     (*col_wc)[i] = state.water_content.data[i];
-    (*col_temp)[i] = state.temperature.data[i];
+    //(*col_temp)[i] = state.temperature.data[i];
 
     (*col_l_sat)[i] = props.liquid_saturation.data[i];
     (*col_g_sat)[i] = props.gas_saturation.data[i];
@@ -837,7 +837,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,ice_density,col_i_dens.ptr());
   ColumnToField_(col,gas_density,col_g_dens.ptr());
   ColumnToField_(col,rock_density,col_r_dens.ptr());
-  ColumnToField_(col,temp, col_temp.ptr());
+  //ColumnToField_(col,temp, col_temp.ptr());
   ColumnToField_(col,conductivity,col_cond.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
 
