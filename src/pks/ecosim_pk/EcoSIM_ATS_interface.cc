@@ -390,7 +390,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>("water_content", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("relatiive_permeabiilty", tag_next_).Update(*S_, name_);
+  S_->GetEvaluator("relative_permeabiilty", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>("relative_permeabiilty", tag_next_)
           .ViewComponent("cell",false))(0);
 
