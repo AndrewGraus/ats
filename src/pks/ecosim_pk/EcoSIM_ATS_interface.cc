@@ -750,7 +750,20 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   const auto& cell_volume = *S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", true);*/
 
   //auto& tcc = S_->GetPtrW<CompositeVector>(tcc_key_, water_tag, passwd_).ViewComponent("cell");
-  Epetra_MultiVector&  porosity = *S_->GetPtrW<CompositeVector>(poro_key_, water_tag, passwd_)->ViewComponent("cell");
+
+  //There are various ways to access data unclear which I need
+  //Attempt 1 fails
+  //Epetra_MultiVector&  porosity = *S_->GetPtrW<CompositeVector>(poro_key_, water_tag, passwd_)->ViewComponent("cell");
+
+  //Attempt 2
+  //porosity = Teuchos::rcp(new Epetra_MultiVector(*S_->Get<CompositeVector>("porosity").ViewComponent("cell", true)));
+
+  //Attempt 3
+  //porosity = S_->GetPtrW<CompositeVector>(poro_key_, water_tag, passwd_)->ViewComponent("cell", false));
+
+  //Attempt 4
+  Teuchos::RCP<Epetra_MultiVector> porosity = S_->GetW<CompositeVector>(poro_key_, water_tag, passwd_).ViewComponent("cell", true);
+
   Epetra_MultiVector&  liquid_saturation = *S_->GetPtrW<CompositeVector>(saturation_liquid_key_, water_tag, passwd_)->ViewComponent("cell");
   Epetra_MultiVector& gas_saturation = *S_->GetPtrW<CompositeVector>(saturation_gas_key_, water_tag, passwd_)->ViewComponent("cell");
   Epetra_MultiVector& ice_saturation = *S_->GetPtrW<CompositeVector>(saturation_ice_key_, water_tag, passwd_)->ViewComponent("cell");
