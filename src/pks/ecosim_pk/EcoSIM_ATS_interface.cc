@@ -518,7 +518,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
 // with any luck it's just the reverse of the above similar to how it's done
 // cell by cell in alquimia
 
-void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Epetra_MultiVector vec,
+void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Epetra_Vector& vec,
                                Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
   auto& col_iter = mesh_->cells_of_column(col);
