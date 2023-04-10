@@ -771,7 +771,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   Epetra_MultiVector& water_content = *S_->GetPtrW<CompositeVector>(water_content_key_, water_tag, passwd_)->ViewComponent("cell");
   Epetra_MultiVector& relative_permeability = *S_->GetPtrW<CompositeVector>(rel_perm_key_, water_tag, passwd_)->ViewComponent("cell");
   Epetra_MultiVector& liquid_density = *S_->GetPtrW<CompositeVector>(liquid_den_key_, water_tag, passwd_)->ViewComponent("cell");
-  Epetra_MultiVector& ice_density = *S_->GetPtrW<CompositeVector>(ice_den_key_, water_tag, passwd_)->LViewComponent("cell");
+  Epetra_MultiVector& ice_density = *S_->GetPtrW<CompositeVector>(ice_den_key_, water_tag, passwd_)->ViewComponent("cell");
   Epetra_MultiVector& gas_density = *S_->GetPtrW<CompositeVector>(gas_den_key_, water_tag, passwd_)->ViewComponent("cell");
   Epetra_MultiVector& rock_density = *S_->GetPtrW<CompositeVector>(rock_den_key_, water_tag, passwd_)->ViewComponent("cell");
   Epetra_MultiVector& temp = *S_->GetPtrW<CompositeVector>(T_key_, water_tag, passwd_)->ViewComponent("cell");
