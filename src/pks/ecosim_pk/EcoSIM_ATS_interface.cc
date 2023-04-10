@@ -70,7 +70,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     saturation_ice_key_ = Keys::readKey(*plist_,domain_,"saturation ice", "saturation_ice");
     //elev_key_ = Keys::readKey(*plist_, domain_, "elevation", "elevation");
     water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
-    rel_perm_key_ = Keys::readKey(*plist_,domain_,"relative permeabiilty","relative_permeability");
+    rel_perm_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
 
     //densities
     //If we need bulk density do we need volume fractions of each quantity?
@@ -390,8 +390,8 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>("water_content", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("relative_permeabilty", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>("relative_permeabiilty", tag_next_)
+  S_->GetEvaluator("relative_permeability", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>("relative_permeability", tag_next_)
           .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("mass_density_liquid", tag_next_).Update(*S_, name_);
