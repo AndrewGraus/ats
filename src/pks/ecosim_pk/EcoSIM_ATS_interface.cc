@@ -752,19 +752,19 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   //Attempt 5 (ELM; this should work)
   auto& porosity = *S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false);
 
-  auto& liquid_saturation = *S_->GetW<CompositeVector>(saturation_liquid_key_, water_tag, passwd_).ViewComponent("cell",false);
-  auto& gas_saturation = *S_->GetW<CompositeVector>(saturation_gas_key_, water_tag, passwd_).ViewComponent("cell",false);
-  auto& ice_saturation = *S_->GetW<CompositeVector>(saturation_ice_key_, water_tag, passwd_).ViewComponent("cell",false);
-  //auto& elevation = S_->GetPtrW<CompositeVector>(elev_key_, water_tag, passwd_).ViewComponent("cell");
-  auto& water_content = *S_->GetW<CompositeVector>(water_content_key_, water_tag, passwd_).ViewComponent("cell",false);
-  auto& relative_permeability = *S_->GetW<CompositeVector>(rel_perm_key_, water_tag, passwd_).ViewComponent("cell",false);
-  auto& liquid_density = *S_->GetW<CompositeVector>(liquid_den_key_, water_tag, passwd_).ViewComponent("cell",false);
-  auto& ice_density = *S_->GetW<CompositeVector>(ice_den_key_, water_tag, passwd_).ViewComponent("cell",false);
-  auto& gas_density = *S_->GetW<CompositeVector>(gas_den_key_, water_tag, passwd_).ViewComponent("cell",false);
-  auto& rock_density = *S_->GetW<CompositeVector>(rock_den_key_, water_tag, passwd_).ViewComponent("cell",false);
-  auto& temp = *S_->GetW<CompositeVector>(T_key_, water_tag, passwd_).ViewComponent("cell",false);
-  auto& conductivity = *S_->GetW<CompositeVector>(conductivity_key_, water_tag, passwd_).ViewComponent("cell",false);
-  auto& cell_volume = *S_->GetW<CompositeVector>(cv_key_, water_tag, passwd_).ViewComponent("cell",false);
+  auto& liquid_saturation = *S_->GetW<CompositeVector>(saturation_liquid_key_, Amanzi::Tags::NEXT, saturation_liquid_key_).ViewComponent("cell",false);
+  auto& gas_saturation = *S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell",false);
+  auto& ice_saturation = *S_->GetW<CompositeVector>(saturation_ice_key_, Amanzi::Tags::NEXT, saturation_ice_key_).ViewComponent("cell",false);
+  //auto& elevation = S_->GetPtrW<CompositeVector>(elev_key_, Amanzi::Tags::NEXT, passwd_).ViewComponent("cell");
+  auto& water_content = *S_->GetW<CompositeVector>(water_content_key_, Amanzi::Tags::NEXT, water_content_key_).ViewComponent("cell",false);
+  auto& relative_permeability = *S_->GetW<CompositeVector>(rel_perm_key_, Amanzi::Tags::NEXT, rel_perm_key_).ViewComponent("cell",false);
+  auto& liquid_density = *S_->GetW<CompositeVector>(liquid_den_key_, Amanzi::Tags::NEXT, liquid_den_key_).ViewComponent("cell",false);
+  auto& ice_density = *S_->GetW<CompositeVector>(ice_den_key_, Amanzi::Tags::NEXT, ice_den_key_).ViewComponent("cell",false);
+  auto& gas_density = *S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell",false);
+  auto& rock_density = *S_->GetW<CompositeVector>(rock_den_key_, Amanzi::Tags::NEXT, rock_den_key_).ViewComponent("cell",false);
+  auto& temp = *S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, T_key_).ViewComponent("cell",false);
+  auto& conductivity = *S_->GetW<CompositeVector>(conductivity_key_, Amanzi::Tags::NEXT, conductivity_key_).ViewComponent("cell",false);
+  auto& cell_volume = *S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false);
 
   //I think I need to redefine this here?
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
