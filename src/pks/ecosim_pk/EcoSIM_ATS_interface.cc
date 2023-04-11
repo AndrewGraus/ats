@@ -430,9 +430,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   // right.  Likely correct for soil carbon calculations and incorrect for
   // surface vegetation calculations (where the subsurface's face area is more
   // correct?)
-  S_->GetEvaluator("surface-cell_volume", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& scv = *(*S_->Get<CompositeVector>("surface-cell_volume", tag_next_)
-      .ViewComponent("cell", false))(0);
+  //S_->GetEvaluator("surface-cell_volume", tag_next_).Update(*S_, name_);
+  //const Epetra_MultiVector& scv = *(*S_->Get<CompositeVector>("surface-cell_volume", tag_next_)
+  //    .ViewComponent("cell", false))(0);
 
   // loop over columns and apply the model
   std::cout << "\nBegining advance loop\n";
