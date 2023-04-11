@@ -182,6 +182,8 @@ class EcoSIM : public PK_Physical {
   BGCAuxiliaryData bgc_aux_data_;
 
   bool bgc_initialized_;
+  bool using_energy_;
+  bool using_gas_;
 
  private:
   //factory registration

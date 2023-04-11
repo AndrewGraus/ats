@@ -184,6 +184,11 @@ void EcoSIM::Setup() {
     S_->GetRecordW(alquimia_aux_data_key_, tag_next_, passwd_).set_io_vis(false);
   }
   */
+  if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << vo_->color("green") << "Setup of PK was successful, T="
+        << S_->get_time() << vo_->reset() << std::endl << std::endl;
+  }
 }
 
 // -- Initialize owned (dependent) variables.
@@ -579,7 +584,8 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto& ice_density = *(*S_->GetW<CompositeVector>(ice_den_key_, Amanzi::Tags::NEXT, ice_den_key_).ViewComponent("cell",false))(0);
   auto& gas_density = *(*S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell",false))(0);
   auto& rock_density = *(*S_->GetW<CompositeVector>(rock_den_key_, Amanzi::Tags::NEXT, rock_den_key_).ViewComponent("cell",false))(0);
-  //auto& temp = *S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, name()).ViewComponent("cell",false);
+
+  auto& temp = *S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "").ViewComponent("cell",false);
   auto& conductivity = *(*S_->GetW<CompositeVector>(conductivity_key_, Amanzi::Tags::NEXT, conductivity_key_).ViewComponent("cell",false))(0);
   auto& cell_volume = *(*S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false))(0);
 
