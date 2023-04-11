@@ -402,9 +402,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   //const Epetra_MultiVector& gas_density = *(*S_->Get<CompositeVector>("mass_density_gas", tag_next_)
   //        .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("mass_density_ice", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& ice_density = *(*S_->Get<CompositeVector>("mass_density_ice", tag_next_)
-          .ViewComponent("cell",false))(0);
+  //S_->GetEvaluator("mass_density_ice", tag_next_).Update(*S_, name_);
+  //const Epetra_MultiVector& ice_density = *(*S_->Get<CompositeVector>("mass_density_ice", tag_next_)
+  //        .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("density_rock", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& rock_density = *(*S_->Get<CompositeVector>("density_rock", tag_next_)
