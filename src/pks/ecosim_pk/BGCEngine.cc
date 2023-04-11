@@ -155,9 +155,9 @@ BGCEngine::~BGCEngine()
     delete iter->second;
   }*/
 
-  FreeBGCProperties(&props);
-  FreeBGCState(&state);
-  FreeBGCAuxiliaryData(&aux_data);
+  //FreeBGCProperties(&props);
+  //FreeBGCState(&state);
+  //FreeBGCAuxiliaryData(&aux_data);
   //FreeAlquimiaEngineStatus(&chem_status_);
 }
 
