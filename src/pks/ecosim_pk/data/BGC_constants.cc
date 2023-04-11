@@ -27,6 +27,10 @@
 ** Authors: Benjamin Andre <bandre@lbl.gov>
 */
 
+/*This code is a modification of the constants code contained within alquimia
+as of right now it's only needed to hold the size of the string, it could be
+eliminated eventually and this code could be removed along with the
+corresponding header file*/
 
 #include "BGC_constants.hh"
 

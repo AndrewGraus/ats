@@ -49,9 +49,6 @@
 #include "BGC_memory.hh"
 #include "BGC_containers.hh"
 #include "BGC_constants.hh"
-//#include "alquimia/alquimia_interface.h"
-//#include "alquimia/alquimia_constants.h"
-//#include "alquimia/alquimia_containers.h"
 
 // Returns the nearest power of 2 greater than or equal to n, or 0 if n == 0.
 static inline int nearest_power_of_2(int n)
@@ -89,7 +86,7 @@ void AllocateBGCVectorDouble(const int size, BGCVectorDouble* vector) {
     vector->capacity = 0;
     vector->data = NULL;
   }
-}  /* end AllocateAlquimiaVectorDouble() */
+}  /* end AllocateBGCVectorDouble() */
 
 void FreeBGCVectorDouble(BGCVectorDouble* vector) {
   if (vector != NULL) {
@@ -98,7 +95,7 @@ void FreeBGCVectorDouble(BGCVectorDouble* vector) {
     vector->size = 0;
     vector->capacity = 0;
   }
-}  /* end FreeAlquimiaVectorDouble() */
+}  /* end FreeBGCVectorDouble() */
 
 void AllocateBGCVectorInt(const int size, BGCVectorInt* vector) {
   if (size > 0) {
@@ -111,7 +108,7 @@ void AllocateBGCVectorInt(const int size, BGCVectorInt* vector) {
     vector->capacity = 0;
     vector->data = NULL;
   }
-}  /* end AllocateAlquimiaVectorInt() */
+}  /* end AllocateBGCVectorInt() */
 
 void FreeBGCVectorInt(BGCVectorInt* vector) {
   if (vector != NULL) {
@@ -120,7 +117,7 @@ void FreeBGCVectorInt(BGCVectorInt* vector) {
     vector->size = 0;
     vector->capacity = 0;
   }
-}  /* end FreeAlquimiaVectorInt() */
+}  /* end FreeBGCVectorInt() */
 
 void AllocateBGCVectorString(const int size, BGCVectorString* vector) {
   int i;
@@ -138,7 +135,7 @@ void AllocateBGCVectorString(const int size, BGCVectorString* vector) {
     vector->capacity = 0;
     vector->data = NULL;
   }
-}  /* end AllocateAlquimiaVectorString() */
+}  /* end AllocateBGCVectorString() */
 
 void FreeBGCVectorString(BGCVectorString* vector) {
   int i;
@@ -151,7 +148,7 @@ void FreeBGCVectorString(BGCVectorString* vector) {
     vector->size = 0;
     vector->capacity = 0;
   }
-}  /* end FreeAlquimiaVectorString() */
+}  /* end FreeBGCVectorString() */
 
 /*******************************************************************************
  **
@@ -180,7 +177,7 @@ void AllocateBGCState(BGCSizes* sizes, BGCState* state,
   std::cout << "Finished state allocation" <<  std::endl;
   //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
-}  /* end AllocateAlquimiaState() */
+}  /* end AllocateBGCState() */
 
 void FreeBGCState(BGCState* state) {
   if (state != NULL) {

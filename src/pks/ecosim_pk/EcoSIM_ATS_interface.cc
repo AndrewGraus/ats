@@ -4,6 +4,12 @@
   License: see $ATS_DIR/COPYRIGHT
   Author: Andrew Graus
 
+  This is the main PK for the EcoSIM-ATS interface. This code is written
+  following the example of Alquimia with some additional code from the
+  SimpleBGC code for walking the columns.
+
+  The idea is to take the basic code used by alquimia and repurpose it so
+  that it works on a column by column basis instead of a cell by cell basis
 
   --------------------------------------------------------------------------*/
 
@@ -38,13 +44,11 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
   ncells_per_col_(-1),
   saved_time_(0.0)
   {
+    //grab the relevant domains, surface is needed to find the columns later
     domain_ = plist_->get<std::string>("domain name", "domain");
     domain_surf_ = Keys::readDomainHint(*plist_, domain_, "subsurface", "surface");
 
     // obtain key of fields
-    // What fields will we need to pass to EcoSIM, presumably fields relating to
-    // transport, flow, and energy
-    // What do we need for EcoSIM? Based on the variables doc it is:
     // grid position (X,Y,Z) - can we just pass Z and assume X and Y are 0?
     // Aspect in geometric format
     // water table depth - There's a water table evaluator in
@@ -58,6 +62,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     //
     // mass_density_ice
     // mass_gas_density
+    //
+    // additionally temperature doesn't work because it is owned by energy
     //
     //
     // transport
@@ -105,12 +111,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     //ka_ = 1.e-6 * plist_.get<double>("heat capacity [J kg^-1 K^-1]");
     //Unclear what we need
 
-    // Here is where Alquimia initializes the Chemistry engine which handles differences between
-    // CrunchFlow and PFlotran and eventually runs either code to advance the Chemistry
-    // We will probably need something like this eventually if we add in other BGC codes but it
-    // is very complex and we can almost certainly do something simpler to start out with to just get
-    // EcoSIM running.
-
+    //This initialized the engine (found in BGCEngine.cc) This is the code that
+    //actually points to the driver
     if (!plist_->isParameter("engine")) {
       Errors::Message msg;
       msg << "No 'engine' parameter found in the parameter list for 'BGC'.\n";
@@ -124,44 +126,18 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     std::string engine_name = plist_->get<std::string>("engine");
     std::string engine_inputfile = plist_->get<std::string>("engine input file");
     bgc_engine_ = Teuchos::rcp(new BGCEngine(engine_name, engine_inputfile));
-
-    //comp_names_.clear();
-    //bgc_engine_->GetPrimarySpeciesNames(comp_names_);
-
-    //number_aqueous_components_ = comp_names_.size();
-    //number_free_ion_ = number_aqueous_components_;
-    //number_total_sorbed_ = number_aqueous_components_;
-
   }
 
-/* *******************************************************************
-* Destroy ansilary data structures.
-******************************************************************* */
+
+// -- Destroy ansilary data structures.
 EcoSIM::~EcoSIM()
   {
   if (bgc_initialized_)
     bgc_engine_->FreeState(bgc_props_, bgc_state_, bgc_aux_data_);
   }
 
-
-// now the PK setup
+// -- Setup step
 void EcoSIM::Setup() {
-  std::cout << "beginning Ecosim setup\n";
-  //PK_Physical_Default::Setup();
-
-  /*This is for setting up the Auxiliary Output data which I'm not sure we need
-  chem_engine_->GetAuxiliaryOutputNames(aux_names_, aux_subfield_names_);
-  for (size_t i = 0; i < aux_names_.size(); ++i) {
-    aux_names_[i] = Keys::getKey(domain_, aux_names_[i]);
-
-    if (!S_->HasRecord(aux_names_[i])) {
-      S_->Require<CompositeVector, CompositeVectorSpace>(aux_names_[i], tag_next_, passwd_, aux_subfield_names_[i])
-        .SetMesh(mesh_)->SetGhosted(false)
-        ->SetComponent("cell", AmanziMesh::CELL, aux_subfield_names_[i].size());
-    }
-  }
-  */
-
   //Need to do some basic setup of the columns:
   mesh_surf_ = S_->GetMesh(domain_surf_);
   num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
@@ -208,16 +184,12 @@ void EcoSIM::Setup() {
     S_->GetRecordW(alquimia_aux_data_key_, tag_next_, passwd_).set_io_vis(false);
   }
   */
-  std::cout << "\nEnd setup\n";
 }
 
 // -- Initialize owned (dependent) variables.
 void EcoSIM::Initialize() {
-  std::cout << "\nBegin Initialize\n";
-  //PK_Physical_Default::Initialize();
-
   //Now we have to initalize the variables (i.e. give them initial values)
-  //In our PK it will only be done for variables owned by the PK so the aux_names
+  //In our PK it will only be done for variables owned by the PK
   //Keeping an example of how it's done generically here:
   //S_->GetW<CompositeVector>("co2_decomposition", tag_next_, name_).PutScalar(0.);
   //S_->GetRecordW("co2_decomposition", tag_next_, name_).set_initialized();
@@ -231,22 +203,12 @@ void EcoSIM::Initialize() {
   }*/
 
   //Now we call the engine's init state function which allocates the data
-  std::cout << "\ninitializing BGC engine with: " << ncells_per_col_ << "\n";
 
   bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_);
-  std::cout << "\engine initialized\n";
-  //This function calls four separate functions from the interface:
-  // AllocateAlquimiaProperties - Allocates the properties which are things
-  // chemistry doesn't change
-  // AllocateAlquimiaState - Allocates properties of things chemistry CAN change
-  // AllocateAqluimiaAuxiliaryData - Allocates variables Alquimia needs to carry
-  // over between runs but ATS doesn't need
-  // AllocateAlquimiaAuxiliaryOutputData - Allocates variables that ATS will eventually
-  // output (probably don't need for now)
+
   int ierr = 0;
 
-  // Ensure dependencies are fille
-  std::cout << "\nfilling dependencies\n";
+  // Ensure dependencies are filled
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(poro_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -262,32 +224,14 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
-  std::cout << "\ndependencies filled\n";
 
   int num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
-  //This is the main set up code in alquimia it loops over times and chemical conditions
-  //I don't know that we need the two initial loops. I'm just including them because we might
-  std::cout << "\ninitializing column loop\n";
+  //Looping over the columns and initializing
   for (int col=0; col!=num_cols_; ++col) {
-    //FieldToColumn_(col, temp, col_temp.ptr());
-    //ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
 
-    //We're going to need to write an InitializeSingleColumn code
-    //ierr = InitializeSingleCell(cell, condition);
-    std::cout << "\ninitializing column "<< col <<" \n";
     ierr = InitializeSingleColumn(col);
-    //In Alquimia this function simply calls CopyToAlquimia, then
-    //Calls the chemistry engine and enforces condition, then copies
-    //From Alquimia to Amanzi
-    //
-    //The copy to alquimia function takes the cell index, because it
-    //is assigning things cell by cell in state. For colums this will
-    //be a bit trickier I THINK we could use the FieldToColumn_ function
-    //To do this, but I think I will actually need to figure out a test
-    //for this before I actually code it up
   }
-  std::cout << "\nfinishing initialize\n";
   // verbose message
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
@@ -297,7 +241,6 @@ void EcoSIM::Initialize() {
 }
 
 void EcoSIM::CommitStep(double t_old, double t_new, const Tag& tag) {
-  std::cout << "\nRunning commit\n";
 
   // I don't know that we will have much to do here. In SimpleBGC they just copy
   // Data to the pfts, which we won't be doing. In Alquimia they just save the time
@@ -305,7 +248,6 @@ void EcoSIM::CommitStep(double t_old, double t_new, const Tag& tag) {
 
   saved_time_ = t_new;
 
-  std::cout << "\nEnd commit\n";
 }
 
 bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
@@ -329,9 +271,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
                << "----------------------------------------------------------------" << std::endl;
 
   // Ensure dependencies are filled
-  // Fix this from DEFAULT, see amanzi/amanzi#646 --etc
-  // Update all dependencies again
-  std::cout << "\nupdating dependencies\n";
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(poro_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -348,24 +287,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  //---------------------------------------------------------------------------
-  //BGCSimple Advance
-  //---------------------------------------------------------------------------
-  // Copy the PFT from old to new, in case we failed the previous attempt at
-  // this timestep.  This is hackery to get around the fact that PFTs are not
-  // (but should be) in state.
   AmanziMesh::Entity_ID num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
   // grab the required fields
-  /*
-  Epetra_MultiVector& sc_pools = *S_->GetW<CompositeVector>(key_, tag_next_, name_)
-      .ViewComponent("cell",false);
-  Epetra_MultiVector& co2_decomp = *S_->GetW<CompositeVector>("co2_decomposition", tag_next_, name_)
-      .ViewComponent("cell",false);
-  Epetra_MultiVector& trans = *S_->GetW<CompositeVector>(trans_key_, tag_next_, name_)
-      .ViewComponent("cell",false);*/
-  //Do I need to update everything here?
-  std::cout << "\nGrabbing evaluators\n";
   S_->GetEvaluator("porosity", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>("porosity", tag_next_)
       .ViewComponent("cell",false))(0);
@@ -422,20 +346,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& cell_volume = *(*S_->Get<CompositeVector>("cell_volume", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  //S_->GetEvaluator("pressure", tag_next_).Update(*S_, name_);
-  //const Epetra_MultiVector& pres = *S_->Get<CompositeVector>("pressure", tag_next_)
-  //    .ViewComponent("cell",false);
-
-  // note that this is used as the column area, which is maybe not always
-  // right.  Likely correct for soil carbon calculations and incorrect for
-  // surface vegetation calculations (where the subsurface's face area is more
-  // correct?)
-  //S_->GetEvaluator("surface-cell_volume", tag_next_).Update(*S_, name_);
-  //const Epetra_MultiVector& scv = *(*S_->Get<CompositeVector>("surface-cell_volume", tag_next_)
-  //    .ViewComponent("cell", false))(0);
-
   // loop over columns and apply the model
-  std::cout << "\nBegining advance loop\n";
   for (AmanziMesh::Entity_ID col=0; col!=num_cols_; ++col) {
 
     auto& col_iter = mesh_->cells_of_column(col);
@@ -443,17 +354,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
     //Copy to EcoSIM structures
 
-    // call the model
-    // This will be where we call the main function which advances ecosim
-    //BGCAdvance(S_->get_time(tag_current_), dt, scv[0][col], cryoturbation_coef_, met,
-    //           *temp_c, *pres_c, *depth_c, *dz_c,
-    //           pfts_[col], soil_carbon_pools_[col],
-    //           co2_decomp_c, trans_c, sw_c);
     std::cout << "\nAdvancing col "<< col <<"\n";
     AdvanceSingleColumn(dt, col);
     std::cout << "\nfinished advancing column\n";
-
-    //Copy back to Amanzi
 
   } // end loop over columns
 
@@ -468,59 +371,20 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   std::cout << "\nEnd Advance\n";
 }
 
-//---------------------------------------------------------------------------
-//Here are the BGCSimple helper functions
-//---------------------------------------------------------------------------
-
 // helper function for pushing field to column
 void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
        Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
-  std::cout << "\ncol: "<< col <<"\n";
   auto& col_iter = mesh_->cells_of_column(col);
-  std::cout << "\ncol_iter: "<< col_iter.size() <<"\n";
 
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     std::size_t vec_index = col_iter[i];
-    std::cout << "for i: " << i << "vec_index: " << vec_index << "\n";
-    std::cout << "vec[" << vec_index << "]: " << vec[vec_index] << "\n";
-  }
 
-
-  for (std::size_t i=0; i!=col_iter.size(); ++i) {
-
-    if (i >= col_vec->Length()) {
-      std::cout << "Error: index " << i << " is out of bounds for col_vec\n";
-    }
-
-    std::size_t vec_index = col_iter[i];
-
-    if (vec_index >= vec.MyLength()) {
-      std::cout << "Error: index " << vec_index << " is out of bounds for vec\n";
-    }
-
-    std::cout << "col_vec[" << i << "]: " << (*col_vec)[i] << "\n";
-    std::cout << "vec[" << vec_index << "]: " << vec[vec_index] << "\n";
-
-    //(*col_vec)[i] = vec[vec_index];
     (*col_vec)[i] = vec[vec_index];
   }
 }
 
-// helper function for pushing field to column
-/*void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& vec,
-                               Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
-{
-  auto& col_iter = mesh_->cells_of_column(col);
-  for (std::size_t i=0; i!=col_iter.size(); ++i) {
-    col_vec[i] = vec[col_iter[i]];
-  }
-}*/
-
-// I think I need a function for pushing from the column back to the field
-// with any luck it's just the reverse of the above similar to how it's done
-// cell by cell in alquimia
-
+// helper function for pushing column back to field
 void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Epetra_Vector& vec,
                                Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
@@ -574,17 +438,7 @@ void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID col,
   }
 }
 
-//---------------------------------------------------------------------------
-//Alquimia Helper functions
-//---------------------------------------------------------------------------
-/*void EcoSIM::CopyToEcoSIM(int col,
-        BGCProperties& props,
-        BGCState& state,
-        BGCAuxiliaryData& aux_data)
-{
-  CopyToEcoSIM(col, props, state, aux_data);
-}*/
-
+//Copy to EcoSIM
 void EcoSIM::CopyToEcoSIM(int col,
                                  BGCProperties& props,
                                  BGCState& state,
@@ -592,10 +446,6 @@ void EcoSIM::CopyToEcoSIM(int col,
                                const Tag& water_tag)
 {
   //Fill state with ATS variables that are going to be changed by EcoSIM
-  //NEED TO DECIDE WHICH PROPERTIES GO WHERE
-  std::cout << "\nviewing components\n";
-  //Might need to switch
-  //const Epetra_MultiVector& temp also set ViewComponent to false
   const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& tcc = *(*S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
@@ -615,9 +465,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false))(0);
 
   //Define the column vectors to hold the data
-  std::cout << "\ncreating column vectors with size: "<< ncells_per_col_ << "\n";
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  std::cout << "\ncreated first column\n";
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -637,8 +485,6 @@ void EcoSIM::CopyToEcoSIM(int col,
   //to the data structures that will pass the data to EcoSIM
   //Format is:
   //FieldToColumn_(column index, dataset to copy from, vector to put the data in)
-
-  //FieldToColumn_(col,tcc,col_tcc.ptr());
   std::cout << "\nCopying Amanzi field to column vector\n";
   FieldToColumn_(col,porosity,col_poro.ptr());
   std::cout << "\npushed first column\n";
@@ -658,11 +504,7 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   // I think I need to loop over the column data and save it to the data
   // structures. Eventually I could probably rewrite FieldToColumn_ to do this
-  // automatically, but I just want to test this for now
-
-  std::cout << "\nlooping over cells and copying to EcoSIM data structure\n";
   for (int i=0; i < ncells_per_col_; ++i) {
-    std::cout << "\nlooping through cell " << i << "\n";
     state.fluid_density.data[i] = (*col_f_dens)[i];
     state.gas_density.data[i] = (*col_g_dens)[i];
     state.ice_density.data[i] = (*col_i_dens)[i];
@@ -679,23 +521,10 @@ void EcoSIM::CopyToEcoSIM(int col,
     props.volume.data[i] = (*col_vol)[i];
 
   }
-  std::cout << "\nFinished loop\n";
   //mat_props.volume = mesh_->cell_volume(cell;z
   //mat_props.saturation = water_saturation[0][cell];
 
   num_components_ = tcc.NumVectors();
-
-  //This probably isn't going to work. I think I either need to think
-  //of a way to do this
-  //Possible ideas:
-  // 1) creat a data column per component (how to do that without hard coding?)
-  // 2) have some sort of array of shape num_componentsXcolumnsize and loop over
-  //    the components
-  // For #2 I think I just need to change the serieal dense vector call to
-  // a different data type (are these always 1d?) What is the 2d version?
-  //for (int i = 0; i < num_components; i++) {
-  //  bgc_state.total_mobile.data[i] = (*col_tcc)[i];
-  //}
 
   // Auxiliary data -- block copy.
   /*if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
@@ -734,23 +563,8 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   // be updated here.
   // (this->water_density())[cell] = state.water_density;
   // (this->porosity())[cell] = state.porosity;
-  //I probably need to copy the columns cell by cell in a loop
-  //Can I do this in the field to column function?
 
   //auto& tcc = S_->GetPtrW<CompositeVector>(tcc_key_, water_tag, passwd_).ViewComponent("cell");
-
-  //There are various ways to access data unclear which I need
-  //Attempt 1 fails
-  //Epetra_MultiVector&  porosity = *S_->GetPtrW<CompositeVector>(poro_key_, water_tag, passwd_)->ViewComponent("cell");
-
-  //Attempt 2
-  //porosity = Teuchos::rcp(new Epetra_MultiVector(*S_->Get<CompositeVector>("porosity").ViewComponent("cell", true)));
-
-  //Attempt 3
-  //porosity = S_->GetPtrW<CompositeVector>(poro_key_, water_tag, passwd_)->ViewComponent("cell", false));
-
-  //Attempt 4
-  //Teuchos::RCP<Epetra_MultiVector> porosity = S_->GetW<CompositeVector>(poro_key_, water_tag, passwd_).ViewComponent("cell", true);
 
   //Attempt 5 (ELM; this should work)
   auto& porosity = *(*S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false))(0);
@@ -769,7 +583,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto& conductivity = *(*S_->GetW<CompositeVector>(conductivity_key_, Amanzi::Tags::NEXT, conductivity_key_).ViewComponent("cell",false))(0);
   auto& cell_volume = *(*S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false))(0);
 
-  //I think I need to redefine this here?
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -785,8 +598,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   //auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-
-  /*Can't save cell by cell doesn't seem to work like this*/
 
   for (int i=0; i < ncells_per_col_; ++i) {
     (*col_f_dens)[i] = state.fluid_density.data[i];
@@ -805,9 +616,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_vol)[i] = props.volume.data[i];
   }
 
-  /*for (int i = 0; i < num_components; i++) {
-    bgc_state.total_mobile.data[i] = (*col_tcc)[i];
-  }*/
 
   //Here is where the auxiliary data is filled need to try to change this to columns
   //This may not be trivial
@@ -847,22 +655,18 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 }
 
 /* *******************************************************************
-* This helper performs initialization on a single cell within Amanzi's state.
-* It returns an error code that indicates success (0) or failure (1).
+* This helper performs initialization on a single column within Amanzi's state.
 ******************************************************************* */
 int EcoSIM::InitializeSingleColumn(int col)
 {
-  // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
-  // should use the same tag as transport.  See #673
-  std::cout << "\nCopying to EcoSIM\n";
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
-  std::cout << "\nFinished Copying to EcoSIM\n";
 
-  //bgc_engine_->EnforceCondition(condition, current_time_, bgc_props_,
-  //        bgc_state_, bgc_aux_data_);
-  std::cout << "\nCopying back to Amanzi\n";
+  /* *******************************************************************
+  * Here is where we will put the call to the BGC engine's set ICs for
+  * EcoSIM function
+  ******************************************************************* */
+
   CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
-  std::cout << "\nFinished copying to Amanzi\n";
 
   // ETC: hacking to get consistent solution -- if there is no water
   // (e.g. surface system, we still need to call EnforceCondition() as it also
@@ -877,22 +681,15 @@ int EcoSIM::InitializeSingleColumn(int col)
 
 /* *******************************************************************
 * This helper advances the solution on a single cell within Amanzi's state.
-* It returns the number of iterations taken to obtain the advanced solution,
-* or -1 if an error occurred.
 ******************************************************************* */
 int EcoSIM::AdvanceSingleColumn(double dt, int col)
 {
-  // Copy the state and property information from Amanzi's state within
-  // this cell to Alquimia.
-  //
   // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
   // should use the same tag as transport.  See #673
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   int num_iterations = 0;
-
-  //Think a bit about what to do with this
-  /*****************************************************************
+/*****************************************************************
    ADVANCE CALL GOES HERE
   ******************************************************************
 

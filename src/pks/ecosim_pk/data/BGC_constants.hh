@@ -1,7 +1,7 @@
 /* -*-  mode: c++; c-default-style: "google"; indent-tabs-mode: nil -*- */
 
 /*
-** Alquimia Copyright (c) 2013-2016, The Regents of the University of California, 
+** Alquimia Copyright (c) 2013-2016, The Regents of the University of California,
 ** through Lawrence Berkeley National Laboratory (subject to receipt of any
 ** required approvals from the U.S. Dept. of Energy).  All rights reserved.
 **
@@ -26,6 +26,11 @@
 **
 ** Authors: Benjamin Andre <bandre@lbl.gov>
 */
+
+/*This code is a modification of the constants code contained within alquimia
+as of right now it's only needed to hold the size of the string, it could be
+eliminated eventually and this code could be removed along with the
+corresponding code file*/
 
 #ifndef BGC_CONSTANTS_H_
 #define BGC_CONSTANTS_H_

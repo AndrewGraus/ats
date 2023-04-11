@@ -32,7 +32,6 @@ namespace EcoSIM {
 namespace {
 
 //Here are the major function that the engine will need
-
 void CopyBGCState(BGCState* dest, BGCState* src)
 {
   memcpy(dest->fluid_density.data, src->fluid_density.data, sizeof(double) * src->fluid_density.size);
@@ -76,10 +75,6 @@ BGCEngine::BGCEngine(const std::string& engineName,
 {
   Errors::Message msg;
 
-  // NOTE: Alquimia now has a "hands-off" mode in which Alquimia relies on
-  // NOTE: reaction properties from the engine as opposed to the ones provided
-  // NOTE: in Amanzi's input file. As stop-gap solution hands-off is indicated
-  // NOTE: by the + sign at end of engine name
   bool hands_off = false;
   if (bgc_engine_name_ == "EcoSIM") hands_off = true;
 
@@ -160,10 +155,9 @@ BGCEngine::~BGCEngine()
     delete iter->second;
   }*/
 
-  //FreeBGCState(state);
-  //FreeBGCProperties(props);
-  //FreeBGCAuxiliaryData(aux_data);
-
+  FreeBGCProperties(&props);
+  FreeBGCState(&state);
+  FreeBGCAuxiliaryData(&aux_data);
   //FreeAlquimiaEngineStatus(&chem_status_);
 }
 
