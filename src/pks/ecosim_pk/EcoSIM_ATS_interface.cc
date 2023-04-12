@@ -256,8 +256,10 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Initialize owned evaluators
-  S_->GetW<CompositeVector>(hydra_cond_key_, tag_next_, name_).PutScalar(1.0);
-  S_->GetRecordW(hydra_cond_key_, tag_next_, name_).set_initialized();
+  *vo_->os() << "Getting hydraulic conductivity" << std::endl;
+  S_->GetW<CompositeVector>(hydra_cond_key_, Tags::DEFAULT, name_).PutScalar(1.0);
+  *vo_->os() << "recording to hydraulic" << std::endl;
+  S_->GetRecordW(hydra_cond_key_, Tags::DEFAULT, name_).set_initialized();
 
   //S_->GetW<CompositeVector>(bulk_dens_key_, tag_next_, name_).PutScalar(1.0);
   //S_->GetRecordW(bulk_dens_key_, tag_next_, name_).set_initialized();
@@ -329,7 +331,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(hydra_cond_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Teuchos::RCP<const CompositeVector> bulk_dens = S_->GetPtr<CompositeVector>(bulk_dens_key_, Tags::DEFAULT);
-  //S_->GetEvaluator(bulk_dens_key_, Tags::DEFAULT).Update(*S_, name_);  
+  //S_->GetEvaluator(bulk_dens_key_, Tags::DEFAULT).Update(*S_, name_);
 
   AmanziMesh::Entity_ID num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
