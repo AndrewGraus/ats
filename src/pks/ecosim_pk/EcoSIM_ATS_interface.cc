@@ -29,6 +29,10 @@
 #include "exceptions.hh"
 #include "Mesh.hh"
 
+// include evaluators here
+#include "hydraulic_conductivity_evaluator.hh"
+#include "bulk_density_evaluator.hh"
+
 #include "pk_helpers.hh"
 #include "EcoSIM_ATS_interface.hh"
 
@@ -99,6 +103,10 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     cv_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
     min_vol_frac_key_ = Keys::readKey(*plist_, domain_, "mineral volume fractions", "mineral_volume_fractions");
     ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
+
+    //Evaluator keys
+    hydra_cond_key_ = Keys::readKey(*plist_, domain_, "hydraulic conductivity", "hydraulic_conductivity");
+    //bulk_dens_key_ = Keys::readKey(*plist_, domain_, "bulk density", "bulk_density");
 
     // parameters
     // initial timestep
@@ -184,6 +192,23 @@ void EcoSIM::Setup() {
     S_->GetRecordW(alquimia_aux_data_key_, tag_next_, passwd_).set_io_vis(false);
   }
   */
+
+  //Setup Evaluators
+  requireAtNext(hydra_cond_key_, tag_next_, *S_)
+    .SetMesh(mesh_)
+    ->SetGhosted()
+    ->AddComponent("cell", AmanziMesh::CELL, 1);
+
+  requireAtCurrent(hydra_cond_key_, tag_current_, *S_, name_);
+
+  /*requireAtNext(bulk_dens_key_, tag_next_, *S_)
+    .SetMesh(mesh_)
+    ->SetGhosted()
+    ->AddComponent("cell", AmanziMesh::CELL, 1);
+
+  requireAtCurrent(bulk_dens_key_, tag_current_, *S_, name_);*/
+
+
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << vo_->color("green") << "Setup of PK was successful"
@@ -229,6 +254,13 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
+
+  //Initialize owned evaluators
+  S_->GetW<CompositeVector>(hydra_cond_key_, tag_next_, name_).PutScalar(1.0);
+  S_->GetRecordW(hydra_cond_key_, tag_next_, name_).set_initialized();
+
+  //S_->GetW<CompositeVector>(bulk_dens_key_, tag_next_, name_).PutScalar(1.0);
+  //S_->GetRecordW(bulk_dens_key_, tag_next_, name_).set_initialized();
 
   int num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
@@ -291,6 +323,13 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
+
+  //Update owned evaluators
+  Teuchos::RCP<const CompositeVector> hydra_cond = S_->GetPtr<CompositeVector>(hydra_cond_key_, Tags::DEFAULT);
+  S_->GetEvaluator(hydra_cond_key_, Tags:DEFAULT).Update(*S_, name_);
+
+  //Teuchos::RCP<const CompositeVector> bulk_dens = S_->GetPtr<CompositeVector>(bulk_dens_key_, Tags::DEFAULT);
+  //S_->GetEvaluator(bulk_dens_key_, Tags:DEFAULT).Update(*S_, name_);  
 
   AmanziMesh::Entity_ID num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
