@@ -186,8 +186,8 @@ void EcoSIM::Setup() {
   */
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << vo_->color("green") << "Setup of PK was successful, T="
-        << S_->get_time() << vo_->reset() << std::endl << std::endl;
+    *vo_->os() << vo_->color("green") << "Setup of PK was successful"
+    << vo_->reset() << std::endl << std::endl;
   }
 }
 
