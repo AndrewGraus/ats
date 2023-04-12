@@ -326,10 +326,10 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
   //Update owned evaluators
   Teuchos::RCP<const CompositeVector> hydra_cond = S_->GetPtr<CompositeVector>(hydra_cond_key_, Tags::DEFAULT);
-  S_->GetEvaluator(hydra_cond_key_, Tags:DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(hydra_cond_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Teuchos::RCP<const CompositeVector> bulk_dens = S_->GetPtr<CompositeVector>(bulk_dens_key_, Tags::DEFAULT);
-  //S_->GetEvaluator(bulk_dens_key_, Tags:DEFAULT).Update(*S_, name_);  
+  //S_->GetEvaluator(bulk_dens_key_, Tags::DEFAULT).Update(*S_, name_);  
 
   AmanziMesh::Entity_ID num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
