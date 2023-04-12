@@ -585,7 +585,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto& gas_density = *(*S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell",false))(0);
   auto& rock_density = *(*S_->GetW<CompositeVector>(rock_den_key_, Amanzi::Tags::NEXT, rock_den_key_).ViewComponent("cell",false))(0);
 
-  auto& temp = *S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "").ViewComponent("cell",false);
+  auto& temp = *S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "energy").ViewComponent("cell",false);
   auto& conductivity = *(*S_->GetW<CompositeVector>(conductivity_key_, Amanzi::Tags::NEXT, conductivity_key_).ViewComponent("cell",false))(0);
   auto& cell_volume = *(*S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false))(0);
 
