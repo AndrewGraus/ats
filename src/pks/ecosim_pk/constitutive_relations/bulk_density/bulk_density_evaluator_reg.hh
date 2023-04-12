@@ -1,7 +1,7 @@
 #include "bulk_density_evaluator.hh"
 
 namespace Amanzi {
-namespace Ecosim_pk {
+namespace Ecosim {
 namespace Relations {
 
 Utils::RegisteredFactory<Evaluator,BulkDensityEvaluator> BulkDensityEvaluator::reg_("bulk density");
