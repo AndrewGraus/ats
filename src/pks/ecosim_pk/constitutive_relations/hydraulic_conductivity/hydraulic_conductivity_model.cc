@@ -3,7 +3,7 @@
 
   Generated via evaluator_generator with:
 Richards water content evaluator: the standard form as a function of liquid saturation.
-    
+
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
@@ -12,7 +12,7 @@ Richards water content evaluator: the standard form as a function of liquid satu
 #include "hydraulic_conductivity_model.hh"
 
 namespace Amanzi {
-namespace Ecosim_pk {
+namespace Ecosim {
 namespace Relations {
 
 // Constructor from ParameterList
@@ -58,4 +58,3 @@ HydraulicConductivityModel::DHydraulicConductivityDViscosityLiquid(double k, dou
 } //namespace
 } //namespace
 } //namespace
-  

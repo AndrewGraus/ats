@@ -7,14 +7,14 @@ Richards water content evaluator: the standard form as a function of liquid satu
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
-#ifndef AMANZI_ECOSIM_PK_BULK_DENSITY_EVALUATOR_HH_
-#define AMANZI_ECOSIM_PK_BULK_DENSITY_EVALUATOR_HH_
+#ifndef AMANZI_ECOSIM_BULK_DENSITY_EVALUATOR_HH_
+#define AMANZI_ECOSIM_BULK_DENSITY_EVALUATOR_HH_
 
 #include "Factory.hh"
 #include "EvaluatorSecondaryMonotype.hh"
 
 namespace Amanzi {
-namespace Ecosim_pk {
+namespace Ecosim {
 namespace Relations {
 
 class BulkDensityModel;

@@ -3,7 +3,7 @@
 
   Generated via evaluator_generator with:
 Richards water content evaluator: the standard form as a function of liquid saturation.
-    
+
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
@@ -12,7 +12,7 @@ Richards water content evaluator: the standard form as a function of liquid satu
 #include "bulk_density_model.hh"
 
 namespace Amanzi {
-namespace Ecosim_pk {
+namespace Ecosim {
 namespace Relations {
 
 // Constructor from ParameterList
@@ -88,4 +88,3 @@ BulkDensityModel::DBulkDensityDMolarDensityGas(double phi, double nr, double sl,
 } //namespace
 } //namespace
 } //namespace
-  

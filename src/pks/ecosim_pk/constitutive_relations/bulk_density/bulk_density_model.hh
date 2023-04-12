@@ -3,15 +3,15 @@
 
   Generated via evaluator_generator with:
 Richards water content evaluator: the standard form as a function of liquid saturation.
-    
+
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
-#ifndef AMANZI_ECOSIM_PK_BULK_DENSITY_MODEL_HH_
-#define AMANZI_ECOSIM_PK_BULK_DENSITY_MODEL_HH_
+#ifndef AMANZI_ECOSIM_BULK_DENSITY_MODEL_HH_
+#define AMANZI_ECOSIM_BULK_DENSITY_MODEL_HH_
 
 namespace Amanzi {
-namespace Ecosim_pk {
+namespace Ecosim {
 namespace Relations {
 
 class BulkDensityModel {
@@ -30,7 +30,7 @@ class BulkDensityModel {
   double DBulkDensityDMolarDensityIce(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const;
   double DBulkDensityDSaturationGas(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const;
   double DBulkDensityDMolarDensityGas(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const;
-  
+
  protected:
   void InitializeFromPlist_(Teuchos::ParameterList& plist);
 

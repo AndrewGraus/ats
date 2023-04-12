@@ -3,15 +3,15 @@
 
   Generated via evaluator_generator with:
 Richards water content evaluator: the standard form as a function of liquid saturation.
-    
+
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
-#ifndef AMANZI_ECOSIM_PK_HYDRAULIC_CONDUCTIVITY_MODEL_HH_
-#define AMANZI_ECOSIM_PK_HYDRAULIC_CONDUCTIVITY_MODEL_HH_
+#ifndef AMANZI_ECOSIM_HYDRAULIC_CONDUCTIVITY_MODEL_HH_
+#define AMANZI_ECOSIM_HYDRAULIC_CONDUCTIVITY_MODEL_HH_
 
 namespace Amanzi {
-namespace Ecosim_pk {
+namespace Ecosim {
 namespace Relations {
 
 class HydraulicConductivityModel {
@@ -25,7 +25,7 @@ class HydraulicConductivityModel {
   double DHydraulicConductivityDPermeabiilty(double k, double rho, double mu) const;
   double DHydraulicConductivityDMassDensityLiquid(double k, double rho, double mu) const;
   double DHydraulicConductivityDViscosityLiquid(double k, double rho, double mu) const;
-  
+
  protected:
   void InitializeFromPlist_(Teuchos::ParameterList& plist);
 

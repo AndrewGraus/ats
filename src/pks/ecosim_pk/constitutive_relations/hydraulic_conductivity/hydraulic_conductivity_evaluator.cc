@@ -8,7 +8,7 @@ Richards water content evaluator: the standard form as a function of liquid satu
 #include "hydraulic_conductivity_model.hh"
 
 namespace Amanzi {
-namespace Ecosim_pk {
+namespace Ecosim {
 namespace Relations {
 
 // Constructor from ParameterList
