@@ -4,6 +4,9 @@
 #    Constitutive relations for EcoSIM
 #
 
+add_subdirectory(bulk_density)
+add_subdirectory(hydraulic_conductivity)
+
 # collect all sources
 set(ats_ecosim_relations_src_files
   bulk_density/bulk_density_evaluator.cc
@@ -45,12 +48,12 @@ add_amanzi_library(ats_ecosim_relations
 		   LINK_LIBS ${ats_ecosim_relations_link_libs})
 
 register_evaluator_with_factory(
-  HEADERFILE constitutive_models/bulk_density/bulk_density_evaluator_reg.hh
+  HEADERFILE bulk_density/bulk_density_evaluator_reg.hh
   LISTNAME ATS_ECOSIM_RELATIONS_REG
 )
 
 register_evaluator_with_factory(
-  HEADERFILE constitutive_models/hydraulic_conductivity/hydraulic_conductivity_evaluator_reg.hh
+  HEADERFILE hydraulic_conductivity/hydraulic_conductivity_evaluator_reg.hh
   LISTNAME ATS_ECOSIM_RELATIONS_REG
 )
 
