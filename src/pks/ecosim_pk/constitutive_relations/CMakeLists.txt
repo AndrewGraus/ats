@@ -1,32 +1,23 @@
 # -*- mode: cmake -*-
 #
 #  ATS
-#    Constitutive relations for flow
+#    Constitutive relations for EcoSIM
 #
 
-
 # collect all sources
+set(ats_ecosim_relations_src_files
+  bulk_density/bulk_density_evaluator.cc
+  bulk_density/bulk_density_model.cc
+  hydraulic_conductivity/hydraulic_conductivity_evaluator.cc
+  hydraulic_conductivity/hydraulic_conductivity_model.cc
+)
 
-list(APPEND subdirs bulk_density hydraulic_conductivity)
-
-set(ats_ecosim_relations_src_files "")
-set(ats_ecosim_relations_inc_files "")
-
-foreach(lcv IN LISTS subdirs)
-  include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/${lcv})
-
-  file(GLOB subdir_sources "./${lcv}/*.cc")
-  set(ats_ecosim_relations_src_files ${ats_ecosim_relations_src_files} ${subdir_sources})
-
-  file(GLOB subdir_incs "./${lcv}/*.hh")
-  set(ats_ecosim_relations_inc_files ${ats_ecosim_relations_inc_files} ${subdir_incs})
-
-  file(GLOB registrations "./${lcv}/*_reg.hh" )
-  foreach(reg_lcv IN LISTS registrations)
-    register_abs_evaluator_with_factory(HEADERFILE ${reg_lcv} LISTNAME ATS_ECOISIM_RELATIONS_REG)
-  endforeach(reg_lcv)
-
-endforeach(lcv)
+set(ats_ecosim_relations_inc_files
+  bulk_density/bulk_density_evaluator.hh
+  bulk_density/bulk_density_model.hh
+  hydraulic_conductivity/hydraulic_conductivity_evaluator.hh
+  hydraulic_conductivity/hydraulic_conductivity_model.hh
+)
 
 set(ats_ecosim_relations_link_libs
   ${Teuchos_LIBRARIES}
@@ -36,15 +27,32 @@ set(ats_ecosim_relations_link_libs
   mesh
   data_structures
   whetstone
+  operators
   solvers
+  time_integration
   state
-  )
+  pks
+  chemistry_pk
+  ats_pks
+  ats_eos
+  ats_operators
+)
 
 # make the library
 add_amanzi_library(ats_ecosim_relations
                    SOURCE ${ats_ecosim_relations_src_files}
                    HEADERS ${ats_ecosim_relations_inc_files}
 		   LINK_LIBS ${ats_ecosim_relations_link_libs})
+
+register_evaluator_with_factory(
+  HEADERFILE constitutive_models/bulk_density/bulk_density_evaluator_reg.hh
+  LISTNAME ATS_ECOSIM_RELATIONS_REG
+)
+
+register_evaluator_with_factory(
+  HEADERFILE constitutive_models/hydraulic_conductivity/hydraulic_conductivity_evaluator_reg.hh
+  LISTNAME ATS_ECOSIM_RELATIONS_REG
+)
 
 generate_evaluators_registration_header(
     HEADERFILE ats_ecosim_relations_registration.hh
