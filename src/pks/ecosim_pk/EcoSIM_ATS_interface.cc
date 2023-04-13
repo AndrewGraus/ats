@@ -21,6 +21,7 @@
 #include "Epetra_MultiVector.h"
 #include "Epetra_Vector.h"
 #include "Epetra_SerialDenseVector.h"
+#include "Epetra_SerialDenseMatrix.h"
 #include "Teuchos_RCPDecl.hpp"
 #include "Teuchos_ParameterList.hpp"
 
@@ -664,6 +665,9 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
+  //For the concentration I do not want a vector but a matrix
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(num_components,ncells_per_col_));
+
   for (int i=0; i < ncells_per_col_; ++i) {
     (*col_f_dens)[i] = state.fluid_density.data[i];
     (*col_g_dens)[i] = state.gas_density.data[i];
@@ -671,6 +675,10 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_poro)[i] = state.porosity.data[i];
     (*col_wc)[i] = state.water_content.data[i];
     //(*col_temp)[i] = state.temperature.data[i];
+
+    for (int j=0; i < num_components; ++j) {
+      (*col_tcc)[j][i] = state.tcc.data[j][i];
+    }
 
     (*col_l_sat)[i] = props.liquid_saturation.data[i];
     (*col_g_sat)[i] = props.gas_saturation.data[i];
@@ -680,7 +688,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_cond)[i] = props.conductivity.data[i];
     (*col_vol)[i] = props.volume.data[i];
   }
-
 
   //Here is where the auxiliary data is filled need to try to change this to columns
   //This may not be trivial
@@ -716,6 +723,10 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   //ColumnToField_(col,temp, col_temp.ptr());
   ColumnToField_(col,conductivity,col_cond.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
+
+  for (int i=0; i < num_components; ++i) {
+    ColumnToField_(col,tcc[i],col_tcc[i].ptr());
+  }
 
 }
 

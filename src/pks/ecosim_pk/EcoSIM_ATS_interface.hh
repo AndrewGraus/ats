@@ -29,6 +29,7 @@
 #include "Teuchos_ParameterList.hpp"
 #include "Teuchos_RCP.hpp"
 #include "Epetra_SerialDenseVector.h"
+#include "Epetra_SerialDenseMatrix.h"
 
 #include "VerboseObject.hh"
 #include "TreeVector.hh"
