@@ -149,7 +149,6 @@ class EcoSIM : public PK_Physical {
   //Teuchos::RCP<PrimaryVariableFieldEvaluator> p_root_eval_;
 
   int number_aqueous_components_;
-  int num_components_;
   int ncells_per_col_;
   int num_cols_;
   double saved_time_;
@@ -186,6 +185,9 @@ class EcoSIM : public PK_Physical {
   bool bgc_initialized_;
   bool using_energy_;
   bool using_gas_;
+
+  std::vector<std::string> component_names_;
+  int num_components;
 
  private:
   //factory registration
