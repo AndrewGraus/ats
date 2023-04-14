@@ -259,7 +259,7 @@ void EcoSIM::Initialize() {
   *vo_->os() << "Getting hydraulic conductivity" << std::endl;
   S_->GetW<CompositeVector>(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
   *vo_->os() << "recording to hydraulic" << std::endl;
-  S_->GetRecordW(hydra_cond_key_, Tags::DEFAULT, name_).set_initialized();
+  S_->GetRecordW(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").set_initialized();
 
   //S_->GetW<CompositeVector>(bulk_dens_key_, tag_next_, name_).PutScalar(1.0);
   //S_->GetRecordW(bulk_dens_key_, tag_next_, name_).set_initialized();
