@@ -50,8 +50,8 @@ HydraulicConductivityEvaluator::InitializeFromPlist_()
   Tag tag = my_keys_.front().second;
 
   // - pull Keys from plist
-  // dependency: permeabilty
-  k_key_ = Keys::readKey(plist_, domain_name, "permeabilty", "permeabilty");
+  // dependency: permeability
+  k_key_ = Keys::readKey(plist_, domain_name, "permeability", "permeability");
   dependencies_.insert(KeyTag{ k_key_, tag });
 
   // dependency: mass_density_liquid
@@ -107,7 +107,7 @@ HydraulicConductivityEvaluator::EvaluatePartialDerivative_(const State& S,
 
       int ncomp = result[0]->size(*comp, false);
       for (int i=0; i!=ncomp; ++i) {
-        result_v[0][i] = model_->DHydraulicConductivityDPermeabilty(k_v[0][i], rho_v[0][i], mu_v[0][i]);
+        result_v[0][i] = model_->DHydraulicConductivityDPermeability(k_v[0][i], rho_v[0][i], mu_v[0][i]);
       }
     }
 

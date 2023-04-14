@@ -38,7 +38,7 @@ HydraulicConductivityModel::HydraulicConductivity(double k, double rho, double m
 }
 
 double
-HydraulicConductivityModel::DHydraulicConductivityDPermeabilty(double k, double rho, double mu) const
+HydraulicConductivityModel::DHydraulicConductivityDPermeability(double k, double rho, double mu) const
 {
   return rho;
 }
