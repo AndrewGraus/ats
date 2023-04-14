@@ -26,7 +26,7 @@ HydraulicConductivityModel::HydraulicConductivityModel(Teuchos::ParameterList& p
 void
 HydraulicConductivityModel::InitializeFromPlist_(Teuchos::ParameterList& plist)
 {
-  g_ = plist.get<double>("gravitational constant");
+  //g_ = plist.get<double>("gravitational constant");
 }
 
 
