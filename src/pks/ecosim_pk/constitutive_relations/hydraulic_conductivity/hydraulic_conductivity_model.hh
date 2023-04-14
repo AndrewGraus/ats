@@ -22,7 +22,7 @@ class HydraulicConductivityModel {
 
   double HydraulicConductivity(double k, double rho, double mu) const;
 
-  double DHydraulicConductivityDPermeabiilty(double k, double rho, double mu) const;
+  double DHydraulicConductivityDPermeabilty(double k, double rho, double mu) const;
   double DHydraulicConductivityDMassDensityLiquid(double k, double rho, double mu) const;
   double DHydraulicConductivityDViscosityLiquid(double k, double rho, double mu) const;
 
