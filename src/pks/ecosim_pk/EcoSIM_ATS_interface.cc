@@ -21,6 +21,7 @@
 #include "Epetra_MultiVector.h"
 #include "Epetra_Vector.h"
 #include "Epetra_SerialDenseVector.h"
+#include "Epetra_SerialDenseMatrix.h"
 #include "Teuchos_RCPDecl.hpp"
 #include "Teuchos_ParameterList.hpp"
 
@@ -72,6 +73,13 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     //
     // transport
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
+    //Remember tcc components are accessed by tcc[i][c] where i is the component and c is the cell
+
+    if (plist_->isParameter("component names")) {
+      component_names_ = plist_->get<Teuchos::Array<std::string>>("component names").toVector();
+      num_components = component_names_.size();
+      // otherwise we hopefully get them from chemistry
+    }
 
     //Flow
     poro_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
@@ -527,6 +535,10 @@ void EcoSIM::CopyToEcoSIM(int col,
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
+
+  //For the concentration I do not want a vector but a matrix
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(num_components,ncells_per_col_));
+
   //Here is where we should do the various field-to-column calls to then pass along
   //to the data structures that will pass the data to EcoSIM
   //Format is:
@@ -547,6 +559,10 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,temp, col_temp.ptr());
   FieldToColumn_(col,conductivity,col_cond.ptr());
   FieldToColumn_(col,cell_volume,col_vol.ptr());
+  //Fill the tcc matrix component by component?
+  for (int i=0; i < num_components; ++i) {
+    FieldToColumn_(col,tcc[i],col_tcc[i].ptr());
+  }
 
   // I think I need to loop over the column data and save it to the data
   // structures. Eventually I could probably rewrite FieldToColumn_ to do this
@@ -557,6 +573,9 @@ void EcoSIM::CopyToEcoSIM(int col,
     state.porosity.data[i] = (*col_poro)[i];
     state.water_content.data[i] = (*col_wc)[i];
     state.temperature.data[i] = (*col_temp)[i];
+    for (int j=0; i < num_components; ++j) {
+      state.tcc.data[j][i] = (*col_tcc)[j][i];
+    }
 
     props.liquid_saturation.data[i] = (*col_l_sat)[i];
     props.gas_saturation.data[i] = (*col_g_sat)[i];
@@ -570,7 +589,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   //mat_props.volume = mesh_->cell_volume(cell;z
   //mat_props.saturation = water_saturation[0][cell];
 
-  num_components_ = tcc.NumVectors();
+  //num_components_ = tcc.NumVectors();
 
   // Auxiliary data -- block copy.
   /*if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
@@ -645,6 +664,9 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   //auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  //For the concentration I do not want a vector but a matrix
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(num_components,ncells_per_col_));
+
 
   for (int i=0; i < ncells_per_col_; ++i) {
     (*col_f_dens)[i] = state.fluid_density.data[i];
@@ -652,7 +674,10 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_i_dens)[i] = state.ice_density.data[i];
     (*col_poro)[i] = state.porosity.data[i];
     (*col_wc)[i] = state.water_content.data[i];
-    //(*col_temp)[i] = state.temperature.data[i];
+    (*col_temp)[i] = state.temperature.data[i];
+    for (int j=0; i < num_components; ++j) {
+      (*col_tcc)[j][i] = state.tcc.data[j][i];
+    }
 
     (*col_l_sat)[i] = props.liquid_saturation.data[i];
     (*col_g_sat)[i] = props.gas_saturation.data[i];
@@ -698,6 +723,10 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   //ColumnToField_(col,temp, col_temp.ptr());
   ColumnToField_(col,conductivity,col_cond.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
+
+  for (int i=0; i < num_components; ++i) {
+    ColumnToField_(col,tcc[i],col_tcc[i].ptr());
+  }
 
 }
 
