@@ -20,10 +20,9 @@
 #include "ats_surface_balance_registration.hh"
 #include "ats_mpc_registration.hh"
 //#include "ats_sediment_transport_registration.hh"
-#include "mdm_transport_registration.hh"
-#include "multiscale_transport_registration.hh"
+#include "models_transport_reg.hh"
 #ifdef ALQUIMIA_ENABLED
-#  include "pks_chemistry_registration.hh"
+#  include "pks_chemistry_reg.hh"
 #endif
 #include "ats_ecosim_registration.hh"
 #include "ats_ecosim_relations_registration.hh"

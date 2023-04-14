@@ -207,7 +207,8 @@ Coordinator::initialize()
     S_->set_time(Amanzi::Tags::NEXT, t0_);
 
     for (Amanzi::State::mesh_iterator mesh = S_->mesh_begin(); mesh != S_->mesh_end(); ++mesh) {
-      if (S_->IsDeformableMesh(mesh->first)) { Amanzi::DeformCheckpointMesh(*S_, mesh->first); }
+      if (S_->IsDeformableMesh(mesh->first) && !S_->IsAliasedMesh(mesh->first))
+        Amanzi::DeformCheckpointMesh(*S_, mesh->first);
     }
   }
 
@@ -544,7 +545,7 @@ Coordinator::advance()
 }
 
 
-void
+bool
 Coordinator::visualize(bool force)
 {
   // write visualization if requested
@@ -561,15 +562,19 @@ Coordinator::visualize(bool force)
   for (const auto& vis : visualization_) {
     if (force || vis->DumpRequested(cycle, time)) { WriteVis(*vis, *S_); }
   }
+  return dump;
 }
 
 
-void
+bool
 Coordinator::checkpoint(bool force)
 {
   int cycle = S_->get_cycle();
   double time = S_->get_time();
-  if (force || checkpoint_->DumpRequested(cycle, time)) { checkpoint_->Write(*S_); }
+  bool dump = force;
+  dump |= checkpoint_->DumpRequested(cycle, time);
+  if (dump) checkpoint_->Write(*S_);
+  return dump;
 }
 
 } // namespace ATS
