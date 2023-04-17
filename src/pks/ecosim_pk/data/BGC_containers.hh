@@ -65,6 +65,21 @@ extern "C" {
   } BGCVectorString;
 
   typedef struct {
+    int rows, cols, capacity;
+    double** data;
+  } BGCMatrixDouble;
+
+  typedef struct {
+    int rows, cols, capacity;
+    int** data;
+  } BGCMatrixInt;
+
+  typedef struct {
+    int rows, cols, capacity;
+    char** data;
+  } BGCMatrixString;
+
+  typedef struct {
     int ncells_per_col_;
   } BGCSizes;
 
@@ -76,6 +91,7 @@ extern "C" {
     BGCVectorDouble water_content;
     BGCVectorDouble temperature;
     BGCVectorDouble total_mobile;
+    BGCMatrixDouble total_component_concentration;
   } BGCState;
 
   typedef struct {

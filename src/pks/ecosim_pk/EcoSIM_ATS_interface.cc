@@ -242,7 +242,7 @@ void EcoSIM::Initialize() {
 
   //Now we call the engine's init state function which allocates the data
 
-  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_);
+  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, num_components);
 
   int ierr = 0;
 
@@ -520,7 +520,7 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   //Define the column vectors to hold the data
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));

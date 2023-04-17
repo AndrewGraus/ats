@@ -66,19 +66,9 @@ static inline int nearest_power_of_2(int n)
  **
  *******************************************************************************/
 void AllocateBGCVectorDouble(const int size, BGCVectorDouble* vector) {
-  std::cout << "Allocating vector double size: " << size << std::endl;
-  std::cout << "vector" << vector << std::endl;
-  /*
-  for (int j = 0; j < *vector->size; j++){
-    std::cout << "element " << j << ": " << *vector[j] << std::endl;
-  }
-  */
   if (size > 0) {
-    std::cout << "Allocating size" << std::endl;
     vector->size = size;
-    std::cout << "Allocating capacity" << std::endl;
     vector->capacity = nearest_power_of_2(size);
-    std::cout << "setting data" << std::endl;
     vector->data = (double*) calloc((size_t)vector->capacity, sizeof(double));
     //ALQUIMIA_ASSERT(NULL != vector->data);
   } else {
@@ -152,6 +142,95 @@ void FreeBGCVectorString(BGCVectorString* vector) {
 
 /*******************************************************************************
  **
+ **  BGC Matrix
+ **
+ *******************************************************************************/
+void AllocateBGCMatrixDouble(const int rows, const int cols, BGCMatrixDouble* matrix) {
+  if (rows > 0 ) && (cols > 0){
+    matrix->rows = rows;
+    matrix->cols = cols;
+    matrix->capacity = nearest_power_of_2(rows * cols);
+    matrix->data = (double*) calloc((size_t)matrix->capacity, sizeof(double));
+    //ALQUIMIA_ASSERT(NULL != matrix->data);
+  } else {
+    matrix->rows = 0;
+    matrix->cols = 0;
+    matrix->capacity = 0;
+    matrix->data = NULL;
+  }
+}  /* end AllocateBGCmatrixDouble() */
+
+void FreeBGCMatrixDouble(BGCMatrixDouble* matrix) {
+  if (matrix != NULL) {
+    free(matrix->data);
+    matrix->data = NULL;
+    matrix->rows = 0;
+    matrix->cols = 0;
+    matrix->capacity = 0;
+  }
+}  /* end FreeBGCmatrixDouble() */
+
+void AllocateBGCmatrixInt(const int rows, const int cols, BGCmatrixInt* matrix) {
+  if (size > 0) {
+    matrix->rows = rows;
+    matrix->cols = cols;
+    matrix->capacity = nearest_power_of_2(rows * cols);
+    matrix->data = (int*) calloc((size_t)matrix->capacity, sizeof(int));
+    //ALQUIMIA_ASSERT(NULL != matrix->data);
+  } else {
+    matrix->rows = 0;
+    matrix->cols = 0;
+    matrix->capacity = 0;
+    matrix->data = NULL;
+  }
+}  /* end AllocateBGCmatrixInt() */
+
+void FreeBGCmatrixInt(BGCmatrixInt* matrix) {
+  if (matrix != NULL) {
+    free(matrix->data);
+    matrix->data = NULL;
+    matrix->rows = 0;
+    matrix->cols = 0;
+    matrix->capacity = 0;
+  }
+}  /* end FreeBGCmatrixInt() */
+
+/*Not quite sure how to do the string version, so I'm punting for now as
+I don't think we need it yet
+void AllocateBGCmatrixString(const int rows, const int cols, BGCmatrixString* matrix) {
+  int i;
+  if (size > 0) {
+    matrix->rows = rows;
+    matrix->cols = cols;
+    matrix->capacity = nearest_power_of_2(rows * cols);
+    matrix->data = (char**) calloc((size_t)matrix->capacity, sizeof(char*));
+    //ALQUIMIA_ASSERT(NULL != matrix->data);
+    for (i = 0; i < matrix->size; ++i) {
+      matrix->data[i] = (char*) calloc((size_t)kBGCMaxStringLength, sizeof(char));
+      //ALQUIMIA_ASSERT(NULL != matrix->data[i]);
+    }
+  } else {
+    matrix->size = 0;
+    matrix->capacity = 0;
+    matrix->data = NULL;
+  }
+}  end AllocateBGCmatrixString()
+
+void FreeBGCmatrixString(BGCmatrixString* matrix) {
+  int i;
+  if (matrix != NULL) {
+    for (i = 0; i < matrix->size; ++i) {
+      free(matrix->data[i]);
+    }
+    free(matrix->data);
+    matrix->data = NULL;
+    matrix->size = 0;
+    matrix->capacity = 0;
+  }
+}  end FreeBGCmatrixString() */
+
+/*******************************************************************************
+ **
  **  State
  **
  *******************************************************************************/
@@ -162,7 +241,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
                            BGCState* state)*/
 
 void AllocateBGCState(BGCSizes* sizes, BGCState* state,
-                      int ncells_per_col_) {
+                      int ncells_per_col_, int num_components) {
   std::cout << "Allocating State vectors with size " << ncells_per_col_ << std::endl;
   sizes->ncells_per_col_ = ncells_per_col_;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->fluid_density));
@@ -174,6 +253,7 @@ void AllocateBGCState(BGCSizes* sizes, BGCState* state,
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->water_content));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->temperature));
 
+  AllocateBGCMatrixDouble(rows->ncells_per_col_,cols->num_components, &(state->total_component_concentration))
   std::cout << "Finished state allocation" <<  std::endl;
   //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
@@ -187,6 +267,7 @@ void FreeBGCState(BGCState* state) {
     FreeBGCVectorDouble(&(state->porosity));
     FreeBGCVectorDouble(&(state->water_content));
     FreeBGCVectorDouble(&(state->temperature));
+    FreeBGCMatrixDoulbe(&(state->total_component_concentration));
   }
 }  /* end FreeAlquimiaState() */
 

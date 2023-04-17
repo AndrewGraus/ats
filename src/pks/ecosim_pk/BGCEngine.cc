@@ -170,13 +170,14 @@ BGCEngine::Sizes() const
 void BGCEngine::InitState(BGCProperties& props,
                                 BGCState& state,
                                 BGCAuxiliaryData& aux_data,
-                                int ncells_per_col_)
+                                int ncells_per_col_,
+                                int num_components)
 {
   std::cout << "Allocating prop" << std::endl;
   std::cout << "size: " << ncells_per_col_ << std::endl;
   AllocateBGCProperties(&sizes_, &props, ncells_per_col_);
   std::cout << "Allocating state" << std::endl;
-  AllocateBGCState(&sizes_, &state, ncells_per_col_);
+  AllocateBGCState(&sizes_, &state, ncells_per_col_, num_components);
   std::cout << "Allocating aux" << std::endl;
   AllocateBGCAuxiliaryData(&sizes_, &aux_data, ncells_per_col_);
   //AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);

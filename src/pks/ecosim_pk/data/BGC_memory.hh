@@ -48,10 +48,22 @@ extern "C" {
   void AllocateBGCVectorString(const int size, BGCVectorString* vector);
   void FreeBGCVectorString(BGCVectorString* vector);
 
+  /* Matrix */
+  void AllocateBGCMatrixDouble(const int rows, const int cols, BGCMatrixDouble* matrix);
+  void FreeBGCMatrixDouble(BGCMatrixDouble* matrix);
+
+  void AllocateBGCMatrixInt(const int rows, const int cols, BGCMatrixInt* matrix);
+  void FreeBGCMatrixInt(BGCMatrixInt* matrix);
+
+
+  void AllocateBGCMatrixString(const int rows, const int cols, BGCMatrixString* matrix);
+  void FreeBGCMatrixString(BGCMatrixString* matrix);
+
   /* State */
   void AllocateBGCState(BGCSizes* sizes,
                         BGCState* state,
-                        int ncells_per_col_);
+                        int ncells_per_col_,
+                        int num_components);
   void FreeBGCState(BGCState* state);
 
   /* Auxiliary Data */
