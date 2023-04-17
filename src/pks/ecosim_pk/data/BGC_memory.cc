@@ -202,7 +202,8 @@ void FreeBGCMatrixInt(BGCMatrixInt* matrix) {
     matrix->data = NULL;
     matrix->rows = 0;
     matrix->cols = 0;
-    matrix->capacity = 0;
+    matrix->cap_cols = 0;
+    matrix->cap_rows = 0;
   }
 }  /* end FreeBGCMatrixInt() */
 
