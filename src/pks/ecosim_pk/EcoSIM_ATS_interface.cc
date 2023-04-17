@@ -501,7 +501,10 @@ void EcoSIM::CopyToEcoSIM(int col,
 {
   //Fill state with ATS variables that are going to be changed by EcoSIM
   const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& tcc = *(*S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& tcc = *(*S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", false))(0);
+
+  const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, water_tag)->ViewComponent("cell"));
+
   const Epetra_Vector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
