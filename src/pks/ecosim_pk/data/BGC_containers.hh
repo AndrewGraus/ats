@@ -65,12 +65,12 @@ extern "C" {
   } BGCVectorString;
 
   typedef struct {
-    int rows, cols, capacity;
+    int rows, cols, cap_rows, cap_cols;
     double** data;
   } BGCMatrixDouble;
 
   typedef struct {
-    int rows, cols, capacity;
+    int rows, cols, cap_rows, cap_cols;
     int** data;
   } BGCMatrixInt;
 
