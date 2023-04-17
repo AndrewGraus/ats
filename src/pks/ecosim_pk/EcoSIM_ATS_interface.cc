@@ -560,7 +560,13 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,cell_volume,col_vol.ptr());
   //Fill the tcc matrix component by component?
   for (int i=0; i < num_components; ++i) {
-    FieldToColumn_(col,tcc[i],col_tcc[i].ptr());
+    Epetra_SerialDenseVector col_comp(ncells_per_col_);
+    Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
+    for (int j=0; j<ncells_per_col_; ++j){
+      col_comp(j) = col_tcc(j,i);
+      tcc_comp(j) = tcc(j,i);
+    }
+    FieldToColumn_(col,tcc_comp,col_comp.ptr());
   }
 
   // I think I need to loop over the column data and save it to the data
@@ -723,7 +729,13 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,cell_volume,col_vol.ptr());
 
   for (int i=0; i < num_components; ++i) {
-    ColumnToField_(col,tcc[i],col_tcc[i].ptr());
+    Epetra_SerialDenseVector col_comp(ncells_per_col_);
+    Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
+    for (int j=0; j<ncells_per_col_; ++j){
+      col_comp(j) = col_tcc(j,i);
+      tcc_comp(j) = tcc(j,i);
+    }
+    ColumnToField_(col,tcc_comp,col_comp.ptr());
   }
 
 }
