@@ -637,8 +637,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   // (this->water_density())[cell] = state.water_density;
   // (this->porosity())[cell] = state.porosity;
 
-  auto& tcc = *(*S_->GetW<CompositeVector>(tcc_key_, water_tag, passwd_).ViewComponent("cell"))(0);
-  //Attempt 5 (ELM; this should work)
+  Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, water_tag)->ViewComponent("cell"));
   auto& porosity = *(*S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false))(0);
 
   auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Amanzi::Tags::NEXT, saturation_liquid_key_).ViewComponent("cell",false))(0);
@@ -732,12 +731,12 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
-    Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
+    Epetra_Vector tcc_comp(ncells_per_col_);
     for (int j=0; j<ncells_per_col_; ++j){
-      col_comp(j) = col_tcc(j,i);
-      tcc_comp(j) = tcc(j,i);
+      col_comp(j) = (*col_tcc)(i,j);
+      tcc_comp(j) = tcc[i][j];
     }
-    ColumnToField_(col,tcc_comp,col_comp.ptr());
+    ColumnToField_(col,tcc_comp,col_comp);
   }
 
 }
