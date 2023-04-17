@@ -564,7 +564,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   //Fill the tcc matrix component by component?
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
-    Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
+    Epetra_Vector tcc_comp(ncells_per_col_);
     for (int j=0; j<ncells_per_col_; ++j){
       col_comp(j) = (*col_tcc)(i,j);
       tcc_comp(j) = tcc[i][j];
