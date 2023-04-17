@@ -146,7 +146,7 @@ void FreeBGCVectorString(BGCVectorString* vector) {
  **
  *******************************************************************************/
 void AllocateBGCMatrixDouble(const int rows, const int cols, BGCMatrixDouble* matrix) {
-  if (rows > 0 ) && (cols > 0){
+  if ((rows > 0 ) || (cols > 0)){
     matrix->rows = rows;
     matrix->cols = cols;
     matrix->capacity = nearest_power_of_2(rows * cols);
@@ -170,8 +170,8 @@ void FreeBGCMatrixDouble(BGCMatrixDouble* matrix) {
   }
 }  /* end FreeBGCmatrixDouble() */
 
-void AllocateBGCmatrixInt(const int rows, const int cols, BGCmatrixInt* matrix) {
-  if (size > 0) {
+void AllocateBGCMatrixInt(const int rows, const int cols, BGCMatrixInt* matrix) {
+  if ((rows > 0) || (cols > 0)) {
     matrix->rows = rows;
     matrix->cols = cols;
     matrix->capacity = nearest_power_of_2(rows * cols);
@@ -185,7 +185,7 @@ void AllocateBGCmatrixInt(const int rows, const int cols, BGCmatrixInt* matrix) 
   }
 }  /* end AllocateBGCmatrixInt() */
 
-void FreeBGCmatrixInt(BGCmatrixInt* matrix) {
+void FreeBGCMatrixInt(BGCmatrixInt* matrix) {
   if (matrix != NULL) {
     free(matrix->data);
     matrix->data = NULL;
@@ -267,7 +267,7 @@ void FreeBGCState(BGCState* state) {
     FreeBGCVectorDouble(&(state->porosity));
     FreeBGCVectorDouble(&(state->water_content));
     FreeBGCVectorDouble(&(state->temperature));
-    FreeBGCMatrixDoulbe(&(state->total_component_concentration));
+    FreeBGCMatrixDouble(&(state->total_component_concentration));
   }
 }  /* end FreeAlquimiaState() */
 
