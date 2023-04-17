@@ -159,7 +159,8 @@ void AllocateBGCMatrixDouble(const int rows, const int cols, BGCMatrixDouble* ma
   } else {
     matrix->rows = 0;
     matrix->cols = 0;
-    matrix->capacity = 0;
+    matrix->cap_rows = 0;
+    matrix->cap_cols = 0;
     matrix->data = NULL;
   }
 }  /* end AllocateBGCmatrixDouble() */
@@ -188,12 +189,13 @@ void AllocateBGCMatrixInt(const int rows, const int cols, BGCMatrixInt* matrix) 
   } else {
     matrix->rows = 0;
     matrix->cols = 0;
-    matrix->capacity = 0;
+    matrix->cap_rows = 0;
+    matrix->cap_cols = 0;
     matrix->data = NULL;
   }
-}  /* end AllocateBGCmatrixInt() */
+}  /* end AllocateBGCMatrixInt() */
 
-void FreeBGCMatrixInt(BGCmatrixInt* matrix) {
+void FreeBGCMatrixInt(BGCMatrixInt* matrix) {
   if (matrix != NULL) {
     free(matrix->data);
     matrix->data = NULL;
@@ -201,7 +203,7 @@ void FreeBGCMatrixInt(BGCmatrixInt* matrix) {
     matrix->cols = 0;
     matrix->capacity = 0;
   }
-}  /* end FreeBGCmatrixInt() */
+}  /* end FreeBGCMatrixInt() */
 
 /*Not quite sure how to do the string version, so I'm punting for now as
 I don't think we need it yet
@@ -261,7 +263,7 @@ void AllocateBGCState(BGCSizes* sizes, BGCState* state,
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->water_content));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->temperature));
 
-  AllocateBGCMatrixDouble(rows->ncells_per_col_,cols->num_components, &(state->total_component_concentration))
+  AllocateBGCMatrixDouble(sizes->ncells_per_col_,sizes->num_components, &(state->total_component_concentration))
   std::cout << "Finished state allocation" <<  std::endl;
   //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 

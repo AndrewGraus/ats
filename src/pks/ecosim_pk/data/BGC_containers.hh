@@ -81,6 +81,7 @@ extern "C" {
 
   typedef struct {
     int ncells_per_col_;
+    int num_components;
   } BGCSizes;
 
   typedef struct {
