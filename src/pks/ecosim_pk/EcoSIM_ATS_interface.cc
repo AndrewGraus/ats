@@ -569,7 +569,7 @@ void EcoSIM::CopyToEcoSIM(int col,
       col_comp(j) = (*col_tcc)(i,j);
       tcc_comp(j) = tcc[i][j];
     }
-    FieldToColumn_(col,tcc_comp,col_comp.ptr());
+    FieldToColumn_(col,tcc_comp,col_comp);
   }
 
   // I think I need to loop over the column data and save it to the data
