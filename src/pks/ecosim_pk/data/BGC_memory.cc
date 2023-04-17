@@ -150,7 +150,7 @@ void AllocateBGCMatrixDouble(const int rows, const int cols, BGCMatrixDouble* ma
     matrix->rows = rows;
     matrix->cols = cols;
     matrix->cap_rows = nearest_power_of_2(rows);
-    matrix->cap_cols = nearest_power_of_2(cols)
+    matrix->cap_cols = nearest_power_of_2(cols);
     matrix->data = (double**) calloc((size_t)matrix->cap_rows, sizeof(double*));
     for (int i = 0; i < matrix->rows; ++i) {
       matrix->data[i] = (double*) calloc((size_t)matrix->cap_cols, sizeof(double));
@@ -171,7 +171,8 @@ void FreeBGCMatrixDouble(BGCMatrixDouble* matrix) {
     matrix->data = NULL;
     matrix->rows = 0;
     matrix->cols = 0;
-    matrix->capacity = 0;
+    matrix->cap_rows = 0;
+    matrix->cap_cols = 0;
   }
 }  /* end FreeBGCmatrixDouble() */
 
@@ -180,7 +181,7 @@ void AllocateBGCMatrixInt(const int rows, const int cols, BGCMatrixInt* matrix) 
     matrix->rows = rows;
     matrix->cols = cols;
     matrix->cap_rows = nearest_power_of_2(rows);
-    matrix->cap_cols = nearest_power_of_2(cols)
+    matrix->cap_cols = nearest_power_of_2(cols);
     matrix->data = (int**) calloc((size_t)matrix->cap_rows, sizeof(int*));
     for (int i = 0; i < matrix->rows; ++i) {
       matrix->data[i] = (int*) calloc((size_t)matrix->cap_cols, sizeof(int));
@@ -263,7 +264,7 @@ void AllocateBGCState(BGCSizes* sizes, BGCState* state,
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->water_content));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->temperature));
 
-  AllocateBGCMatrixDouble(sizes->ncells_per_col_,sizes->num_components, &(state->total_component_concentration))
+  AllocateBGCMatrixDouble(sizes->ncells_per_col_,sizes->num_components, &(state->total_component_concentration));
   std::cout << "Finished state allocation" <<  std::endl;
   //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
