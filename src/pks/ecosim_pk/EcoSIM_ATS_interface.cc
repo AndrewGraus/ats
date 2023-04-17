@@ -574,7 +574,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     state.water_content.data[i] = (*col_wc)[i];
     state.temperature.data[i] = (*col_temp)[i];
     for (int j=0; i < num_components; ++j) {
-      state.tcc.data[j][i] = (*col_tcc)[j][i];
+      state.total_component_concentration.data[j][i] = (*col_tcc)[j][i];
     }
 
     props.liquid_saturation.data[i] = (*col_l_sat)[i];
@@ -629,7 +629,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   // (this->water_density())[cell] = state.water_density;
   // (this->porosity())[cell] = state.porosity;
 
-  //auto& tcc = S_->GetPtrW<CompositeVector>(tcc_key_, water_tag, passwd_).ViewComponent("cell");
+  auto& tcc = S_->GetPtrW<CompositeVector>(tcc_key_, water_tag, passwd_).ViewComponent("cell");
 
   //Attempt 5 (ELM; this should work)
   auto& porosity = *(*S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false))(0);
@@ -649,7 +649,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto& conductivity = *(*S_->GetW<CompositeVector>(conductivity_key_, Amanzi::Tags::NEXT, conductivity_key_).ViewComponent("cell",false))(0);
   auto& cell_volume = *(*S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false))(0);
 
-  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(ncells_per_col_));
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -661,7 +661,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_i_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  //auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   //For the concentration I do not want a vector but a matrix
@@ -676,7 +676,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_wc)[i] = state.water_content.data[i];
     (*col_temp)[i] = state.temperature.data[i];
     for (int j=0; i < num_components; ++j) {
-      (*col_tcc)[j][i] = state.tcc.data[j][i];
+      (*col_tcc)[j][i] = state.total_component_concentration.data[j][i];
     }
 
     (*col_l_sat)[i] = props.liquid_saturation.data[i];
@@ -720,7 +720,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,ice_density,col_i_dens.ptr());
   ColumnToField_(col,gas_density,col_g_dens.ptr());
   ColumnToField_(col,rock_density,col_r_dens.ptr());
-  //ColumnToField_(col,temp, col_temp.ptr());
+  ColumnToField_(col,temp, col_temp.ptr());
   ColumnToField_(col,conductivity,col_cond.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
 
