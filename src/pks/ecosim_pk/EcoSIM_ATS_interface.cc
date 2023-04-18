@@ -71,6 +71,20 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // additionally temperature doesn't work because it is owned by energy
     //
     //
+    // Simple tests with the keys
+    std::string test_key_name_one = "porosity key";
+    std::string test_key_name_two = "mass density ice key";
+
+    std::string test_key_suffix_one = "porosity key suffix";
+    std::string test_key_suffix_two = "mass density ice key suffix";
+
+    if (list.isParameter(test_key_suffix_one)) {
+      *vo_->os() << "found porosity key" << std::endl;
+    }
+    if (list.isParameter(test_key_suffix_two)) {
+      *vo_->os() << "found mass density ice key" << std::endl;
+    }
+
     // transport
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
     //Remember tcc components are accessed by tcc[i][c] where i is the component and c is the cell
