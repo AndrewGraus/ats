@@ -567,9 +567,9 @@ void EcoSIM::CopyToEcoSIM(int col,
     Epetra_Vector tcc_comp(ncells_per_col_);
     for (int j=0; j<ncells_per_col_; ++j){
       col_comp(j) = (*col_tcc)(i,j);
-      tcc_comp(j) = tcc[i][j];
+      tcc_comp[j] = tcc[i][j];
     }
-    FieldToColumn_(col,tcc_comp,col_comp);
+    FieldToColumn_(col,tcc_comp,Teuchos::ptr(&col_comp));
   }
 
   // I think I need to loop over the column data and save it to the data
@@ -734,9 +734,9 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     Epetra_Vector tcc_comp(ncells_per_col_);
     for (int j=0; j<ncells_per_col_; ++j){
       col_comp(j) = (*col_tcc)(i,j);
-      tcc_comp(j) = tcc[i][j];
+      tcc_comp[j] = tcc[i][j];
     }
-    ColumnToField_(col,tcc_comp,col_comp);
+    ColumnToField_(col,tcc_comp,Teuchos::ptr(&col_comp));
   }
 
 }
