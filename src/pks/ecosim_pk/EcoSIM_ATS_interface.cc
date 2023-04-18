@@ -563,7 +563,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,cell_volume,col_vol.ptr());
   //Fill the tcc matrix component by component?
 
-  Epetra_BlockMap tcc_map(ncells_per_col_, 1, 0);
+  Epetra_BlockMap tcc_map(ncells_per_col_, 1, 1, 0);
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
     Epetra_Vector tcc_comp(tcc_map);
@@ -730,7 +730,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,temp, col_temp.ptr());
   ColumnToField_(col,conductivity,col_cond.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
-  Epetra_BlockMap tcc_map(ncells_per_col_, 1, 0);
+  Epetra_BlockMap tcc_map(ncells_per_col_,1 ,1, 0);
 
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
