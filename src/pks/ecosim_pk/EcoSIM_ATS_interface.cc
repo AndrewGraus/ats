@@ -460,6 +460,15 @@ void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Epetra_Vector& vec,
   }
 }
 
+void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Teuchos::Ptr<Epetra_SerialDenseVector> vec,
+                               Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
+{
+  auto& col_iter = mesh_->cells_of_column(col);
+  for (std::size_t i=0; i!=col_iter.size(); ++i) {
+    (*vec)[col_iter[i]] = (*col_vec)[i];
+  }
+}
+
 // helper function for collecting column dz and depth
 void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID col,
                             Teuchos::Ptr<Epetra_SerialDenseVector> depth,
@@ -576,7 +585,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   //Epetra_BlockMap tcc_map(int ncells_per_col_, 1, 1, 0);
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
-    Epetra_SerialDenseVector tcc_comp(tcc_map);
+    Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
     for (int j=0; j<ncells_per_col_; ++j){
       col_comp(j) = (*col_tcc)(i,j);
       tcc_comp[j] = (*tcc)(i,j);
@@ -740,16 +749,15 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,temp, col_temp.ptr());
   ColumnToField_(col,conductivity,col_cond.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
-  Epetra_BlockMap tcc_map(int ncells_per_col_,1 ,1, 0);
 
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
-    Epetra_Vector tcc_comp(tcc_map);
+    Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
     for (int j=0; j<ncells_per_col_; ++j){
       col_comp(j) = (*col_tcc)(i,j);
-      tcc_comp[j] = tcc[i][j];
+      tcc_comp(j) = (*tcc)(i,j);
     }
-    ColumnToField_(col,tcc_comp,Teuchos::ptr(&col_comp));
+    ColumnToField_(col,ptr(&tcc_comp),Teuchos::ptr(&col_comp));
   }
 
 }
