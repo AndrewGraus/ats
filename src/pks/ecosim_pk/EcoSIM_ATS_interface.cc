@@ -588,7 +588,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
     for (int j=0; j<ncells_per_col_; ++j){
       col_comp(j) = (*col_tcc)(i,j);
-      tcc_comp[j] = (*tcc)[i][j];
+      tcc_comp[j] = tcc[i][j];
     }
     FieldToColumn_(col,Teuchos::ptr(&tcc_comp),Teuchos::ptr(&col_comp));
   }
@@ -755,7 +755,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
     for (int j=0; j<ncells_per_col_; ++j){
       col_comp(j) = (*col_tcc)(i,j);
-      tcc_comp(j) = (*tcc)[i][j];
+      tcc_comp(j) = tcc[i][j];
     }
     ColumnToField_(col,ptr(&tcc_comp),Teuchos::ptr(&col_comp));
   }
