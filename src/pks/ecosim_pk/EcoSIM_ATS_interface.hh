@@ -137,6 +137,9 @@ class EcoSIM : public PK_Physical {
   void FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
           Teuchos::Ptr<Epetra_SerialDenseVector> col_vec);
 
+  void FieldToColumn_(AmanziMesh::Entity_ID col, Teuchos::Ptr<Epetra_SerialDenseVector> vec,
+          Teuchos::Ptr<Epetra_SerialDenseVector> col_vec);
+
   //void FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
   //                                       double* col_vec);
   void ColDepthDz_(AmanziMesh::Entity_ID col,

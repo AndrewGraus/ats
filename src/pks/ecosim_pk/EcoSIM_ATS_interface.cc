@@ -438,6 +438,18 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
   }
 }
 
+void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Teuchos::Ptr<Epetra_SerialDenseVector> vec,
+       Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
+{
+  auto& col_iter = mesh_->cells_of_column(col);
+
+  for (std::size_t i=0; i!=col_iter.size(); ++i) {
+    std::size_t vec_index = col_iter[i];
+
+    (*col_vec)[i] = (*vec)[vec_index];
+  }
+}
+
 // helper function for pushing column back to field
 void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Epetra_Vector& vec,
                                Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
@@ -545,9 +557,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   //to the data structures that will pass the data to EcoSIM
   //Format is:
   //FieldToColumn_(column index, dataset to copy from, vector to put the data in)
-  std::cout << "\nCopying Amanzi field to column vector\n";
   FieldToColumn_(col,porosity,col_poro.ptr());
-  std::cout << "\npushed first column\n";
   FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
   FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
   FieldToColumn_(col,ice_saturation,col_i_sat.ptr());
@@ -563,15 +573,15 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,cell_volume,col_vol.ptr());
   //Fill the tcc matrix component by component?
 
-  Epetra_BlockMap tcc_map(ncells_per_col_, 1, 1, 0);
+  //Epetra_BlockMap tcc_map(int ncells_per_col_, 1, 1, 0);
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
-    Epetra_Vector tcc_comp(tcc_map);
+    Epetra_SerialDenseVector tcc_comp(tcc_map);
     for (int j=0; j<ncells_per_col_; ++j){
       col_comp(j) = (*col_tcc)(i,j);
-      tcc_comp[j] = tcc[i][j];
+      tcc_comp[j] = (*tcc)(i,j);
     }
-    FieldToColumn_(col,tcc_comp,Teuchos::ptr(&col_comp));
+    FieldToColumn_(col,Teuchos::ptr(&tcc_comp),Teuchos::ptr(&col_comp));
   }
 
   // I think I need to loop over the column data and save it to the data
@@ -730,7 +740,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,temp, col_temp.ptr());
   ColumnToField_(col,conductivity,col_cond.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
-  Epetra_BlockMap tcc_map(ncells_per_col_,1 ,1, 0);
+  Epetra_BlockMap tcc_map(int ncells_per_col_,1 ,1, 0);
 
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
