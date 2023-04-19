@@ -72,20 +72,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     //
     //
     // Simple tests with the keys
-    std::string test_key_name_one = "porosity key";
-    std::string test_key_name_two = "mass density ice key";
-
-    std::string test_key_suffix_one = "porosity key suffix";
-    std::string test_key_suffix_two = "mass density ice key suffix";
-
-    if (S->HasRecordSet(test_key_name_one)) {
-      Teuchos::OSTab tab = vo_->getOSTab();
-      *vo_->os() << "found porosity key suffix" << std::endl;
-    }
-    if (S->HasRecordSet(test_key_name_two)) {
-      Teuchos::OSTab tab = vo_->getOSTab();
-      *vo_->os() << "found mass density ice key suffix" << std::endl;
-    }
 
     // transport
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
@@ -115,10 +101,18 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // f_ice = S_ice * porosity
 
     liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
-    ice_den_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
+    ice_den_key_ = Keys::readKey(*plist_, domain_, "mass density ice", "mass_density_ice");
     gas_den_key_ = Keys::readKey(*plist_, domain_,"porosity", "porosity");
     rock_den_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
 
+    if (S->HasRecordSet(poro_key_)) {
+      Teuchos::OSTab tab = vo_->getOSTab();
+      *vo_->os() << "found porosity key suffix" << std::endl;
+    }
+    if (S->HasRecordSet(ice_den_key_)) {
+      Teuchos::OSTab tab = vo_->getOSTab();
+      *vo_->os() << "found mass density ice key suffix" << std::endl;
+    }
     //energy
     T_key_ = Keys::readKey(*plist_, domain_, "temperature", "temperature");
     conductivity_key_ = Keys::readKey(*plist_, domain_, "thermal conductivity", "thermal_conductivity");
