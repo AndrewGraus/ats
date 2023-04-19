@@ -254,11 +254,8 @@ void AllocateBGCState(const BGCSizes* const sizes,
 
 void AllocateBGCState(BGCSizes* sizes, BGCState* state,
                       int ncells_per_col_, int num_components) {
-  std::cout << "Allocating State vectors with size " << ncells_per_col_ << std::endl;
   sizes->ncells_per_col_ = ncells_per_col_;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->fluid_density));
-
-  std::cout << "Finish fluid density" << std::endl;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->gas_density));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->ice_density));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->porosity));
@@ -266,7 +263,6 @@ void AllocateBGCState(BGCSizes* sizes, BGCState* state,
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->temperature));
 
   AllocateBGCMatrixDouble(sizes->ncells_per_col_,sizes->num_components, &(state->total_component_concentration));
-  std::cout << "Finished state allocation" <<  std::endl;
   //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
 }  /* end AllocateBGCState() */
@@ -314,18 +310,15 @@ void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
 
 void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* props,
                           int ncells_per_col_) {
-  std::cout << "Allocating Prop vectors with size" << ncells_per_col_ << std::endl;
   sizes->ncells_per_col_ = ncells_per_col_;
 
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->liquid_saturation));
-  std::cout << "finished liquid sat" << std::endl;
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->gas_saturation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->ice_saturation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->elevation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->relative_permeability));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->conductivity));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->volume));
-  std::cout << "prop alloc" << std::endl;
 }  /* end AllocateAlquimiaProperties() */
 
 void FreeBGCProperties(BGCProperties* props) {

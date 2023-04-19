@@ -79,10 +79,24 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     std::string test_key_suffix_two = "mass density ice key suffix";
 
     if (plist_->isParameter(test_key_suffix_one)) {
-      *vo_->os() << "found porosity key" << std::endl;
+      Teuchos::OSTab tab = vo_->getOSTab();
+      *vo_->os() << "found porosity key suffix" << std::endl;
     }
     if (plist_->isParameter(test_key_suffix_two)) {
+      Teuchos::OSTab tab = vo_->getOSTab();
+      *vo_->os() << "found mass density ice key suffix" << std::endl;
+    }
+    if (plist_->isParameter(test_key_name_one)) {
+      Teuchos::OSTab tab = vo_->getOSTab();
+      *vo_->os() << "found porosity key" << std::endl;
+    }
+    if (plist_->isParameter(test_key_name_two)) {
+      Teuchos::OSTab tab = vo_->getOSTab();
       *vo_->os() << "found mass density ice key" << std::endl;
+    }
+    if (!plist_->isParameter(test_key_name_two)) && (!plist_->isParameter(test_key_name_two)) && (!plist_->isParameter(test_key_name_two)) && (!plist_->isParameter(test_key_name_two)) {
+      Teuchos::OSTab tab = vo_->getOSTab();
+      *vo_->os() << "didn't find any of that" << std::endl;
     }
 
     // transport
@@ -278,8 +292,10 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Initialize owned evaluators
+  Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "Getting hydraulic conductivity" << std::endl;
   S_->GetW<CompositeVector>(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
+  Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "recording to hydraulic" << std::endl;
   S_->GetRecordW(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").set_initialized();
 
