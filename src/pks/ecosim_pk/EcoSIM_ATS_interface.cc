@@ -672,7 +672,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   // (this->water_density())[cell] = state.water_density;
   // (this->porosity())[cell] = state.porosity;
 
-  Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, water_tag, tcc_key_)->ViewComponent("cell",false));
+  Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, Amanzi::Tags::NEXT, "state")->ViewComponent("cell",false));
   auto& porosity = *(*S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false))(0);
 
   auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Amanzi::Tags::NEXT, saturation_liquid_key_).ViewComponent("cell",false))(0);
