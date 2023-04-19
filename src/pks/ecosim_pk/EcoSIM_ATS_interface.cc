@@ -94,11 +94,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
       Teuchos::OSTab tab = vo_->getOSTab();
       *vo_->os() << "found mass density ice key" << std::endl;
     }
-    if (!plist_->isParameter(test_key_name_two) && !plist_->isParameter(test_key_name_two) && !plist_->isParameter(test_key_name_two) && !plist_->isParameter(test_key_name_two)
-    {
-      Teuchos::OSTab tab = vo_->getOSTab();
-      *vo_->os() << "didn't find any of that" << std::endl;
-    }
 
     // transport
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
