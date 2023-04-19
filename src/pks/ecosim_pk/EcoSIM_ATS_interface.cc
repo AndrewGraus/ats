@@ -78,10 +78,10 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     std::string test_key_suffix_one = "porosity key suffix";
     std::string test_key_suffix_two = "mass density ice key suffix";
 
-    if (plist_.isParameter(test_key_suffix_one)) {
+    if (plist_->isParameter(test_key_suffix_one)) {
       *vo_->os() << "found porosity key" << std::endl;
     }
-    if (plist_.isParameter(test_key_suffix_two)) {
+    if (plist_->isParameter(test_key_suffix_two)) {
       *vo_->os() << "found mass density ice key" << std::endl;
     }
 
