@@ -101,9 +101,12 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // f_ice = S_ice * porosity
 
     liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
-    ice_den_key_ = Keys::readKey(*plist_, domain_, "mass density ice", "mass_density_ice");
+    ice_den_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
     gas_den_key_ = Keys::readKey(*plist_, domain_,"porosity", "porosity");
     rock_den_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
+
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "testing keys" << std::endl;
 
     if (S->HasRecordSet(poro_key_)) {
       Teuchos::OSTab tab = vo_->getOSTab();
