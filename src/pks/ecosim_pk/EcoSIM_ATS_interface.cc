@@ -94,7 +94,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
       Teuchos::OSTab tab = vo_->getOSTab();
       *vo_->os() << "found mass density ice key" << std::endl;
     }
-    if (!plist_->isParameter(test_key_name_two)) && (!plist_->isParameter(test_key_name_two)) && (!plist_->isParameter(test_key_name_two)) && (!plist_->isParameter(test_key_name_two)) {
+    if (!plist_->isParameter(test_key_name_two) && !plist_->isParameter(test_key_name_two) && !plist_->isParameter(test_key_name_two) && !plist_->isParameter(test_key_name_two) {
       Teuchos::OSTab tab = vo_->getOSTab();
       *vo_->os() << "didn't find any of that" << std::endl;
     }
@@ -295,7 +295,6 @@ void EcoSIM::Initialize() {
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "Getting hydraulic conductivity" << std::endl;
   S_->GetW<CompositeVector>(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
-  Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "recording to hydraulic" << std::endl;
   S_->GetRecordW(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").set_initialized();
 
