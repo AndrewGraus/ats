@@ -278,11 +278,11 @@ void EcoSIM::Initialize() {
     *vo_->os() << "found mass density ice key suffix" << std::endl;
   }
 
-  if (S_->HasRecord(poro_key_)) {
+  if (S_->HasRecord(poro_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found porosity key suffix" << std::endl;
   }
-  if (S_->HasRecord(ice_den_key_)) {
+  if (S_->HasRecord(ice_den_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found mass density ice key suffix" << std::endl;
   }
