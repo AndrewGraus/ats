@@ -173,6 +173,7 @@ class EcoSIM : public PK_Physical {
   Key liquid_den_key_;
   Key ice_den_key_;
   Key gas_den_key_;
+  Key gas_den_key_test_;
   Key rock_den_key_;
   Key T_key_;
   Key conductivity_key_;
