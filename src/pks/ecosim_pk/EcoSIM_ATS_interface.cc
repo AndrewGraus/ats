@@ -104,18 +104,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     ice_den_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
     gas_den_key_ = Keys::readKey(*plist_, domain_,"porosity", "porosity");
     rock_den_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
-
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "testing keys" << std::endl;
-
-    if (S->HasRecordSet(poro_key_)) {
-      Teuchos::OSTab tab = vo_->getOSTab();
-      *vo_->os() << "found porosity key suffix" << std::endl;
-    }
-    if (S->HasRecordSet(ice_den_key_)) {
-      Teuchos::OSTab tab = vo_->getOSTab();
-      *vo_->os() << "found mass density ice key suffix" << std::endl;
-    }
     //energy
     T_key_ = Keys::readKey(*plist_, domain_, "temperature", "temperature");
     conductivity_key_ = Keys::readKey(*plist_, domain_, "thermal conductivity", "thermal_conductivity");
@@ -276,8 +264,19 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  //Initialize owned evaluators
   Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "testing keys" << std::endl;
+
+  if (S->HasRecordSet(poro_key_)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "found porosity key suffix" << std::endl;
+  }
+  if (S->HasRecordSet(ice_den_key_)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "found mass density ice key suffix" << std::endl;
+  }
+
+  //Initialize owned evaluators
   *vo_->os() << "Getting hydraulic conductivity" << std::endl;
   S_->GetW<CompositeVector>(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
   *vo_->os() << "recording to hydraulic" << std::endl;
