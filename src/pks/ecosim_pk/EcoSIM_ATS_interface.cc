@@ -267,6 +267,8 @@ void EcoSIM::Initialize() {
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "testing keys" << std::endl;
 
+  plist_->print(std::out)
+
   if (S->HasRecordSet(poro_key_)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found porosity key suffix" << std::endl;
