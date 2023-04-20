@@ -278,6 +278,15 @@ void EcoSIM::Initialize() {
     *vo_->os() << "found mass density ice key suffix" << std::endl;
   }
 
+  if (S_->HasRecord(poro_key_)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "found porosity key suffix" << std::endl;
+  }
+  if (S_->HasRecord(ice_den_key_)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "found mass density ice key suffix" << std::endl;
+  }
+
   //Initialize owned evaluators
   *vo_->os() << "Getting hydraulic conductivity" << std::endl;
   S_->GetW<CompositeVector>(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
