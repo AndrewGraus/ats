@@ -103,6 +103,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
     ice_den_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
     gas_den_key_ = Keys::readKey(*plist_, domain_,"porosity", "porosity");
+    gas_den_key_test_ = Keys::readKey(*plist_, domain_, "mass density gas", "mass_density_gas");
     rock_den_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
     //energy
     T_key_ = Keys::readKey(*plist_, domain_, "temperature", "temperature");
@@ -285,6 +286,14 @@ void EcoSIM::Initialize() {
   if (S_->HasRecord(ice_den_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found mass density ice key suffix" << std::endl;
+  }
+
+  if (S_->HasRecord(gas_den_key_test_, Tags::DEFAULT)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "found mass density ice key suffix" << std::endl;
+  } else {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "Did not find gas key" << std::endl;
   }
 
   //Initialize owned evaluators
