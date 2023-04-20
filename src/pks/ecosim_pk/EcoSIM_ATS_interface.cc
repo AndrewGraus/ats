@@ -267,7 +267,7 @@ void EcoSIM::Initialize() {
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "testing keys" << std::endl;
 
-  plist_->print(std::cout)
+  plist_->print(std::cout);
 
   if (S_->HasRecordSet(poro_key_)) {
     Teuchos::OSTab tab = vo_->getOSTab();
