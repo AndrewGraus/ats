@@ -191,8 +191,7 @@ class EcoSIM : public PK_Physical {
   BGCAuxiliaryData bgc_aux_data_;
 
   bool bgc_initialized_;
-  bool using_energy_;
-  bool using_gas_;
+  bool has_energy, has_gas, has_ice;
   std::vector<std::string> component_names_;
   int num_components;
 

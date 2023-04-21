@@ -101,8 +101,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     // f_ice = S_ice * porosity
 
     liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
-    ice_den_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
-    gas_den_key_ = Keys::readKey(*plist_, domain_,"porosity", "porosity");
+    ice_den_key_ = Keys::readKey(*plist_, domain_, "mass density ice", "mass_density_ice");
+    gas_den_key_ = Keys::readKey(*plist_, domain_,"mass density gas", "mass_density_gas");
     gas_den_key_test_ = Keys::readKey(*plist_, domain_, "mass density gas", "mass_density_gas");
     rock_den_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
     //energy
@@ -252,48 +252,54 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(poro_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(saturation_ice_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(ice_den_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(gas_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
 
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "testing keys" << std::endl;
 
-  plist_->print(std::cout);
-
-  if (S_->HasRecordSet(poro_key_)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "found porosity key suffix" << std::endl;
-  }
-  if (S_->HasRecordSet(ice_den_key_)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "found mass density ice key suffix" << std::endl;
-  }
-
-  if (S_->HasRecord(poro_key_, Tags::DEFAULT)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "found porosity key suffix" << std::endl;
-  }
-  if (S_->HasRecord(ice_den_key_, Tags::DEFAULT)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "found mass density ice key suffix" << std::endl;
-  }
+  //Here we put the checks for the optional keys
+  //Temperature, ice and gas
+  //plist_->print(std::cout);
 
   if (S_->HasRecord(gas_den_key_test_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "found mass density ice key suffix" << std::endl;
+    *vo_->os() << "found mass density gas key" << std::endl;
+    S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(gas_den_key_, Tags::DEFAULT).Update(*S_, name_);
+    has_gas = true;
   } else {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "Did not find gas key" << std::endl;
+    has_gas = false;
+  }
+
+  if (S_->HasRecord(T_key_, Tags::DEFAULT)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "found temp key" << std::endl;
+    S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
+    has_energy = true;
+  } else {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "Did not find temp key" << std::endl;
+    has_energy = false;
+  }
+
+  if (S_->HasRecord(ice_den_key_, Tags::DEFAULT)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "found ice key" << std::endl;
+    S_->GetEvaluator(saturation_ice_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(ice_den_key_, Tags::DEFAULT).Update(*S_, name_);
+    has_ice = true;
+  } else {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "Did not find ice key" << std::endl;
+    has_ice = false;
   }
 
   //Initialize owned evaluators
@@ -354,18 +360,29 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(poro_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(saturation_ice_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(ice_den_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(gas_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
+
+  if (has_gas) {
+    S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(gas_den_key_, Tags::DEFAULT).Update(*S_, name_);
+  }
+
+  if (has_ice) {
+    S_->GetEvaluator(saturation_ice_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(ice_den_key_, Tags::DEFAULT).Update(*S_, name_);
+  }
+
+  if (has_energy) {
+    S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
+  }
 
   //Update owned evaluators
   Teuchos::RCP<const CompositeVector> hydra_cond = S_->GetPtr<CompositeVector>(hydra_cond_key_, Tags::DEFAULT);
@@ -385,14 +402,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& liquid_saturation = *(*S_->Get<CompositeVector>("saturation_liquid", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("saturation_gas", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& gas_saturation = *(*S_->Get<CompositeVector>("saturation_gas", tag_next_)
-          .ViewComponent("cell",false))(0);
-
-  S_->GetEvaluator("saturation_ice", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& ice_saturation = *(*S_->Get<CompositeVector>("saturation_ice", tag_next_)
-          .ViewComponent("cell",false))(0);
-
   //S_->GetEvaluator("elevation", tag_next_).Update(*S_, name_);
   //const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("elevation", tag_next_)
   //        .ViewComponent("cell",false);
@@ -409,29 +418,43 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& liquid_density = *(*S_->Get<CompositeVector>("mass_density_liquid", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  //S_->GetEvaluator("mass_density_gas", tag_next_).Update(*S_, name_);
-  //const Epetra_MultiVector& gas_density = *(*S_->Get<CompositeVector>("mass_density_gas", tag_next_)
-  //        .ViewComponent("cell",false))(0);
-
-  //S_->GetEvaluator("mass_density_ice", tag_next_).Update(*S_, name_);
-  //const Epetra_MultiVector& ice_density = *(*S_->Get<CompositeVector>("mass_density_ice", tag_next_)
-  //        .ViewComponent("cell",false))(0);
-
   S_->GetEvaluator("density_rock", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& rock_density = *(*S_->Get<CompositeVector>("density_rock", tag_next_)
-          .ViewComponent("cell",false))(0);
-
-  S_->GetEvaluator("temperature", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& temp = *(*S_->Get<CompositeVector>("temperature", tag_next_)
-      .ViewComponent("cell",false))(0);
-
-  S_->GetEvaluator("thermal_conductivity", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& conductivity = *(*S_->Get<CompositeVector>("thermal_conductivity", tag_next_)
           .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("cell_volume", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& cell_volume = *(*S_->Get<CompositeVector>("cell_volume", tag_next_)
           .ViewComponent("cell",false))(0);
+
+  if (has_gas) {
+    S_->GetEvaluator("mass_density_gas", tag_next_).Update(*S_, name_);
+    const Epetra_MultiVector& gas_density = *(*S_->Get<CompositeVector>("mass_density_gas", tag_next_)
+            .ViewComponent("cell",false))(0);
+
+    S_->GetEvaluator("saturation_gas", tag_next_).Update(*S_, name_);
+    const Epetra_MultiVector& gas_saturation = *(*S_->Get<CompositeVector>("saturation_gas", tag_next_)
+            .ViewComponent("cell",false))(0);
+  }
+
+  if (has_ice) {
+    S_->GetEvaluator("mass_density_ice", tag_next_).Update(*S_, name_);
+    const Epetra_MultiVector& ice_density = *(*S_->Get<CompositeVector>("mass_density_ice", tag_next_)
+            .ViewComponent("cell",false))(0);
+
+    S_->GetEvaluator("saturation_ice", tag_next_).Update(*S_, name_);
+    const Epetra_MultiVector& ice_saturation = *(*S_->Get<CompositeVector>("saturation_ice", tag_next_)
+            .ViewComponent("cell",false))(0);
+  }
+
+  if (has_energy) {
+    S_->GetEvaluator("temperature", tag_next_).Update(*S_, name_);
+    const Epetra_MultiVector& temp = *(*S_->Get<CompositeVector>("temperature", tag_next_)
+        .ViewComponent("cell",false))(0);
+
+    S_->GetEvaluator("thermal_conductivity", tag_next_).Update(*S_, name_);
+    const Epetra_MultiVector& conductivity = *(*S_->Get<CompositeVector>("thermal_conductivity", tag_next_)
+            .ViewComponent("cell",false))(0);
+  }
 
   // loop over columns and apply the model
   for (AmanziMesh::Entity_ID col=0; col!=num_cols_; ++col) {
@@ -555,42 +578,24 @@ void EcoSIM::CopyToEcoSIM(int col,
 {
   //Fill state with ATS variables that are going to be changed by EcoSIM
   const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false))(0);
-  //const Epetra_Vector& tcc = *(*S_->Get<CompositeVector>(tcc_key_, water_tag).ViewComponent("cell", false))(0);
-
   const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, water_tag)->ViewComponent("cell"));
-
   const Epetra_Vector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
   //const Epetra_Vector& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false);
   const Epetra_Vector& water_content = *(*S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& relative_permeability = *(*S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& liquid_density = *(*S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& rock_density = *(*S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
-  //const Epetra_Vector& temp = *S_->Get<CompositeVector>("temperature", tag_next_).ViewComponent("cell", false);
-
-  const Epetra_Vector& conductivity = *(*S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false))(0);
 
   //Define the column vectors to hold the data
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   //auto col_elev = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_f_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_i_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-
 
   //For the concentration I do not want a vector but a matrix
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(num_components,ncells_per_col_));
@@ -601,21 +606,14 @@ void EcoSIM::CopyToEcoSIM(int col,
   //FieldToColumn_(column index, dataset to copy from, vector to put the data in)
   FieldToColumn_(col,porosity,col_poro.ptr());
   FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
-  FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
-  FieldToColumn_(col,ice_saturation,col_i_sat.ptr());
   //FieldToColumn_(col,elevation,col_elev.ptr());
   FieldToColumn_(col,water_content,col_wc.ptr());
   FieldToColumn_(col,relative_permeability,col_rel_perm.ptr());
   FieldToColumn_(col,liquid_density,col_f_dens.ptr());
-  FieldToColumn_(col,ice_density,col_i_dens.ptr());
-  FieldToColumn_(col,gas_density,col_g_dens.ptr());
   FieldToColumn_(col,rock_density,col_r_dens.ptr());
-  FieldToColumn_(col,temp, col_temp.ptr());
-  FieldToColumn_(col,conductivity,col_cond.ptr());
   FieldToColumn_(col,cell_volume,col_vol.ptr());
   //Fill the tcc matrix component by component?
 
-  //Epetra_BlockMap tcc_map(int ncells_per_col_, 1, 1, 0);
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
     Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
@@ -626,12 +624,43 @@ void EcoSIM::CopyToEcoSIM(int col,
     FieldToColumn_(col,Teuchos::ptr(&tcc_comp),Teuchos::ptr(&col_comp));
   }
 
+  if (has_gas) {
+    const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
+    const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false))(0);
+
+    auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+    auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+
+    FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
+    FieldToColumn_(col,gas_density,col_g_dens.ptr());
+  }
+
+  if (has_ice) {
+    const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
+    const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
+
+    auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+    auto col_i_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+
+    FieldToColumn_(col,ice_saturation,col_i_sat.ptr());
+    FieldToColumn_(col,ice_density,col_i_dens.ptr());
+  }
+
+  if (has_energy) {
+    const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
+    const Epetra_Vector& conductivity = *(*S_->Get<CompositeVector>(conductivity_key_, water_tag).ViewComponent("cell", false))(0);
+
+    auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+    auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+
+    FieldToColumn_(col,temp, col_temp.ptr());
+    FieldToColumn_(col,conductivity,col_cond.ptr());
+  }
+
   // I think I need to loop over the column data and save it to the data
   // structures. Eventually I could probably rewrite FieldToColumn_ to do this
   for (int i=0; i < ncells_per_col_; ++i) {
     state.fluid_density.data[i] = (*col_f_dens)[i];
-    state.gas_density.data[i] = (*col_g_dens)[i];
-    state.ice_density.data[i] = (*col_i_dens)[i];
     state.porosity.data[i] = (*col_poro)[i];
     state.water_content.data[i] = (*col_wc)[i];
     state.temperature.data[i] = (*col_temp)[i];
@@ -640,12 +669,25 @@ void EcoSIM::CopyToEcoSIM(int col,
     }
 
     props.liquid_saturation.data[i] = (*col_l_sat)[i];
-    props.gas_saturation.data[i] = (*col_g_sat)[i];
-    props.ice_saturation.data[i] = (*col_i_sat)[i];
     //props.elevation.data[i] = (*col_elev)[i];
     props.relative_permeability.data[i] = (*col_rel_perm)[i];
     props.conductivity.data[i] = (*col_cond)[i];
     props.volume.data[i] = (*col_vol)[i];
+
+    if (has_gas) {
+      props.gas_saturation.data[i] = (*col_g_sat)[i];
+      state.gas_density.data[i] = (*col_g_dens)[i];
+    }
+
+    if (has_ice) {
+      state.ice_density.data[i] = (*col_i_dens)[i];
+      props.ice_saturation.data[i] = (*col_i_sat)[i];
+    }
+
+    if (has_energy) {
+      state.temperature.data[i] = (*col_temp)[i];
+      props.conductivity.data[i] = (*col_cond)[i];
+    }
 
   }
   //mat_props.volume = mesh_->cell_volume(cell;z
@@ -693,58 +735,76 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 
   Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, Amanzi::Tags::NEXT, "state")->ViewComponent("cell",false));
   auto& porosity = *(*S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false))(0);
-
   auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Amanzi::Tags::NEXT, saturation_liquid_key_).ViewComponent("cell",false))(0);
-  auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell",false))(0);
-  auto& ice_saturation = *(*S_->GetW<CompositeVector>(saturation_ice_key_, Amanzi::Tags::NEXT, saturation_ice_key_).ViewComponent("cell",false))(0);
   //auto& elevation = S_->GetPtrW<CompositeVector>(elev_key_, Amanzi::Tags::NEXT, passwd_).ViewComponent("cell");
   auto& water_content = *(*S_->GetW<CompositeVector>(water_content_key_, Amanzi::Tags::NEXT, water_content_key_).ViewComponent("cell",false))(0);
   auto& relative_permeability = *(*S_->GetW<CompositeVector>(rel_perm_key_, Amanzi::Tags::NEXT, rel_perm_key_).ViewComponent("cell",false))(0);
   auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_den_key_, Amanzi::Tags::NEXT, liquid_den_key_).ViewComponent("cell",false))(0);
-  auto& ice_density = *(*S_->GetW<CompositeVector>(ice_den_key_, Amanzi::Tags::NEXT, ice_den_key_).ViewComponent("cell",false))(0);
-  auto& gas_density = *(*S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell",false))(0);
   auto& rock_density = *(*S_->GetW<CompositeVector>(rock_den_key_, Amanzi::Tags::NEXT, rock_den_key_).ViewComponent("cell",false))(0);
-
-  auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "energy").ViewComponent("cell",false))(0);
-  auto& conductivity = *(*S_->GetW<CompositeVector>(conductivity_key_, Amanzi::Tags::NEXT, conductivity_key_).ViewComponent("cell",false))(0);
   auto& cell_volume = *(*S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false))(0);
 
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   //auto col_elev = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_f_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_i_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   //For the concentration I do not want a vector but a matrix
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(num_components,ncells_per_col_));
 
+  if (has_gas) {
+    auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell", false))(0);
+    auto& gas_density = *(*S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell", false))(0);
+
+    auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+    auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  }
+
+  if (has_ice) {
+    auto& ice_saturation = *(*S_->GetW<CompositeVector>(saturation_ice_key_, Amanzi::Tags::NEXT, saturation_ice_key_).ViewComponent("cell",false))(0);
+    auto& ice_density = *(*S_->GetW<CompositeVector>(ice_den_key_, Amanzi::Tags::NEXT, ice_den_key_).ViewComponent("cell",false))(0);
+
+    auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+    auto col_i_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  }
+
+  if (has_energy) {
+    auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "energy").ViewComponent("cell",false))(0);
+    auto& conductivity = *(*S_->GetW<CompositeVector>(conductivity_key_, Amanzi::Tags::NEXT, conductivity_key_).ViewComponent("cell",false))(0);
+
+    auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+    auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  }
 
   for (int i=0; i < ncells_per_col_; ++i) {
     (*col_f_dens)[i] = state.fluid_density.data[i];
-    (*col_g_dens)[i] = state.gas_density.data[i];
-    (*col_i_dens)[i] = state.ice_density.data[i];
     (*col_poro)[i] = state.porosity.data[i];
     (*col_wc)[i] = state.water_content.data[i];
-    (*col_temp)[i] = state.temperature.data[i];
     for (int j=0; i < num_components; ++j) {
       (*col_tcc)[j][i] = state.total_component_concentration.data[j][i];
     }
-
     (*col_l_sat)[i] = props.liquid_saturation.data[i];
-    (*col_g_sat)[i] = props.gas_saturation.data[i];
-    (*col_i_sat)[i] = props.ice_saturation.data[i];
     //(*col_elev)[i] = props.elevation.data[i];
     (*col_rel_perm)[i] = props.relative_permeability.data[i];
     (*col_cond)[i] = props.conductivity.data[i];
     (*col_vol)[i] = props.volume.data[i];
+
+    if (has_gas) {
+      (*col_g_dens)[i] = state.gas_density.data[i];
+      (*col_g_sat)[i] = props.gas_saturation.data[i];
+    }
+
+    if (has_ice) {
+      (*col_i_dens)[i] = state.ice_density.data[i];
+      (*col_i_sat)[i] = props.ice_saturation.data[i];
+    }
+
+    if (has_energy) {
+      (*col_temp)[i] = state.temperature.data[i];
+      (*col_cond)[i] = props.conductivity.data[i];
+    }
   }
 
 
@@ -782,6 +842,21 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,temp, col_temp.ptr());
   ColumnToField_(col,conductivity,col_cond.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
+
+  if (has_gas) {
+    ColumnToField_(col,gas_saturation,col_g_sat.ptr());
+    ColumnToField_(col,gas_density,col_g_dens.ptr());
+  }
+
+  if (has_ice) {
+    ColumnToField_(col,ice_saturation,col_i_sat.ptr());
+    ColumnToField_(col,ice_density,col_i_dens.ptr());
+  }
+
+  if (has_energy) {
+    ColumnToField_(col,temp, col_temp.ptr());
+    ColumnToField_(col,conductivity,col_cond.ptr());
+  }
 
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
