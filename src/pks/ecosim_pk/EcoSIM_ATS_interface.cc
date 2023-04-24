@@ -837,21 +837,12 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,liquid_density,col_f_dens.ptr());
   ColumnToField_(col,rock_density,col_r_dens.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
-
-  if (has_gas) {
-    ColumnToField_(col,gas_saturation,col_g_sat.ptr());
-    ColumnToField_(col,gas_density,col_g_dens.ptr());
-  }
-
-  if (has_ice) {
-    ColumnToField_(col,ice_saturation,col_i_sat.ptr());
-    ColumnToField_(col,ice_density,col_i_dens.ptr());
-  }
-
-  if (has_energy) {
-    ColumnToField_(col,temp, col_temp.ptr());
-    ColumnToField_(col,conductivity,col_cond.ptr());
-  }
+  ColumnToField_(col,gas_saturation,col_g_sat.ptr());
+  ColumnToField_(col,gas_density,col_g_dens.ptr());
+  ColumnToField_(col,ice_saturation,col_i_sat.ptr());
+  ColumnToField_(col,ice_density,col_i_dens.ptr());
+  ColumnToField_(col,temp, col_temp.ptr());
+  ColumnToField_(col,conductivity,col_cond.ptr());
 
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
