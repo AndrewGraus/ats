@@ -755,28 +755,25 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
+  Epetra_Vector gas_saturation(ncells_per_col_);
+  Epetra_Vector gas_density(ncells_per_col_);
   if (has_gas) {
     auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell", false))(0);
     auto& gas_density = *(*S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell", false))(0);
-  } else {
-    Epetra_Vector gas_saturation(ncells_per_col_);
-    Epetra_Vector gas_density(ncells_per_col_);
   }
 
+  Epetra_Vector ice_saturation(ncells_per_col_);
+  Epetra_Vector ice_density(ncells_per_col_);
   if (has_ice) {
     auto& ice_saturation = *(*S_->GetW<CompositeVector>(saturation_ice_key_, Amanzi::Tags::NEXT, saturation_ice_key_).ViewComponent("cell",false))(0);
     auto& ice_density = *(*S_->GetW<CompositeVector>(ice_den_key_, Amanzi::Tags::NEXT, ice_den_key_).ViewComponent("cell",false))(0);
-  } else {
-    Epetra_Vector ice_saturation(ncells_per_col_);
-    Epetra_Vector ice_density(ncells_per_col_);
   }
 
+  Epetra_Vector temp(ncells_per_col_);
+  Epetra_Vector conductivity(ncells_per_col_);
   if (has_energy) {
     auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "energy").ViewComponent("cell",false))(0);
     auto& conductivity = *(*S_->GetW<CompositeVector>(conductivity_key_, Amanzi::Tags::NEXT, conductivity_key_).ViewComponent("cell",false))(0);
-  } else {
-    Epetra_Vector temp(ncells_per_col_);
-    Epetra_Vector conductivity(ncells_per_col_);
   }
 
   for (int i=0; i < ncells_per_col_; ++i) {
