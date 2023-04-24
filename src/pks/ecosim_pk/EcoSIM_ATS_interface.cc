@@ -825,17 +825,11 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   //ColumnToField_(col,tcc,col_tcc.ptr());
   ColumnToField_(col,porosity,col_poro.ptr());
   ColumnToField_(col,liquid_saturation,col_l_sat.ptr());
-  ColumnToField_(col,gas_saturation,col_g_sat.ptr());
-  ColumnToField_(col,ice_saturation,col_i_sat.ptr());
   //ColumnToField_(col,elevation,col_elev.ptr());
   ColumnToField_(col,water_content,col_wc.ptr());
   ColumnToField_(col,relative_permeability,col_rel_perm.ptr());
   ColumnToField_(col,liquid_density,col_f_dens.ptr());
-  ColumnToField_(col,ice_density,col_i_dens.ptr());
-  ColumnToField_(col,gas_density,col_g_dens.ptr());
   ColumnToField_(col,rock_density,col_r_dens.ptr());
-  ColumnToField_(col,temp, col_temp.ptr());
-  ColumnToField_(col,conductivity,col_cond.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
 
   if (has_gas) {
