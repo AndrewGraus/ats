@@ -315,7 +315,6 @@ void EcoSIM::Initialize() {
 
   //Looping over the columns and initializing
   for (int col=0; col!=num_cols_; ++col) {
-
     ierr = InitializeSingleColumn(col);
   }
   // verbose message
@@ -576,6 +575,8 @@ void EcoSIM::CopyToEcoSIM(int col,
                                  BGCAuxiliaryData& aux_data,
                                const Tag& water_tag)
 {
+  Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "Starting copy step" << std::endl;
   //Fill state with ATS variables that are going to be changed by EcoSIM
   const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, water_tag)->ViewComponent("cell"));
@@ -618,15 +619,15 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,liquid_density,col_f_dens.ptr());
   FieldToColumn_(col,rock_density,col_r_dens.ptr());
   FieldToColumn_(col,cell_volume,col_vol.ptr());
-  //Fill the tcc matrix component by component?
-  std::cout << "Total comp: " << num_components << "\n";
-  std::cout << "Total cells: " << ncells_per_col_ << "\n";
+
+  *vo_->os() << "Total Comp: " << num_components << std::endl;
+  *vo_->os() << "Total cells: " << ncells_per_col_ << std::endl;
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
     Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
-    std::cout << "component: " << i << "\n";
+    *vo_->os() << "Component: " << i << std::endl;
     for (int j=0; j<ncells_per_col_; ++j){
-      std::cout << "cell: " << j << "\n";
+      *vo_->os() << "Cell: " << j << std::endl;
       col_comp(j) = (*col_tcc)(i,j);
       tcc_comp[j] = tcc[i][j];
     }
