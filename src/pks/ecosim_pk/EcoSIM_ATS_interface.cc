@@ -619,11 +619,14 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,rock_density,col_r_dens.ptr());
   FieldToColumn_(col,cell_volume,col_vol.ptr());
   //Fill the tcc matrix component by component?
-
+  std::cout << "Total comp: " << num_components << "\n";
+  std::cout << "Total cells: " << ncells_per_col_ << "\n";
   for (int i=0; i < num_components; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
     Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
+    std::cout << "component: " << i << "\n";
     for (int j=0; j<ncells_per_col_; ++j){
+      std::cout << "cell: " << j << "\n";
       col_comp(j) = (*col_tcc)(i,j);
       tcc_comp[j] = tcc[i][j];
     }
