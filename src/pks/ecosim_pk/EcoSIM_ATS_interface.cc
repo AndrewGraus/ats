@@ -237,8 +237,11 @@ void EcoSIM::Initialize() {
     InitializeCVField(S_, *vo_, aux_names_[i], tag_next_, passwd_, 0.0);
   }*/
 
-  //Now we call the engine's init state function which allocates the data
+  //Need to know the number of components to initialize data structures
+  const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, water_tag)->ViewComponent("cell"));
+  int tcc_num = tcc.NumVectors();
 
+  //Now we call the engine's init state function which allocates the data
   bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num);
 
   int ierr = 0;
