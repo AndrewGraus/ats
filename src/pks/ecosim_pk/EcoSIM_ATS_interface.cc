@@ -688,7 +688,6 @@ void EcoSIM::CopyToEcoSIM(int col,
   // structures. Eventually I could probably rewrite FieldToColumn_ to do this
   // have to fill tcc separately (I think)
 
-  *vo_->os() << "component: "<< i << std::endl;
   for (int j=0; j < tcc_num; ++j) {
     *vo_->os() << "component: "<< j << std::endl;
     for (int i=0; i < ncells_per_col_; ++i) {
