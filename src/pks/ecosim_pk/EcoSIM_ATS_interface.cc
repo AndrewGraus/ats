@@ -75,7 +75,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
 
     // transport
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
-    int tcc_num = tcc.NumVectors();
     //Remember tcc components are accessed by tcc[i][c] where i is the component and c is the cell
 
     //Flow
@@ -238,7 +237,7 @@ void EcoSIM::Initialize() {
   }*/
 
   //Need to know the number of components to initialize data structures
-  const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, water_tag)->ViewComponent("cell"));
+  const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, Tags::DEFAULT)->ViewComponent("cell"));
   int tcc_num = tcc.NumVectors();
 
   //Now we call the engine's init state function which allocates the data
