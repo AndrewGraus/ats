@@ -516,7 +516,8 @@ void EcoSIM::MatrixFieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiV
         *vo_->os() << "cell: "<< i << std::endl;
         *vo_->os() << "cell: "<< i << std::endl;
         *vo_->os() << "col arr: "<< (*col_arr)(i,j) << std::endl;
-        *vo_->os() << "m_arr: "<< m_arr[col_iter[i]][j] << std::endl;                
+        //*vo_->os() << "m_arr: "<< m_arr[col_iter[i]][j] << std::endl;
+        *vo_->os() << "m_arr: "<< m_arr(col_iter[i],j) << std::endl;
         (*col_arr)(i,j) = m_arr[col_iter[i]][j];
       }
     }
