@@ -75,6 +75,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
 
     // transport
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
+    int tcc_num = tcc.NumVectors();
     //Remember tcc components are accessed by tcc[i][c] where i is the component and c is the cell
 
     //Flow
