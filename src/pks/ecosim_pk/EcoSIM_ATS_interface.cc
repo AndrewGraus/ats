@@ -77,12 +77,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
     //Remember tcc components are accessed by tcc[i][c] where i is the component and c is the cell
 
-    if (plist_->isParameter("component names")) {
-      component_names_ = plist_->get<Teuchos::Array<std::string>>("component names").toVector();
-      num_components = component_names_.size();
-      // otherwise we hopefully get them from chemistry
-    }
-
     //Flow
     poro_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
     saturation_liquid_key_ = Keys::readKey(*plist_, domain_, "saturation liquid", "saturation_liquid");
@@ -244,7 +238,7 @@ void EcoSIM::Initialize() {
 
   //Now we call the engine's init state function which allocates the data
 
-  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, num_components);
+  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num);
 
   int ierr = 0;
 
@@ -580,6 +574,8 @@ void EcoSIM::CopyToEcoSIM(int col,
   //Fill state with ATS variables that are going to be changed by EcoSIM
   const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, water_tag)->ViewComponent("cell"));
+  int tcc_num = tcc.NumVectors();
+
   const Epetra_Vector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
   //const Epetra_Vector& elevation = *S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false);
   const Epetra_Vector& water_content = *(*S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false))(0);
@@ -605,7 +601,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
   //For the concentration I do not want a vector but a matrix
-  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(num_components,ncells_per_col_));
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
   //Here is where we should do the various field-to-column calls to then pass along
   //to the data structures that will pass the data to EcoSIM
@@ -623,7 +619,6 @@ void EcoSIM::CopyToEcoSIM(int col,
   //int tcc_num = tcc.size();
   int tcc_num = tcc.NumVectors();
   *vo_->os() << "Total Comp: " << tcc_num << std::endl;
-  *vo_->os() << "Total Comp: " << num_components << std::endl;
   *vo_->os() << "Total cells: " << ncells_per_col_ << std::endl;
   for (int i=0; i < tcc_num; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
@@ -695,8 +690,6 @@ void EcoSIM::CopyToEcoSIM(int col,
   //mat_props.volume = mesh_->cell_volume(cell;z
   //mat_props.saturation = water_saturation[0][cell];
 
-  //num_components_ = tcc.NumVectors();
-
   // Auxiliary data -- block copy.
   /*if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
     aux_data_ = S_->GetW<CompositeVector>(bgc_aux_data_key_, tag_next_, passwd_).ViewComponent("cell");
@@ -736,6 +729,8 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   // (this->porosity())[cell] = state.porosity;
 
   Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, Amanzi::Tags::NEXT, "state")->ViewComponent("cell",false));
+  int tcc_num = tcc.NumVectors();
+
   auto& porosity = *(*S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false))(0);
   auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Amanzi::Tags::NEXT, saturation_liquid_key_).ViewComponent("cell",false))(0);
   //auto& elevation = S_->GetPtrW<CompositeVector>(elev_key_, Amanzi::Tags::NEXT, passwd_).ViewComponent("cell");
@@ -754,7 +749,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   //For the concentration I do not want a vector but a matrix
-  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(num_components,ncells_per_col_));
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
   auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
