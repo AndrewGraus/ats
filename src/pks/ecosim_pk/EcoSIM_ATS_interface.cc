@@ -502,6 +502,23 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Teuchos::Ptr<Epetra
   }
 }
 
+void EcoSIM::MatrixFieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& m_arr,
+  Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr)
+  {
+    int n_comp = m_arr.NumVectors();
+    auto& col_iter = mesh_->cells_of_column(col);
+
+    *vo->os() << "number of comp: "<< n_comp << std::endl;
+    *vo->os() << "number of cells: "<< col_iter.size() << std::endl;
+    for (int j=0; j!=n_comp; ++j){
+      *vo->os() << "component: "<< j << std::endl;
+      for (std::size_t i=0; i!=col_iter.size(); ++i) {
+        *vo->os() << "cell: "<< i << std::endl;
+        (*col_arr)(i,j) = m_arr[col_iter[i]][j];
+      }
+    }
+  }
+
 // helper function for pushing column back to field
 void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Epetra_Vector& vec,
                                Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
@@ -619,7 +636,9 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,rock_density,col_r_dens.ptr());
   FieldToColumn_(col,cell_volume,col_vol.ptr());
 
-  *vo_->os() << "Total Comp: " << tcc_num << std::endl;
+  MatrixFieldToColumn_(col, tcc, col_tcc.ptr());
+
+  /**vo_->os() << "Total Comp: " << tcc_num << std::endl;
   *vo_->os() << "Total cells: " << ncells_per_col_ << std::endl;
   for (int i=0; i < tcc_num; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
@@ -631,7 +650,9 @@ void EcoSIM::CopyToEcoSIM(int col,
       tcc_comp[j] = tcc[i][j];
     }
     FieldToColumn_(col,Teuchos::ptr(&tcc_comp),Teuchos::ptr(&col_comp));
-  }
+  }*/
+
+
 
   if (has_gas) {
     const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
