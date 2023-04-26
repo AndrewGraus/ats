@@ -620,9 +620,11 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,rock_density,col_r_dens.ptr());
   FieldToColumn_(col,cell_volume,col_vol.ptr());
 
+  int tcc_num = tcc_comp->size();
+  *vo_->os() << "Total Comp: " << tcc_num << std::endl;
   *vo_->os() << "Total Comp: " << num_components << std::endl;
   *vo_->os() << "Total cells: " << ncells_per_col_ << std::endl;
-  for (int i=0; i < num_components; ++i) {
+  for (int i=0; i < tcc_num; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
     Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
     *vo_->os() << "Component: " << i << std::endl;
@@ -843,7 +845,8 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,rock_density,col_r_dens.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
 
-  for (int i=0; i < num_components; ++i) {
+  int tcc_num = tcc_comp->size();
+  for (int i=0; i < tcc_num; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
     Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
     for (int j=0; j<ncells_per_col_; ++j){
