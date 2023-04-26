@@ -692,7 +692,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     state.porosity.data[i] = (*col_poro)[i];
     state.water_content.data[i] = (*col_wc)[i];
     for (int j=0; i < tcc_num; ++j) {
-      state.total_component_concentration.data[j][i] = (*col_tcc)[j][i];
+      state.total_component_concentration.data[j][i] = (*col_tcc)(i,j);
     }
 
     props.liquid_saturation.data[i] = (*col_l_sat)[i];
