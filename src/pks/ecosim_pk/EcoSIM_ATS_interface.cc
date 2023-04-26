@@ -616,8 +616,6 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,rock_density,col_r_dens.ptr());
   FieldToColumn_(col,cell_volume,col_vol.ptr());
 
-  //int tcc_num = tcc.size();
-  int tcc_num = tcc.NumVectors();
   *vo_->os() << "Total Comp: " << tcc_num << std::endl;
   *vo_->os() << "Total cells: " << ncells_per_col_ << std::endl;
   for (int i=0; i < tcc_num; ++i) {
@@ -756,9 +754,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_i_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-
-  //int tcc_num = tcc.size();
-  int tcc_num = tcc.NumVectors();
 
   if (has_gas) {
     auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell", false))(0);
