@@ -4,8 +4,8 @@
 #    Constitutive relations for EcoSIM
 #
 
-add_subdirectory(bulk_density)
-add_subdirectory(hydraulic_conductivity)
+#add_subdirectory(bulk_density)
+#add_subdirectory(hydraulic_conductivity)
 
 # collect all sources
 set(ats_ecosim_relations_src_files
