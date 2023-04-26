@@ -620,7 +620,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,rock_density,col_r_dens.ptr());
   FieldToColumn_(col,cell_volume,col_vol.ptr());
 
-  int tcc_num = tcc_comp->size();
+  int tcc_num = tcc->size();
   *vo_->os() << "Total Comp: " << tcc_num << std::endl;
   *vo_->os() << "Total Comp: " << num_components << std::endl;
   *vo_->os() << "Total cells: " << ncells_per_col_ << std::endl;
@@ -666,7 +666,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     state.fluid_density.data[i] = (*col_f_dens)[i];
     state.porosity.data[i] = (*col_poro)[i];
     state.water_content.data[i] = (*col_wc)[i];
-    for (int j=0; i < num_components; ++j) {
+    for (int j=0; i < tcc_num; ++j) {
       state.total_component_concentration.data[j][i] = (*col_tcc)[j][i];
     }
 
@@ -761,6 +761,8 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
+  int tcc_num = tcc->size();
+
   if (has_gas) {
     auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell", false))(0);
     auto& gas_density = *(*S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell", false))(0);
@@ -805,7 +807,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_f_dens)[i] = state.fluid_density.data[i];
     (*col_poro)[i] = state.porosity.data[i];
     (*col_wc)[i] = state.water_content.data[i];
-    for (int j=0; i < num_components; ++j) {
+    for (int j=0; i < tcc_num; ++j) {
       (*col_tcc)[j][i] = state.total_component_concentration.data[j][i];
     }
     (*col_l_sat)[i] = props.liquid_saturation.data[i];
@@ -845,7 +847,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,rock_density,col_r_dens.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
 
-  int tcc_num = tcc_comp->size();
   for (int i=0; i < tcc_num; ++i) {
     Epetra_SerialDenseVector col_comp(ncells_per_col_);
     Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
