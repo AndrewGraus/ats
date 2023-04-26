@@ -517,7 +517,6 @@ void EcoSIM::MatrixFieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiV
       *vo_->os() << "component: "<< j << std::endl;
       for (std::size_t i=0; i!=col_iter.size(); ++i) {
         *vo_->os() << "cell: "<< i << std::endl;
-        *vo_->os() << "cell: "<< i << std::endl;
         *vo_->os() << "col arr: "<< (*col_arr)(i,j) << std::endl;
         *vo_->os() << "m_arr: "<< m_arr[j][col_iter[i]] << std::endl;
         //*vo_->os() << "m_arr: "<< (*m_arr)(col_iter[i],j) << std::endl;
@@ -687,14 +686,23 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   // I think I need to loop over the column data and save it to the data
   // structures. Eventually I could probably rewrite FieldToColumn_ to do this
+  // have to fill tcc separately (I think)
+
+  *vo_->os() << "component: "<< i << std::endl;
+  for (int j=0; j < tcc_num; ++j) {
+    *vo_->os() << "component: "<< j << std::endl;
+    for (int i=0; i < ncells_per_col_; ++i) {
+      *vo_->os() << "cell: "<< i << std::endl;
+      *vo_->os() << "col arr: "<< (*col_tcc)(i,j) << std::endl;
+      *vo_->os() << "m_arr: "<< state.total_component_concentration.data[j][i] << std::endl;
+      state.total_component_concentration.data[j][i] = (*col_tcc)(i,j);
+    }
+  }
+
   for (int i=0; i < ncells_per_col_; ++i) {
     state.fluid_density.data[i] = (*col_f_dens)[i];
     state.porosity.data[i] = (*col_poro)[i];
     state.water_content.data[i] = (*col_wc)[i];
-    for (int j=0; i < tcc_num; ++j) {
-      state.total_component_concentration.data[j][i] = (*col_tcc)(i,j);
-    }
-
     props.liquid_saturation.data[i] = (*col_l_sat)[i];
     //props.elevation.data[i] = (*col_elev)[i];
     props.relative_permeability.data[i] = (*col_rel_perm)[i];
