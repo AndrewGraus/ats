@@ -85,6 +85,10 @@ class BGCEngine {
   void CopyBGCProperties(const BGCProperties* const source,
                               BGCProperties* destination);
 
+  void CreateBGCInterface(const char* const engine_name,
+                          BGCInterface* interface,
+                          BGCEngineStatus* status);
+
  private:
 
   // bgc data structures.

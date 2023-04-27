@@ -83,6 +83,10 @@ BGCEngine::BGCEngine(const std::string& engineName,
     msg << "BGCEngine: Unsupported bgc engine: '" << bgc_engine_name_ << "'\n";
     msg << "  Only option for now is 'EcoSIM'.\n";
     Exceptions::amanzi_throw(msg);
+
+    CreateBGCInterface(bgc_engine_name_.c_str(), &bgc_, &bgc_status_);
+
+    bgc_.Setup(bgc_engine_inputfile_.c_str())
   }
 
   // All alquimia function calls require a status object.
@@ -141,7 +145,7 @@ BGCEngine::BGCEngine(const std::string& engineName,
 
 BGCEngine::~BGCEngine()
 {
-  //chem_.Shutdown(&engine_state_, &chem_status_);
+  bgc_.Shutdown(&engine_state_, &bgc_status_);
   //FreeAlquimiaProblemMetaData(&chem_metadata_);
 
   // As there are no chemical conditions, am I just deleting variables?
@@ -155,9 +159,9 @@ BGCEngine::~BGCEngine()
     delete iter->second;
   }*/
 
-  //FreeBGCProperties(&props);
-  //FreeBGCState(&state);
-  //FreeBGCAuxiliaryData(&aux_data);
+  FreeBGCProperties(&props);
+  FreeBGCState(&state);
+  FreeBGCAuxiliaryData(&aux_data);
   //FreeAlquimiaEngineStatus(&chem_status_);
 }
 
@@ -205,13 +209,13 @@ bool BGCEngine::Advance(const double delta_time,
 {
 
   // Advance the chemical reaction all operator-split-like.
-  /*chem_.ReactionStepOperatorSplit(&engine_state_,
-                                  delta_time,
-                                  &(const_cast<AlquimiaProperties&>(mat_props)),
-                                  &chem_state,
-                                  &aux_data,
-                                  &chem_status_);
-  */
+  bgc_.Advance(&engine_state_,
+                delta_time,
+                &(const_cast<AlquimiaProperties&>(mat_props)),
+                &chem_state,
+                &aux_data,
+                &chem_status_);
+
   //This is alquimia's advance function which we won't need
   //calling EcoSIM advance driver
 
@@ -220,6 +224,17 @@ bool BGCEngine::Advance(const double delta_time,
   *************************/
 }
 
+
+void CreateBGCInterface(const char* const engine_name,
+                        BGCInterface* interface,
+                        BGCEngineStatus* status)
+ {
+
+   interface->Setup = &ecosim_setup;
+   interface->Shutdown = &ecosim_shutdown;
+   interface->Advance = &ecosim_advance;
+
+ }
 
 //For now I don't need any of the rest of this code yet. Just commenting
 //out in case I need it later.
