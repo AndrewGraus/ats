@@ -544,6 +544,30 @@ void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Teuchos::Ptr<Epetra_Seria
   }
 }
 
+void EcoSIM::MatrixColumnToField_(AmanziMesh::Entity_ID col, Epetra_MultiVector& m_arr,
+  Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr) {
+    auto& col_iter = mesh->cells_of_column(col);
+
+    int n_comp = m_arr.NumVectors();
+    auto& col_iter = mesh_->cells_of_column(col);
+
+    *vo_->os() << "number of comp: "<< n_comp << std::endl;
+    *vo_->os() << "number of cells: "<< col_iter.size() << std::endl;
+
+    *vo_->os() << "Matrix rows: "<< m_arr.GlobalLength() << std::endl;
+    *vo_->os() << "Matrix columns: "<< m_arr.NumVectors() << std::endl;
+
+    for (int j=0; j!=n_comp; ++j){
+      *vo_->os() << "component: "<< j << std::endl;
+      for (std::size_t i=0; i!=col_iter.size(); ++i) {
+        *vo_->os() << "cell: "<< i << std::endl;
+        *vo_->os() << "col arr: "<< (*col_arr)(i,j) << std::endl;
+        *vo_->os() << "m_arr: "<< m_arr[j][col_iter[i]] << std::endl;
+
+        m_arr[j][col_iter[i]] = (*col_arr)(i,j);
+
+  }
+
 // helper function for collecting column dz and depth
 void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID col,
                             Teuchos::Ptr<Epetra_SerialDenseVector> depth,
@@ -837,9 +861,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_f_dens)[i] = state.fluid_density.data[i];
     (*col_poro)[i] = state.porosity.data[i];
     (*col_wc)[i] = state.water_content.data[i];
-    for (int j=0; i < tcc_num; ++j) {
-      (*col_tcc)[j][i] = state.total_component_concentration.data[j][i];
-    }
     (*col_l_sat)[i] = props.liquid_saturation.data[i];
     //(*col_elev)[i] = props.elevation.data[i];
     (*col_rel_perm)[i] = props.relative_permeability.data[i];
@@ -847,6 +868,17 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_vol)[i] = props.volume.data[i];
   }
 
+  //Take new values from Ecosim state and put them into the secondary data structure
+  //for backing back into amanzi state
+  for (int j=0; j < tcc_num; ++j) {
+    *vo_->os() << "component: "<< j << std::endl;
+    for (int i=0; i < ncells_per_col_; ++i) {
+      *vo_->os() << "cell: "<< i << std::endl;
+      *vo_->os() << "col arr: "<< (*col_tcc)(i,j) << std::endl;
+      *vo_->os() << "m_arr: "<< state.total_component_concentration.data[j][i] << std::endl;
+      (*col_tcc)(i,j) = state.total_component_concentration.data[j][i];
+    }
+  }
 
   //Here is where the auxiliary data is filled need to try to change this to columns
   //This may not be trivial
@@ -877,16 +909,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,rock_density,col_r_dens.ptr());
   ColumnToField_(col,cell_volume,col_vol.ptr());
 
-  for (int i=0; i < tcc_num; ++i) {
-    Epetra_SerialDenseVector col_comp(ncells_per_col_);
-    Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
-    for (int j=0; j<ncells_per_col_; ++j){
-      col_comp(j) = (*col_tcc)(i,j);
-      tcc_comp(j) = tcc[i][j];
-    }
-    ColumnToField_(col,Teuchos::ptr(&tcc_comp),Teuchos::ptr(&col_comp));
-  }
-
+  MatrixColumnToField_(col, tcc, col_tcc.ptr());
 }
 
 /* *******************************************************************
