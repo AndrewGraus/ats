@@ -546,7 +546,7 @@ void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Teuchos::Ptr<Epetra_Seria
 
 void EcoSIM::MatrixColumnToField_(AmanziMesh::Entity_ID col, Epetra_MultiVector& m_arr,
   Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr) {
-    auto& col_iter = mesh->cells_of_column(col);
+    auto& col_iter = mesh_->cells_of_column(col);
 
     int n_comp = m_arr.NumVectors();
     auto& col_iter = mesh_->cells_of_column(col);
@@ -565,6 +565,8 @@ void EcoSIM::MatrixColumnToField_(AmanziMesh::Entity_ID col, Epetra_MultiVector&
         *vo_->os() << "m_arr: "<< m_arr[j][col_iter[i]] << std::endl;
 
         m_arr[j][col_iter[i]] = (*col_arr)(i,j);
+      }
+    }
 
   }
 
