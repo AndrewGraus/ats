@@ -43,16 +43,11 @@ class BGCEngine {
          const char* input_filename,
          //bool hands_off,
          //void* pft_engine_state,
-         BGCSizes* sizes,
-         //BGCEngineFunctionality* functionality,
-         //BGCEngineStatus* status
-       );
+         BGCSizes* sizes);
 
      /* gracefully shutdown the engine, cleanup memory */
      void (*Shutdown)(
-       void* pft_engine_state,
-       //BGCEngineStatus* status
-     );
+       void* pft_engine_state);
 
      /* constrain processing for boundary/initial constraints. Called
         once for each IC/BC. */
@@ -70,9 +65,7 @@ class BGCEngine {
          double delta_t,
          BGCProperties* props,
          BGCState* state,
-         BGCAuxiliaryData* aux_data,
-         //BGCEngineStatus* status
-       );
+         BGCAuxiliaryData* aux_data);
 
      /* Access to user selected geochemical data for output, i.e. pH,
         mineral SI, reaction rates */
@@ -137,9 +130,7 @@ class BGCEngine {
                               BGCProperties* destination);
 
   void CreateBGCInterface(const char* const engine_name,
-                          BGCInterface* interface,
-                          //BGCEngineStatus* status
-                        );
+                          BGCInterface* interface);
 
  private:
 

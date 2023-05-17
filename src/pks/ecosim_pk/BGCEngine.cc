@@ -85,9 +85,7 @@ BGCEngine::BGCEngine(const std::string& engineName,
     Exceptions::amanzi_throw(msg);
 
     CreateBGCInterface(bgc_engine_name_.c_str(),
-                      &bgc_,
-                      //&bgc_status_
-                    );
+                      &bgc_);
 
     bgc_.Setup(bgc_engine_inputfile_.c_str(),&sizes_)
   }
@@ -148,9 +146,7 @@ BGCEngine::BGCEngine(const std::string& engineName,
 
 BGCEngine::~BGCEngine()
 {
-  bgc_.Shutdown(&engine_state_,
-                //&bgc_status_
-              );
+  bgc_.Shutdown(&engine_state_);
   //FreeAlquimiaProblemMetaData(&chem_metadata_);
 
   // As there are no chemical conditions, am I just deleting variables?
