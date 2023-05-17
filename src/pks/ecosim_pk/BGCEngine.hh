@@ -41,16 +41,18 @@ class BGCEngine {
         (includes reading database, swapping basis, etc.) */
      void (*Setup)(
          const char* input_filename,
-         bool hands_off,
-         void* pft_engine_state,
+         //bool hands_off,
+         //void* pft_engine_state,
          BGCSizes* sizes,
-         BGCEngineFunctionality* functionality,
-         BGCEngineStatus* status);
+         //BGCEngineFunctionality* functionality,
+         //BGCEngineStatus* status
+       );
 
      /* gracefully shutdown the engine, cleanup memory */
      void (*Shutdown)(
        void* pft_engine_state,
-       BGCEngineStatus* status);
+       //BGCEngineStatus* status
+     );
 
      /* constrain processing for boundary/initial constraints. Called
         once for each IC/BC. */
@@ -69,7 +71,8 @@ class BGCEngine {
          BGCProperties* props,
          BGCState* state,
          BGCAuxiliaryData* aux_data,
-         BGCEngineStatus* status);
+         //BGCEngineStatus* status
+       );
 
      /* Access to user selected geochemical data for output, i.e. pH,
         mineral SI, reaction rates */
@@ -135,20 +138,20 @@ class BGCEngine {
 
   void CreateBGCInterface(const char* const engine_name,
                           BGCInterface* interface,
-                          BGCEngineStatus* status);
+                          //BGCEngineStatus* status
+                        );
 
  private:
 
   // bgc data structures.
   bool bgc_initialized_;
   void* engine_state_;
-  BGCEngineFunctionality functionality_;
+  //BGCEngineFunctionality functionality_;
   BGCSizes sizes_;
   BGCInterface bgc_;
-  BGCEngineStatus bgc_status_;
-  BGCProblemMetaData bgc_metadata_;  
+  //BGCEngineStatus bgc_status_;
+  //BGCProblemMetaData bgc_metadata_;
 
-  BGCSizes sizes_;
   /*AlquimiaEngineFunctionality functionality_;
   AlquimiaSizes sizes_;
   AlquimiaInterface chem_;

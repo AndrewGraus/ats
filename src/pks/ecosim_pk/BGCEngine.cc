@@ -84,9 +84,12 @@ BGCEngine::BGCEngine(const std::string& engineName,
     msg << "  Only option for now is 'EcoSIM'.\n";
     Exceptions::amanzi_throw(msg);
 
-    CreateBGCInterface(bgc_engine_name_.c_str(), &bgc_, &bgc_status_);
+    CreateBGCInterface(bgc_engine_name_.c_str(),
+                      &bgc_,
+                      //&bgc_status_
+                    );
 
-    bgc_.Setup(bgc_engine_inputfile_.c_str())
+    bgc_.Setup(bgc_engine_inputfile_.c_str(),&sizes_)
   }
 
   // All alquimia function calls require a status object.
@@ -145,7 +148,9 @@ BGCEngine::BGCEngine(const std::string& engineName,
 
 BGCEngine::~BGCEngine()
 {
-  bgc_.Shutdown(&engine_state_, &bgc_status_);
+  bgc_.Shutdown(&engine_state_,
+                //&bgc_status_
+              );
   //FreeAlquimiaProblemMetaData(&chem_metadata_);
 
   // As there are no chemical conditions, am I just deleting variables?
@@ -159,9 +164,9 @@ BGCEngine::~BGCEngine()
     delete iter->second;
   }*/
 
-  FreeBGCProperties(&props);
-  FreeBGCState(&state);
-  FreeBGCAuxiliaryData(&aux_data);
+  //FreeBGCProperties(&props);
+  //FreeBGCState(&state);
+  //FreeBGCAuxiliaryData(&aux_data);
   //FreeAlquimiaEngineStatus(&chem_status_);
 }
 
@@ -552,17 +557,6 @@ const AlquimiaSizes& ChemistryEngine::Sizes() const
 {
   return sizes_;
 }*/
-
-void CreateBGCInterface(const char* const engine_name,
-                             BGCInterface* interface,
-                             BGCEngineStatus* status) {
-  //Now here is where I should put the links to the actual Setup, Shutdown
-  //Functions for the dirver
-  interface->Setup = NULL;
-  interface->Shutdown = NULL;
-  interface->Advance = NULL;
-
-}  /* end CreateAlquimiaInterface() */
 
 } // namespace
 } // namespace
