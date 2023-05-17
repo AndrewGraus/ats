@@ -211,10 +211,8 @@ bool BGCEngine::Advance(const double delta_time,
   // Advance the chemical reaction all operator-split-like.
   bgc_.Advance(&engine_state_,
                 delta_time,
-                &(const_cast<AlquimiaProperties&>(mat_props)),
-                &chem_state,
-                &aux_data,
-                &chem_status_);
+                &state,
+                &aux_data);
 
   //This is alquimia's advance function which we won't need
   //calling EcoSIM advance driver
@@ -554,6 +552,17 @@ const AlquimiaSizes& ChemistryEngine::Sizes() const
 {
   return sizes_;
 }*/
+
+void CreateBGCInterface(const char* const engine_name,
+                             BGCInterface* interface,
+                             BGCEngineStatus* status) {
+  //Now here is where I should put the links to the actual Setup, Shutdown
+  //Functions for the dirver
+  interface->Setup = NULL;
+  interface->Shutdown = NULL;
+  interface->Advance = NULL;
+
+}  /* end CreateAlquimiaInterface() */
 
 } // namespace
 } // namespace
