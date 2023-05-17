@@ -142,6 +142,11 @@ class BGCEngine {
   // bgc data structures.
   bool bgc_initialized_;
   void* engine_state_;
+  BGCEngineFunctionality functionality_;
+  BGCSizes sizes_;
+  BGCInterface bgc_;
+  BGCEngineStatus bgc_status_;
+  BGCProblemMetaData bgc_metadata_;  
 
   BGCSizes sizes_;
   /*AlquimiaEngineFunctionality functionality_;
