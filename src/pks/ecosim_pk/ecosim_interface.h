@@ -27,17 +27,13 @@
 ** Authors: Benjamin Andre <bandre@lbl.gov>
 */
 
-#ifndef ALQUIMIA_PFLOTRAN_INTERFACE_H_
-#define ALQUIMIA_PFLOTRAN_INTERFACE_H_
-
 /*******************************************************************************
  **
- ** C declarations of the pflotran alquimia interface
+ ** C declarations of the ecosim interface
  **
  ******************************************************************************/
 
-#include "alquimia/alquimia_interface.h"
-#include "alquimia/alquimia_containers.h"
+#include "data/bgc_containers.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,23 +41,16 @@ extern "C" {
 
 void ecosim_setup(
   const char* input_filename,
-  bool hands_off,
-  void* pft_engine_state,
-  BGCSizes* sizes,
-  BGCEngineFunctionality* functionality,
-  BGCEngineStatus* status
+  BGCSizes* sizes
 );
 
 void ecosim_advance(
   void* pft_engine_state,
   double delta_t,
-  BGCProperties* material_properties,
   BGCState* state,
   BGCAuxiliaryData* aux_data,
-  BGCEngineStatus* status  
+  BGCEngineStatus* status
 );
-
-#endif
 
 #ifdef __cplusplus
 }
