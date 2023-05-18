@@ -27,10 +27,10 @@
 ** Authors: Benjamin Andre <bandre@lbl.gov>
 */
 
-#include "BGC_containers.h"
+#include "BGC_containers.hh"
 
 /* Its kind of silly to have this as a separate code at this point, but this
-will in theory become the switching code if we add other bgc 
+will in theory become the switching code if we add other bgc
 codes, in alquimia this switches between CrunchFlow and PFloTran*/
 
 void CreateBGCInterface(const char* const engine_name, BGCInterface* interface)
