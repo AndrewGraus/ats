@@ -129,8 +129,7 @@ class BGCEngine {
   void CopyBGCProperties(const BGCProperties* const source,
                               BGCProperties* destination);
 
-  void CreateBGCInterface(const char* const engine_name,
-                          BGCInterface* interface);
+  void CreateBGCInterface(const char* const engine_name);
 
  private:
 

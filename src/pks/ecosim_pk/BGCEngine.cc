@@ -87,7 +87,7 @@ BGCEngine::BGCEngine(const std::string& engineName,
     CreateBGCInterface(bgc_engine_name_.c_str(),
                       &bgc_);
 
-    bgc_.Setup(bgc_engine_inputfile_.c_str(),&sizes_)
+    bgc_.Setup(bgc_engine_inputfile_.c_str(),&sizes_);
   }
 
   // All alquimia function calls require a status object.
@@ -224,9 +224,7 @@ bool BGCEngine::Advance(const double delta_time,
 }
 
 
-void CreateBGCInterface(const char* const engine_name,
-                        BGCInterface* interface,
-                        BGCEngineStatus* status)
+void CreateBGCInterface(const char* const engine_name)
  {
 
    interface->Setup = &ecosim_setup;
