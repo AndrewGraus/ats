@@ -73,7 +73,7 @@ class BGCEngine {
   // returned by GetSpeciesNames. Returns true if the advance is successful,
   // false if it fails.
   bool Advance(const double delta_time,
-               const BGCProperties& props,
+               BGCProperties& props,
                BGCState& state,
                BGCAuxiliaryData& aux_data,
                int& num_iterations);
