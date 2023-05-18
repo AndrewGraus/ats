@@ -33,7 +33,7 @@
 will in theory become the switching code if we add other bgc
 codes, in alquimia this switches between CrunchFlow and PFloTran*/
 
-void CreateBGCInterface(char* engine_name, BGCInterface* interface)
+void CreateBGCInterface(const char* const engine_name, BGCInterface* interface)
  {
 
    interface->Setup = NULL;

@@ -49,7 +49,10 @@ subroutine EcoSIM_Setup(input_filename, hands_off, &
   type (BGCEngineStatus), intent(out) :: status
 
   call ATS2EcoSIMData(filter_col,data_1d,var_1d,data_2d,var_2d,data_3d,var_3d)
+
   call Init_EcoSIM(jz,js,ncol)
+
+  call EcoSIM2ATSData()
 
 end subroutine EcoSIM_Setup
 
@@ -78,6 +81,10 @@ subroutine EcoSIM_Advance( &
   type (BGCAuxiliaryData), intent(inout) :: aux_data
   type (BGCEngineStatus), intent(out) :: status
 
+  call ATS2EcoSIMData(filter_col,data_1d,var_1d,data_2d,var_2d,data_3d,var_3d)
+
   call Run_EcoSIM_one_step()
 
+  call EcoSIM2ATSData()
+  
 end subroutine EcoSIM_Advance
