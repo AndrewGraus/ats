@@ -151,6 +151,8 @@ extern "C" {
         BGCAuxiliaryOutputData* aux_out,
         BGCEngineStatus* status);*/
   } BGCInterface;
+
+  void CreateBGCInterface(const char* const engine_name, BGCInterface* interface);
   /*
   typedef struct {
     int error;
