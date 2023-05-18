@@ -212,6 +212,7 @@ bool BGCEngine::Advance(const double delta_time,
   // Advance the chemical reaction all operator-split-like.
   bgc_.Advance(&engine_state_,
                 delta_time,
+                &props,
                 &state,
                 &aux_data);
 
@@ -224,7 +225,7 @@ bool BGCEngine::Advance(const double delta_time,
 }
 
 
-void CreateBGCInterface(const char* const engine_name, BGCInterface* interface)
+/*void CreateBGCInterface(const char* const engine_name, BGCInterface* interface)
  {
 
    interface->Setup = &ecosim_setup;
@@ -232,7 +233,7 @@ void CreateBGCInterface(const char* const engine_name, BGCInterface* interface)
    interface->Advance = &ecosim_advance;
 
  }
-
+*/
 //For now I don't need any of the rest of this code yet. Just commenting
 //out in case I need it later.
 

@@ -34,50 +34,6 @@ namespace EcoSIM {
 class BGCEngine {
  public:
 
-   //This is the main struct which will hold the data for the engine including
-   //its set up and shutdown regions
-   typedef struct {
-     /* read data files/structures, initialize memory, basis management
-        (includes reading database, swapping basis, etc.) */
-     void (*Setup)(
-         const char* input_filename,
-         //bool hands_off,
-         //void* pft_engine_state,
-         BGCSizes* sizes);
-
-     /* gracefully shutdown the engine, cleanup memory */
-     void (*Shutdown)(
-       void* pft_engine_state);
-
-     /* constrain processing for boundary/initial constraints. Called
-        once for each IC/BC. */
-     /*void (*Setup)(
-         void* pft_engine_state,
-         BGCGeochemicalCondition* condition,
-         BGCProperties* props,
-         BGCState* state,
-         BGCAuxiliaryData* aux_data,
-         BGCEngineStatus* status);*/
-
-     /* take one (or more?) reaction steps in operator split mode */
-     void (*Advance)(
-         void* pft_engine_state,
-         double delta_t,
-         BGCProperties* props,
-         BGCState* state,
-         BGCAuxiliaryData* aux_data);
-
-     /* Access to user selected geochemical data for output, i.e. pH,
-        mineral SI, reaction rates */
-     /*void (*GetAuxiliaryOutput)(
-         void* pft_engine_state,
-         BGCProperties* props,
-         BGCState* state,
-         BGCAuxiliaryData* aux_data,
-         BGCAuxiliaryOutputData* aux_out,
-         BGCEngineStatus* status);*/
-   } BGCInterface;
-
   // Constructs a chemistry engine using the given engine (backend) name and input file.
   BGCEngine(const std::string& engineName, const std::string& inputFile);
 
