@@ -203,7 +203,7 @@ void BGCEngine::FreeState(BGCProperties& props,
 }
 
 bool BGCEngine::Advance(const double delta_time,
-                              const BGCProperties& props,
+                              BGCProperties& props,
                               BGCState& state,
                               BGCAuxiliaryData& aux_data,
                               int& num_iterations)
