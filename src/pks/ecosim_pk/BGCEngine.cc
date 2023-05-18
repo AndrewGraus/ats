@@ -224,7 +224,7 @@ bool BGCEngine::Advance(const double delta_time,
 }
 
 
-void CreateBGCInterface(const char* const engine_name)
+void CreateBGCInterface(const char* const engine_name, BGCInterface* interface)
  {
 
    interface->Setup = &ecosim_setup;
