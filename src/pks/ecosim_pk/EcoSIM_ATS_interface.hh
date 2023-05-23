@@ -182,7 +182,7 @@ class EcoSIM : public PK_Physical {
   Key gas_den_key_test_;
   Key rock_den_key_;
   Key T_key_;
-  Key conductivity_key_;
+  Key therm_cond_key_;
   Key cv_key_;
   Key min_vol_frac_key_;
   Key ecosim_aux_data_key_;
