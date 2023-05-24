@@ -85,13 +85,14 @@ extern "C" {
   } BGCSizes;
 
   typedef struct {
-    BGCVectorDouble fluid_density;
+    BGCVectorDouble liquid_density;
     BGCVectorDouble gas_density;
     BGCVectorDouble ice_density;
     BGCVectorDouble porosity;
     BGCVectorDouble water_content;
     BGCVectorDouble temperature;
     BGCVectorDouble total_mobile;
+    BGCVectorDouble hydraulic_conductivity;
     BGCMatrixDouble total_component_concentration;
   } BGCState;
 
@@ -101,7 +102,7 @@ extern "C" {
     BGCVectorDouble ice_saturation;
     BGCVectorDouble elevation;
     BGCVectorDouble relative_permeability;
-    BGCVectorDouble conductivity;
+    BGCVectorDouble thermal_conductivity;
     BGCVectorDouble volume;
   } BGCProperties;
 
