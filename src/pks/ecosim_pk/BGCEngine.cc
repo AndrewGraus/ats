@@ -34,12 +34,13 @@ namespace {
 //Here are the major function that the engine will need
 void CopyBGCState(BGCState* dest, BGCState* src)
 {
-  memcpy(dest->fluid_density.data, src->fluid_density.data, sizeof(double) * src->fluid_density.size);
+  memcpy(dest->liquid_density.data, src->liquid_density.data, sizeof(double) * src->liquid_density.size);
   memcpy(dest->gas_density.data, src->gas_density.data, sizeof(double) * src->gas_density.size);
   memcpy(dest->ice_density.data, src->ice_density.data, sizeof(double) * src->ice_density.size);
   memcpy(dest->porosity.data, src->porosity.data, sizeof(double) * src->porosity.size);
   memcpy(dest->water_content.data, src->water_content.data, sizeof(double) * src->water_content.size);
   memcpy(dest->temperature.data, src->temperature.data, sizeof(double) * src->temperature.size);
+  memcpy(dest->hydraulic_conductivity.data, src->hydraulic_conductivity.data, sizeof(double) * src->hydraulic_conductivity.size);
   //memcpy(dest->total_mobile.data, src->total_mobile.data, sizeof(double) * src->total_mobile.size);
 
   //dest->water_density = src->water_density;
@@ -55,7 +56,7 @@ void CopyBGCProperties(BGCProperties* dest, BGCProperties* src)
   memcpy(dest->ice_saturation.data, src->ice_saturation.data, sizeof(double) * src->ice_saturation.size);
   memcpy(dest->elevation.data, src->elevation.data, sizeof(double) * src->elevation.size);
   memcpy(dest->relative_permeability.data, src->relative_permeability.data, sizeof(double) * src->relative_permeability.size);
-  memcpy(dest->conductivity.data, src->conductivity.data, sizeof(double) * src->conductivity.size);
+  memcpy(dest->thermal_conductivity.data, src->thermal_conductivity.data, sizeof(double) * src->thermal_conductivity.size);
   memcpy(dest->volume.data, src->volume.data, sizeof(double) * src->volume.size);
 }
 

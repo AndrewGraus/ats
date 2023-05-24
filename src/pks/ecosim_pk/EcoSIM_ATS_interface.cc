@@ -804,7 +804,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_den_key_, Amanzi::Tags::NEXT, liquid_den_key_).ViewComponent("cell",false))(0);
   auto& rock_density = *(*S_->GetW<CompositeVector>(rock_den_key_, Amanzi::Tags::NEXT, rock_den_key_).ViewComponent("cell",false))(0);
   auto& cell_volume = *(*S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false))(0);
-  auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydra_cond_key_, Amanzi::Tags::NEXT, hydra_cond_key_.ViewComponent("cell",false))(0);
+  auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydra_cond_key_, Amanzi::Tags::NEXT, hydra_cond_key_).ViewComponent("cell",false))(0);
 
 
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -858,7 +858,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 
     for (int i=0; i < ncells_per_col_; ++i) {
       (*col_temp)[i] = state.temperature.data[i];
-      (*col_cond)[i] = props.conductivity.data[i];
+      (*col_cond)[i] = props.thermal_conductivity.data[i];
     }
 
     ColumnToField_(col,temp, col_temp.ptr());
