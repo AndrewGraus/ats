@@ -33,7 +33,7 @@
  **
  ******************************************************************************/
 
-#include "data/bgc_containers.h"
+#include "data/BGC_containers.hh"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,9 +47,9 @@ void ecosim_setup(
 void ecosim_advance(
   void* pft_engine_state,
   double delta_t,
+  BGCProperties* properties,
   BGCState* state,
   BGCAuxiliaryData* aux_data,
-  BGCEngineStatus* status
 );
 
 #ifdef __cplusplus

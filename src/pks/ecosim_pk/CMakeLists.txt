@@ -16,11 +16,13 @@ include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/h
 set(ats_ecosim_src_files
     EcoSIM_ATS_interface.cc
     BGCEngine.cc
+    ecosim_wrappers.F90
   )
 
 set(ats_ecosim_inc_files
     EcoSIM_ATS_interface.hh
     BGCEngine.hh
+    ecosim_interface.h
   )
 
 set(ats_ecosim_link_libs

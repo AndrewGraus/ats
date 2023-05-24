@@ -30,23 +30,18 @@
 !
 ! **************************************************************************** !
 
-subroutine EcoSIM_Setup(input_filename, hands_off, &
-     pft_engine_state, sizes, functionality, status) bind(C)
+subroutine EcoSIM_Setup(input_filename, sizes) bind(C)
 
   use, intrinsic :: iso_c_binding
 
   use BGCContainers_module
-  use ATSCPLMod, only : ATS2EcoSIMData, Init_EcoSIM
+  use ATSCPLMod
 
   implicit none
 
   ! function parameters
   character(kind=c_char), dimension(*), intent(in) :: input_filename
-  logical (c_bool), value, intent(in) :: hands_off
-  type (c_ptr), intent(out) :: pft_engine_state
   type (BGCSizes), intent(out) :: sizes
-  type (BGCEngineFunctionality), intent(out) :: functionality
-  type (BGCEngineStatus), intent(out) :: status
 
   call ATS2EcoSIMData(filter_col,data_1d,var_1d,data_2d,var_2d,data_3d,var_3d)
 
@@ -63,8 +58,7 @@ subroutine EcoSIM_Advance( &
      delta_t, &
      properties, &
      state, &
-     aux_data, &
-     status) bind(C)
+     aux_data) bind(C)
 
   use, intrinsic :: iso_c_binding
 
@@ -86,5 +80,5 @@ subroutine EcoSIM_Advance( &
   call Run_EcoSIM_one_step()
 
   call EcoSIM2ATSData()
-  
+
 end subroutine EcoSIM_Advance
