@@ -144,6 +144,7 @@ set(tpl_link_libs
   ${HYPRE_LIBRARIES}
   ${HDF5_LIBRARIES}
   ${CLM_LIBRARIES}
+  ${ECOSIM_LIBRARIES}
   )
 
 add_amanzi_library(ats_executable

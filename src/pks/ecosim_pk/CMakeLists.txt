@@ -8,6 +8,7 @@ include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/data)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/bulk_density)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/hydraulic_conductivity)
+include_directories(${ECOSIM_INCLUDE_DIRS})
 
 # ATS EcoSIM pk
 # For adding F90 files add the F90 file to the ecosim source files and
@@ -28,6 +29,7 @@ set(ats_ecosim_inc_files
 set(ats_ecosim_link_libs
   ${Teuchos_LIBRARIES}
   ${Epetra_LIBRARIES}
+  ${ECOSIM_LIBRARIES}
   error_handling
   atk
   mesh
