@@ -35,15 +35,19 @@ subroutine EcoSIM_Setup(input_filename, sizes) bind(C)
   use, intrinsic :: iso_c_binding
 
   use BGCContainers_module
-  use ATSCPLMod
+  use ATSCPLMod, only : ATS2EcoSIMData, Init_EcoSIM, EcoSIM2ATSData
 
   implicit none
 
   ! function parameters
   character(kind=c_char), dimension(*), intent(in) :: input_filename
   type (BGCSizes), intent(out) :: sizes
+  type (BGCState), intent(in) :: state
+  type (BGCAuxiliaryData), intent(in) :: aux_data
+  type (BGCProperties), intent(in) :: prop
+  integer :: ncol
 
-  call ATS2EcoSIMData(filter_col,data_1d,var_1d,data_2d,var_2d,data_3d,var_3d)
+  call ATS2EcoSIMData(ncol, state, aux_data, prop)
 
   call Init_EcoSIM(jz,js,ncol)
 
@@ -61,9 +65,10 @@ subroutine EcoSIM_Advance( &
      aux_data) bind(C)
 
   use, intrinsic :: iso_c_binding
+  use BGCContainers_module
 
   use BGCContainers_module
-  use ATSCPLMod, only : Run_EcoSIM_one_step
+  use ATSCPLMod, only : Run_EcoSIM_one_step, ATS2EcoSIMData, EcoSIM2ATSData
 
   implicit none
 
