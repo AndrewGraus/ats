@@ -8,7 +8,11 @@ include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/data)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/bulk_density)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim_pk/constitutive_relations/hydraulic_conductivity)
+include_directories(${TPL_INSTALL_PREFIX}/ecosim/f90src/ATSUtils/)
+
 include_directories(${ECOSIM_INCLUDE_DIRS})
+
+message(eco_inc_file="${ECOSIM_INCLUDE_DIRS}")
 
 # ATS EcoSIM pk
 # For adding F90 files add the F90 file to the ecosim source files and
@@ -18,7 +22,11 @@ set(ats_ecosim_src_files
     EcoSIM_ATS_interface.cc
     BGCEngine.cc
     ecosim_wrappers.F90
-  )
+    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/BGC_containers.F90
+    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/ATSCPLMod.F90	
+    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/c_f_interface_module.F90	 
+    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/data_kind_mod.F90	
+ )
 
 set(ats_ecosim_inc_files
     EcoSIM_ATS_interface.hh

@@ -30,7 +30,7 @@
 !
 ! **************************************************************************** !
 
-subroutine EcoSIM_Setup(input_filename, sizes) bind(C)
+subroutine EcoSIM_Setup(input_filename, sizes, prop, state, aux_data) bind(C)
 
   use, intrinsic :: iso_c_binding
 
@@ -45,7 +45,7 @@ subroutine EcoSIM_Setup(input_filename, sizes) bind(C)
   type (BGCState), intent(in) :: state
   type (BGCAuxiliaryData), intent(in) :: aux_data
   type (BGCProperties), intent(in) :: prop
-  integer :: ncol
+  integer :: ncol, jz, js
 
   call ATS2EcoSIMData(ncol, state, aux_data, prop)
 
@@ -60,13 +60,11 @@ end subroutine EcoSIM_Setup
 subroutine EcoSIM_Advance( &
      pft_engine_state, &
      delta_t, &
-     properties, &
+     prop, &
      state, &
      aux_data) bind(C)
 
   use, intrinsic :: iso_c_binding
-  use BGCContainers_module
-
   use BGCContainers_module
   use ATSCPLMod, only : Run_EcoSIM_one_step, ATS2EcoSIMData, EcoSIM2ATSData
 
@@ -75,12 +73,13 @@ subroutine EcoSIM_Advance( &
   ! function parameters
   type (c_ptr), intent(inout) :: pft_engine_state
   real (c_double), value, intent(in) :: delta_t
-  type (BGCProperties), intent(in) :: properties
+  type (BGCProperties), intent(in) :: prop
   type (BGCState), intent(inout) :: state
   type (BGCAuxiliaryData), intent(inout) :: aux_data
-  type (BGCEngineStatus), intent(out) :: status
+  !type (BGCEngineStatus), intent(out) :: status
+  integer :: ncol
 
-  call ATS2EcoSIMData(filter_col,data_1d,var_1d,data_2d,var_2d,data_3d,var_3d)
+  call ATS2EcoSIMData(ncol, state, aux_data, prop)
 
   call Run_EcoSIM_one_step()
 
