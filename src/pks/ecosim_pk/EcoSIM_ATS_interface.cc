@@ -300,9 +300,9 @@ void EcoSIM::Initialize() {
   }
 
   //Initialize owned evaluators
-  *vo_->os() << "Getting hydraulic conductivity" << std::endl;
+  //*vo_->os() << "Getting hydraulic conductivity" << std::endl;
   S_->GetW<CompositeVector>(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
-  *vo_->os() << "recording to hydraulic" << std::endl;
+  //*vo_->os() << "recording to hydraulic" << std::endl;
   S_->GetRecordW(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").set_initialized();
 
   //S_->GetW<CompositeVector>(bulk_dens_key_, tag_next_, name_).PutScalar(1.0);
@@ -507,18 +507,8 @@ void EcoSIM::MatrixFieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiV
     int n_comp = m_arr.NumVectors();
     auto& col_iter = mesh_->cells_of_column(col);
 
-    *vo_->os() << "number of comp: "<< n_comp << std::endl;
-    *vo_->os() << "number of cells: "<< col_iter.size() << std::endl;
-
-    *vo_->os() << "Matrix rows: "<< m_arr.GlobalLength() << std::endl;
-    *vo_->os() << "Matrix columns: "<< m_arr.NumVectors() << std::endl;
     for (int j=0; j!=n_comp; ++j){
-      *vo_->os() << "component: "<< j << std::endl;
       for (std::size_t i=0; i!=col_iter.size(); ++i) {
-        *vo_->os() << "cell: "<< i << std::endl;
-        *vo_->os() << "col arr: "<< (*col_arr)(i,j) << std::endl;
-        *vo_->os() << "m_arr: "<< m_arr[j][col_iter[i]] << std::endl;
-        //*vo_->os() << "m_arr: "<< (*m_arr)(col_iter[i],j) << std::endl;
         (*col_arr)(i,j) = m_arr[j][col_iter[i]];
       }
     }
@@ -549,19 +539,8 @@ void EcoSIM::MatrixColumnToField_(AmanziMesh::Entity_ID col, Epetra_MultiVector&
     int n_comp = m_arr.NumVectors();
     auto& col_iter = mesh_->cells_of_column(col);
 
-    *vo_->os() << "number of comp: "<< n_comp << std::endl;
-    *vo_->os() << "number of cells: "<< col_iter.size() << std::endl;
-
-    *vo_->os() << "Matrix rows: "<< m_arr.GlobalLength() << std::endl;
-    *vo_->os() << "Matrix columns: "<< m_arr.NumVectors() << std::endl;
-
     for (int j=0; j!=n_comp; ++j){
-      *vo_->os() << "component: "<< j << std::endl;
       for (std::size_t i=0; i!=col_iter.size(); ++i) {
-        *vo_->os() << "cell: "<< i << std::endl;
-        *vo_->os() << "col arr: "<< (*col_arr)(i,j) << std::endl;
-        *vo_->os() << "m_arr: "<< m_arr[j][col_iter[i]] << std::endl;
-
         m_arr[j][col_iter[i]] = (*col_arr)(i,j);
       }
     }

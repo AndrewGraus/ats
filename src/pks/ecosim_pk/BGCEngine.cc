@@ -84,10 +84,13 @@ BGCEngine::BGCEngine(const std::string& engineName,
     msg << "BGCEngine: Unsupported bgc engine: '" << bgc_engine_name_ << "'\n";
     msg << "  Only option for now is 'EcoSIM'.\n";
     Exceptions::amanzi_throw(msg);
-
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "Creating the BGC Engine interface" << std::endl;
     CreateBGCInterface(bgc_engine_name_.c_str(),
                       &bgc_);
 
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "Running bgc engine setup" << std::endl;
     bgc_.Setup(bgc_engine_inputfile_.c_str(),&sizes_);
   }
 
@@ -179,12 +182,13 @@ void BGCEngine::InitState(BGCProperties& props,
                                 int ncells_per_col_,
                                 int num_components)
 {
-  std::cout << "Allocating prop" << std::endl;
-  std::cout << "size: " << ncells_per_col_ << std::endl;
+  Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "Allocating Properties" << std::endl;
+  *vo_->os() << "Size of columns: " << ncells_per_col_ << std::endl;
   AllocateBGCProperties(&sizes_, &props, ncells_per_col_);
-  std::cout << "Allocating state" << std::endl;
+  *vo_->os() << "Allocating State" << std::endl;
   AllocateBGCState(&sizes_, &state, ncells_per_col_, num_components);
-  std::cout << "Allocating aux" << std::endl;
+  *vo_->os() << "Allocating aux" << std::endl;
   AllocateBGCAuxiliaryData(&sizes_, &aux_data, ncells_per_col_);
   //AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);
 
@@ -209,7 +213,8 @@ bool BGCEngine::Advance(const double delta_time,
                               BGCAuxiliaryData& aux_data,
                               int& num_iterations)
 {
-
+  Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "Running BGC Engine Advance" << std::endl;
   // Advance the chemical reaction all operator-split-like.
   bgc_.Advance(&engine_state_,
                 delta_time,
