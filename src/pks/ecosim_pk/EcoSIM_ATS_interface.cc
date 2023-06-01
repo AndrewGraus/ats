@@ -908,10 +908,7 @@ int EcoSIM::InitializeSingleColumn(int col)
 {
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-  /* *******************************************************************
-  * Here is where we will put the call to the BGC engine's set ICs for
-  * EcoSIM function
-  ******************************************************************* */
+  bgc_engine_->BGCEngine(engineName, inputFile)
 
   CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
@@ -935,23 +932,13 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
   // should use the same tag as transport.  See #673
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-  int num_iterations = 0;
+  int num_iterations = 1;
 /*****************************************************************
    ADVANCE CALL GOES HERE
-  ******************************************************************
+  *******************************************************************/
 
-  if (ecosim_mat_props_.saturation > saturation_tolerance_) {
-    bool success = bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
+ bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
                                          bgc_aux_data_, num_iterations);
-    if (not success) {
-      if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
-        Teuchos::OSTab tab = vo_->getOSTab();
-        *vo_->os() << "no convergence in cell: " << mesh_->cell_map(false).GID(cell) << std::endl;
-      }
-      return -1;
-    }
-  }
-  */
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
   CopyEcoSIMStateToAmanzi(col,

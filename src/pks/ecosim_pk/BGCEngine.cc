@@ -212,8 +212,7 @@ bool BGCEngine::Advance(const double delta_time,
 {
   std::cout << "Running BGC Engine Advance" << std::endl;
   // Advance the chemical reaction all operator-split-like.
-  bgc_.Advance(&engine_state_,
-                delta_time,
+  bgc_.Advance(delta_time,
                 &props,
                 &state,
                 &aux_data);
