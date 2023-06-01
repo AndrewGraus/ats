@@ -60,6 +60,30 @@ end subroutine EcoSIM_Setup
 
 ! **************************************************************************** !
 
+subroutine EcoSIM_Shutdown() bind(C)
+
+  !For now this does nothing, but it should clear all
+  !the data structures
+  use, intrinsic :: iso_c_binding
+
+  use BGCContainers_module
+
+  implicit none
+
+  ! function parameters
+  character(kind=c_char), dimension(*), intent(in) :: input_filename
+  type (BGCSizes), intent(out) :: sizes
+  type (BGCState), intent(in) :: state
+  type (BGCAuxiliaryData), intent(in) :: aux_data
+  type (BGCProperties), intent(in) :: prop
+  integer :: ncol, jz, js
+  real (c_double), value, intent(in) :: delta_t
+  integer, intent(in) :: num_iterations
+
+end subroutine EcoSIM_Setup
+
+! **************************************************************************** !
+
 subroutine EcoSIM_Advance( &
      delta_t, &
      prop, &

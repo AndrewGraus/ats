@@ -122,8 +122,7 @@ extern "C" {
       int num_iterations);
 
     /* gracefully shutdown the engine, cleanup memory */
-    void (*Shutdown)(
-      void* pft_engine_state);
+    void (*Shutdown)();
 
     /* constrain processing for boundary/initial constraints. Called
        once for each IC/BC. */

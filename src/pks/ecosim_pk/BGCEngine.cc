@@ -148,7 +148,7 @@ BGCEngine::BGCEngine(const std::string& engineName,
 
 BGCEngine::~BGCEngine()
 {
-  bgc_.Shutdown(&engine_state_);
+  bgc_.Shutdown();
   //FreeAlquimiaProblemMetaData(&chem_metadata_);
 
   // As there are no chemical conditions, am I just deleting variables?

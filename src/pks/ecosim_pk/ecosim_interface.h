@@ -47,6 +47,8 @@ void ecosim_setup(
   int num_iterations
 );
 
+void ecosim_shutdown();
+
 void ecosim_advance(
   double delta_t,
   BGCProperties* properties,
