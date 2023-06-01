@@ -211,7 +211,7 @@ bool BGCEngine::Setup(BGCProperties& props,
 {
   std::cout << "Running BGC Engine Setup" << std::endl;
   // Advance the chemical reaction all operator-split-like.
-  bgc_.Stup(&props,
+  bgc_.Setup(&props,
                 &state,
                 &aux_data,
                 num_iterations);
