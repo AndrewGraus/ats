@@ -40,7 +40,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 void ecosim_setup(
-  double delta_t,
   BGCProperties* properties,
   BGCState* state,
   BGCAuxiliaryData* aux_data,

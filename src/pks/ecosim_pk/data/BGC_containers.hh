@@ -115,7 +115,6 @@ extern "C" {
     /* read data files/structures, initialize memory, basis management
        (includes reading database, swapping basis, etc.) */
     void (*Setup)(
-      double delta_t,
       BGCProperties* properties,
       BGCState* state,
       BGCAuxiliaryData* aux_data,

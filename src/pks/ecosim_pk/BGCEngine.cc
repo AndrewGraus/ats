@@ -212,10 +212,9 @@ bool BGCEngine::Setup(const double delta_time,
 {
   std::cout << "Running BGC Engine Setup" << std::endl;
   // Advance the chemical reaction all operator-split-like.
-  bgc_.Advance(delta_time,
-                &props,
+  bgc_.Stup(&props,
                 &state,
-                &aux_data
+                &aux_data,
                 num_iterations);
 
   //This is alquimia's advance function which we won't need
@@ -237,7 +236,7 @@ bool BGCEngine::Advance(const double delta_time,
   bgc_.Advance(delta_time,
                 &props,
                 &state,
-                &aux_data
+                &aux_data,
                 num_iterations);
 
   //This is alquimia's advance function which we won't need

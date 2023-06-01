@@ -70,8 +70,7 @@ class BGCEngine {
                         AlquimiaState& state,
                         AlquimiaAuxiliaryData& aux_data);*/
 
-  bool Setup(const double delta_time,
-               BGCProperties& props,
+  bool Setup(BGCProperties& props,
                BGCState& state,
                BGCAuxiliaryData& aux_data,
                int& num_iterations);

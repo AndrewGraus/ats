@@ -904,13 +904,13 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 /* *******************************************************************
 * This helper performs initialization on a single column within Amanzi's state.
 ******************************************************************* */
-int EcoSIM::InitializeSingleColumn(double dt, int col)
+int EcoSIM::InitializeSingleColumn(int col)
 {
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   int num_iterations = 1;
 
-  bgc_engine_->Setup(dt, bgc_props_, bgc_state_,
+  bgc_engine_->Setup(bgc_props_, bgc_state_,
                                           bgc_aux_data_, num_iterations);
   CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 

@@ -30,7 +30,7 @@
 !
 ! **************************************************************************** !
 
-subroutine EcoSIM_Setup(delta_t, props, state, aux_data, &
+subroutine EcoSIM_Setup(props, state, aux_data, &
                           num_iterations) bind(C)
 
   use, intrinsic :: iso_c_binding
@@ -45,12 +45,12 @@ subroutine EcoSIM_Setup(delta_t, props, state, aux_data, &
   type (BGCSizes), intent(out) :: sizes
   type (BGCState), intent(in) :: state
   type (BGCAuxiliaryData), intent(in) :: aux_data
-  type (BGCProperties), intent(in) :: prop
+  type (BGCProperties), intent(in) :: props
   integer :: ncol, jz, js
   real (c_double), value, intent(in) :: delta_t
   integer, intent(in) :: num_iterations
 
-  call ATS2EcoSIMData(ncol, state, aux_data, prop)
+  call ATS2EcoSIMData(ncol, state, aux_data, props
 
   call Init_EcoSIM(jz,js,ncol)
 
@@ -75,7 +75,7 @@ subroutine EcoSIM_Shutdown() bind(C)
   type (BGCSizes), intent(out) :: sizes
   type (BGCState), intent(in) :: state
   type (BGCAuxiliaryData), intent(in) :: aux_data
-  type (BGCProperties), intent(in) :: prop
+  type (BGCProperties), intent(in) :: props
   integer :: ncol, jz, js
   real (c_double), value, intent(in) :: delta_t
   integer, intent(in) :: num_iterations
@@ -86,7 +86,7 @@ end subroutine EcoSIM_Shutdown
 
 subroutine EcoSIM_Advance( &
      delta_t, &
-     prop, &
+     props, &
      state, &
      aux_data, &
      num_iterations) bind(C)
@@ -100,14 +100,14 @@ subroutine EcoSIM_Advance( &
   ! function parameters
   type (c_ptr), intent(inout) :: pft_engine_state
   real (c_double), value, intent(in) :: delta_t
-  type (BGCProperties), intent(in) :: prop
+  type (BGCProperties), intent(in) :: props
   type (BGCState), intent(inout) :: state
   type (BGCAuxiliaryData), intent(inout) :: aux_data
   !type (BGCEngineStatus), intent(out) :: status
   integer :: ncol
   integer, intent(in) :: num_iterations
 
-  call ATS2EcoSIMData(ncol, state, aux_data, prop)
+  call ATS2EcoSIMData(ncol, state, aux_data, props)
 
   call Run_EcoSIM_one_step()
 
