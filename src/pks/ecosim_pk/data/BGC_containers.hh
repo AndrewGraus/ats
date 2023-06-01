@@ -115,10 +115,11 @@ extern "C" {
     /* read data files/structures, initialize memory, basis management
        (includes reading database, swapping basis, etc.) */
     void (*Setup)(
-        const char* input_filename,
-        //bool hands_off,
-        //void* pft_engine_state,
-        BGCSizes* sizes);
+      double delta_t,
+      BGCProperties* properties,
+      BGCState* state,
+      BGCAuxiliaryData* aux_data,
+      int num_iterations);
 
     /* gracefully shutdown the engine, cleanup memory */
     void (*Shutdown)(
@@ -136,11 +137,11 @@ extern "C" {
 
     /* take one (or more?) reaction steps in operator split mode */
     void (*Advance)(
-        void* pft_engine_state,
-        double delta_t,
-        BGCProperties* props,
-        BGCState* state,
-        BGCAuxiliaryData* aux_data);
+      double delta_t,
+      BGCProperties* properties,
+      BGCState* state,
+      BGCAuxiliaryData* aux_data,
+      int num_iterations);
 
     /* Access to user selected geochemical data for output, i.e. pH,
        mineral SI, reaction rates */
