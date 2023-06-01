@@ -204,8 +204,7 @@ void BGCEngine::FreeState(BGCProperties& props,
   //FreeAlquimiaAuxiliaryOutputData(&aux_output);
 }
 
-bool BGCEngine::Setup(const double delta_time,
-                              BGCProperties& props,
+bool BGCEngine::Setup(BGCProperties& props,
                               BGCState& state,
                               BGCAuxiliaryData& aux_data,
                               int& num_iterations)

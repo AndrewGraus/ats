@@ -42,15 +42,14 @@ subroutine EcoSIM_Setup(props, state, aux_data, &
 
   ! function parameters
   character(kind=c_char), dimension(*), intent(in) :: input_filename
-  type (BGCSizes), intent(out) :: sizes
+  type (BGCSizes), intent(in) :: sizes
   type (BGCState), intent(in) :: state
   type (BGCAuxiliaryData), intent(in) :: aux_data
   type (BGCProperties), intent(in) :: props
   integer :: ncol, jz, js
-  real (c_double), value, intent(in) :: delta_t
   integer, intent(in) :: num_iterations
 
-  call ATS2EcoSIMData(ncol, state, aux_data, props
+  call ATS2EcoSIMData(ncol, state, aux_data, props)
 
   call Init_EcoSIM(jz,js,ncol)
 
@@ -71,14 +70,13 @@ subroutine EcoSIM_Shutdown() bind(C)
   implicit none
 
   ! function parameters
-  character(kind=c_char), dimension(*), intent(in) :: input_filename
-  type (BGCSizes), intent(out) :: sizes
-  type (BGCState), intent(in) :: state
-  type (BGCAuxiliaryData), intent(in) :: aux_data
-  type (BGCProperties), intent(in) :: props
-  integer :: ncol, jz, js
-  real (c_double), value, intent(in) :: delta_t
-  integer, intent(in) :: num_iterations
+  !character(kind=c_char), dimension(*), intent(in) :: input_filename
+  !type (BGCSizes), intent(out) :: sizes
+  !type (BGCState), intent(in) :: state
+  !type (BGCAuxiliaryData), intent(in) :: aux_data
+  !type (BGCProperties), intent(in) :: props
+  !integer :: ncol, jz, js
+  !integer, intent(in) :: num_iterations
 
 end subroutine EcoSIM_Shutdown
 
@@ -98,7 +96,6 @@ subroutine EcoSIM_Advance( &
   implicit none
 
   ! function parameters
-  type (c_ptr), intent(inout) :: pft_engine_state
   real (c_double), value, intent(in) :: delta_t
   type (BGCProperties), intent(in) :: props
   type (BGCState), intent(inout) :: state
