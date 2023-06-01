@@ -106,6 +106,7 @@ class BGCEngine {
   AlquimiaEngineStatus chem_status_;
   AlquimiaProblemMetaData chem_metadata_;*/
 
+  Teuchos::RCP<VerboseObject> vo_;
   // Back-end engine name and input file.
   std::string bgc_engine_name_;
   std::string bgc_engine_inputfile_;

@@ -89,7 +89,6 @@ BGCEngine::BGCEngine(const std::string& engineName,
     CreateBGCInterface(bgc_engine_name_.c_str(),
                       &bgc_);
 
-    Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "Running bgc engine setup" << std::endl;
     bgc_.Setup(bgc_engine_inputfile_.c_str(),&sizes_);
   }
