@@ -36,12 +36,12 @@ codes, in alquimia this switches between CrunchFlow and PFloTran*/
 void CreateBGCInterface(const char* const engine_name, BGCInterface* interface)
  {
 
-   interface->Setup = NULL;
-   interface->Shutdown = NULL;
-   interface->Advance = NULL;
+   //interface->Setup = NULL;
+   //interface->Shutdown = NULL;
+   //interface->Advance = NULL;
 
-   //interface->Setup = &ecosim_setup;
-   //interface->Shutdown = &ecosim_shutdown;
-   //interface->Advance = &ecosim_advance;
+   interface->Setup = &ecosim_setup;
+   interface->Shutdown = &ecosim_shutdown;
+   interface->Advance = &ecosim_advance;
 
  }  /* end CreateAlquimiaInterface() */

@@ -30,7 +30,8 @@
 !
 ! **************************************************************************** !
 
-subroutine EcoSIM_Setup(input_filename, sizes, prop, state, aux_data) bind(C)
+subroutine EcoSIM_Setup(delta_t, props, state, aux_data, &
+                          num_iterations) bind(C)
 
   use, intrinsic :: iso_c_binding
 
@@ -46,6 +47,8 @@ subroutine EcoSIM_Setup(input_filename, sizes, prop, state, aux_data) bind(C)
   type (BGCAuxiliaryData), intent(in) :: aux_data
   type (BGCProperties), intent(in) :: prop
   integer :: ncol, jz, js
+  real (c_double), value, intent(in) :: delta_t
+  integer, intent(in) :: num_iterations
 
   call ATS2EcoSIMData(ncol, state, aux_data, prop)
 
@@ -58,11 +61,11 @@ end subroutine EcoSIM_Setup
 ! **************************************************************************** !
 
 subroutine EcoSIM_Advance( &
-     pft_engine_state, &
      delta_t, &
      prop, &
      state, &
-     aux_data) bind(C)
+     aux_data, &
+     num_iterations) bind(C)
 
   use, intrinsic :: iso_c_binding
   use BGCContainers_module
@@ -78,6 +81,7 @@ subroutine EcoSIM_Advance( &
   type (BGCAuxiliaryData), intent(inout) :: aux_data
   !type (BGCEngineStatus), intent(out) :: status
   integer :: ncol
+  integer, intent(in) :: num_iterations
 
   call ATS2EcoSIMData(ncol, state, aux_data, prop)
 

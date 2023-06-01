@@ -70,6 +70,12 @@ class BGCEngine {
                         AlquimiaState& state,
                         AlquimiaAuxiliaryData& aux_data);*/
 
+  bool Setup(const double delta_time,
+               BGCProperties& props,
+               BGCState& state,
+               BGCAuxiliaryData& aux_data,
+               int& num_iterations);
+
   // Advances the species represented by the given array of concentrations, replacing old values
   // with new values. The order of the concentrations in the array matches that of the species names
   // returned by GetSpeciesNames. Returns true if the advance is successful,

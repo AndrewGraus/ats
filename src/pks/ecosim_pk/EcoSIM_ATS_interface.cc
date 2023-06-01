@@ -908,8 +908,10 @@ int EcoSIM::InitializeSingleColumn(int col)
 {
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-  bgc_engine_->BGCEngine(engineName, inputFile)
+  int num_iterations = 1;
 
+  bgc_engine_->Setup(dt, bgc_props_, bgc_state_,
+                                          bgc_aux_data_, num_iterations);
   CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   // ETC: hacking to get consistent solution -- if there is no water

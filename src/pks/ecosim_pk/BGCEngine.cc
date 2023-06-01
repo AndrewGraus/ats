@@ -88,8 +88,8 @@ BGCEngine::BGCEngine(const std::string& engineName,
     CreateBGCInterface(bgc_engine_name_.c_str(),
                       &bgc_);
 
-    std::cout << "Running bgc engine setup" << std::endl;
-    bgc_.Setup(bgc_engine_inputfile_.c_str(),&sizes_);
+    //std::cout << "Running bgc engine setup" << std::endl;
+    //bgc_.Setup(bgc_engine_inputfile_.c_str(),&sizes_);
   }
 
   // All alquimia function calls require a status object.
@@ -202,6 +202,27 @@ void BGCEngine::FreeState(BGCProperties& props,
   FreeBGCState(&state);
   FreeBGCAuxiliaryData(&aux_data);
   //FreeAlquimiaAuxiliaryOutputData(&aux_output);
+}
+
+bool BGCEngine::Setup(const double delta_time,
+                              BGCProperties& props,
+                              BGCState& state,
+                              BGCAuxiliaryData& aux_data,
+                              int& num_iterations)
+{
+  std::cout << "Running BGC Engine Setup" << std::endl;
+  // Advance the chemical reaction all operator-split-like.
+  bgc_.Advance(delta_time,
+                &props,
+                &state,
+                &aux_data);
+
+  //This is alquimia's advance function which we won't need
+  //calling EcoSIM advance driver
+
+  /*************************
+  EcoSIMAdvance();
+  *************************/
 }
 
 bool BGCEngine::Advance(const double delta_time,

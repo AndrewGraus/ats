@@ -40,16 +40,19 @@ extern "C" {
 #endif /* __cplusplus */
 
 void ecosim_setup(
-  const char* input_filename,
-  BGCSizes* sizes
-);
-
-void ecosim_advance(
-  void* pft_engine_state,
   double delta_t,
   BGCProperties* properties,
   BGCState* state,
   BGCAuxiliaryData* aux_data,
+  int num_iterations
+);
+
+void ecosim_advance(
+  double delta_t,
+  BGCProperties* properties,
+  BGCState* state,
+  BGCAuxiliaryData* aux_data,
+  int num_iterations
 );
 
 #ifdef __cplusplus
