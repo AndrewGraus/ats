@@ -80,7 +80,7 @@ subroutine EcoSIM_Shutdown() bind(C)
   real (c_double), value, intent(in) :: delta_t
   integer, intent(in) :: num_iterations
 
-end subroutine EcoSIM_Setup
+end subroutine EcoSIM_Shutdown
 
 ! **************************************************************************** !
 

@@ -215,7 +215,8 @@ bool BGCEngine::Setup(const double delta_time,
   bgc_.Advance(delta_time,
                 &props,
                 &state,
-                &aux_data);
+                &aux_data
+                num_iterations);
 
   //This is alquimia's advance function which we won't need
   //calling EcoSIM advance driver
@@ -236,7 +237,8 @@ bool BGCEngine::Advance(const double delta_time,
   bgc_.Advance(delta_time,
                 &props,
                 &state,
-                &aux_data);
+                &aux_data
+                num_iterations);
 
   //This is alquimia's advance function which we won't need
   //calling EcoSIM advance driver

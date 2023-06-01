@@ -112,7 +112,7 @@ class EcoSIM : public PK_Physical {
                 const BGCAuxiliaryData& aux_data,
               const Tag& water_tag = Tags::DEFAULT);
 
-   int InitializeSingleColumn(int col);
+   int InitializeSingleColumn(double dt, int col);
 
    int AdvanceSingleColumn(double dt, int col);
 
