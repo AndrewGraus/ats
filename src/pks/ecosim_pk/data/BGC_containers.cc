@@ -29,6 +29,8 @@
 
 #include "BGC_containers.hh"
 
+#include "ecosim_interface.h"
+
 /* Its kind of silly to have this as a separate code at this point, but this
 will in theory become the switching code if we add other bgc
 codes, in alquimia this switches between CrunchFlow and PFloTran*/
