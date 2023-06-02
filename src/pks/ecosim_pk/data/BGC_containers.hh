@@ -118,7 +118,8 @@ extern "C" {
       BGCProperties* properties,
       BGCState* state,
       BGCAuxiliaryData* aux_data,
-      int num_iterations);
+      int num_iterations,
+      int ncol);
 
     /* gracefully shutdown the engine, cleanup memory */
     void (*Shutdown)();
@@ -139,7 +140,8 @@ extern "C" {
       BGCProperties* properties,
       BGCState* state,
       BGCAuxiliaryData* aux_data,
-      int num_iterations);
+      int num_iterations
+      int ncol);
 
     /* Access to user selected geochemical data for output, i.e. pH,
        mineral SI, reaction rates */
