@@ -230,7 +230,7 @@ bool BGCEngine::Advance(const double delta_time,
                               BGCProperties& props,
                               BGCState& state,
                               BGCAuxiliaryData& aux_data,
-                              int& num_iterations
+                              int& num_iterations,
                               int& ncol)
 {
   std::cout << "Running BGC Engine Advance" << std::endl;
