@@ -911,7 +911,7 @@ int EcoSIM::InitializeSingleColumn(int col)
   int num_iterations = 1;
 
   bgc_engine_->Setup(bgc_props_, bgc_state_,
-                                          bgc_aux_data_, num_iterations);
+                                          bgc_aux_data_, num_iterations, col);
   CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   // ETC: hacking to get consistent solution -- if there is no water
@@ -940,7 +940,7 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
   *******************************************************************/
 
  bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
-                                         bgc_aux_data_, num_iterations);
+                                         bgc_aux_data_, num_iterations, col);
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
   CopyEcoSIMStateToAmanzi(col,

@@ -31,7 +31,7 @@
 ! **************************************************************************** !
 
 subroutine EcoSIM_Setup(props, state, aux_data, &
-                          num_iterations) bind(C)
+                          num_iterations, ncol) bind(C)
 
   use, intrinsic :: iso_c_binding
 
@@ -55,11 +55,11 @@ subroutine EcoSIM_Setup(props, state, aux_data, &
 
   write(*,*) "starting driver Init_EcoSIM"
 
-  call Init_EcoSIM(jz,js,ncol)
+  !call Init_EcoSIM(jz,js,ncol)
 
   write(*,*) "starting driver transfer EcoSIM2ATSData"
 
-  call EcoSIM2ATSData()
+  !call EcoSIM2ATSData()
 
 end subroutine EcoSIM_Setup
 
@@ -93,7 +93,8 @@ subroutine EcoSIM_Advance( &
      props, &
      state, &
      aux_data, &
-     num_iterations) bind(C)
+     num_iterations, &
+     ncol) bind(C)
 
   use, intrinsic :: iso_c_binding
   use BGCContainers_module

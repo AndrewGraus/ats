@@ -43,7 +43,8 @@ void ecosim_setup(
   BGCProperties* properties,
   BGCState* state,
   BGCAuxiliaryData* aux_data,
-  int num_iterations
+  int num_iterations,
+  int ncol
 );
 
 void ecosim_shutdown();
@@ -53,7 +54,8 @@ void ecosim_advance(
   BGCProperties* properties,
   BGCState* state,
   BGCAuxiliaryData* aux_data,
-  int num_iterations
+  int num_iterations,
+  int ncol
 );
 
 #ifdef __cplusplus
