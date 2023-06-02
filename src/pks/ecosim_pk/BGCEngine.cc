@@ -207,14 +207,16 @@ void BGCEngine::FreeState(BGCProperties& props,
 bool BGCEngine::Setup(BGCProperties& props,
                               BGCState& state,
                               BGCAuxiliaryData& aux_data,
-                              int& num_iterations)
+                              int& num_iterations,
+                              int& ncol)
 {
   std::cout << "Running BGC Engine Setup" << std::endl;
   // Advance the chemical reaction all operator-split-like.
   bgc_.Setup(&props,
                 &state,
                 &aux_data,
-                num_iterations);
+                num_iterations,
+                ncol);
 
   //This is alquimia's advance function which we won't need
   //calling EcoSIM advance driver
@@ -228,7 +230,8 @@ bool BGCEngine::Advance(const double delta_time,
                               BGCProperties& props,
                               BGCState& state,
                               BGCAuxiliaryData& aux_data,
-                              int& num_iterations)
+                              int& num_iterations
+                              int& ncol)
 {
   std::cout << "Running BGC Engine Advance" << std::endl;
   // Advance the chemical reaction all operator-split-like.
@@ -236,7 +239,8 @@ bool BGCEngine::Advance(const double delta_time,
                 &props,
                 &state,
                 &aux_data,
-                num_iterations);
+                num_iterations,
+                ncol);
 
   //This is alquimia's advance function which we won't need
   //calling EcoSIM advance driver
