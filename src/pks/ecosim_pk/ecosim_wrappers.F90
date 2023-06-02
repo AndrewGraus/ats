@@ -49,9 +49,15 @@ subroutine EcoSIM_Setup(props, state, aux_data, &
   integer :: ncol, jz, js
   integer, intent(in) :: num_iterations
 
+  write(*,*) "starting driver transfer ATS2EcoSIMData"
+
   call ATS2EcoSIMData(ncol, state, aux_data, props)
 
+  write(*,*) "starting driver Init_EcoSIM"
+
   call Init_EcoSIM(jz,js,ncol)
+
+  write(*,*) "starting driver transfer EcoSIM2ATSData"
 
   call EcoSIM2ATSData()
 
