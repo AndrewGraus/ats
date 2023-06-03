@@ -43,8 +43,8 @@ subroutine EcoSIM_Setup(props, state, aux_data, &
   ! function parameters
   !character(kind=c_char), dimension(*), intent(in) :: input_filename
   !type (BGCSizes), intent(out) :: sizes
-  type (BGCState), intent(in) :: state
-  type (BGCAuxiliaryData), intent(in) :: aux_data
+  type (BGCState), intent(inout) :: state
+  type (BGCAuxiliaryData), intent(inout) :: aux_data
   type (BGCProperties), intent(in) :: props
   integer :: ncol, jz, js
   integer, intent(in) :: num_iterations

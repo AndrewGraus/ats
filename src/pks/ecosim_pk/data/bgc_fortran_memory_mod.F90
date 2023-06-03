@@ -1,0 +1,218 @@
+!It seems like the memory allocation functions need to know how do define the
+!memory even if you do not do memory allocation in F90, so this code writes
+!versions of the memory allocation functions
+
+module bgc_fortran_memory_mod
+
+
+  use BGCContainers_module, only : BGCSizes,BGCProperties,&
+           BGCState,BGCAuxiliaryData
+  use iso_c_binding, only : c_funptr
+
+  implicit none
+
+  type, bind(c) :: BGCInterface
+
+    type(c_funptr) :: Setup
+    type(c_funptr) :: Shutdown
+    type(c_funptr) :: ProcessCondition
+    type(c_funptr) :: ReactionStepOperatorSplit
+    type(c_funptr) :: GetAuxiliaryOutput
+    type(c_funptr) :: GetProblemMetaData
+
+  end type BGCInterface
+
+  type, public :: BGCFortranInterface
+    type(BGCInterface) :: c_interface
+
+  contains
+    procedure, public :: CreateInterface => Create_Fortran_BGC_Interface
+    procedure, public :: Setup  =>  BGC_Fortran_setup
+    procedure, public :: Shutdown  => BGC_Fortran_Shutdown
+    procedure, public :: ProcessCondition  => BGC_Fortran_ProcessCondition
+    procedure, public :: ReactionStepOperatorSplit  => BGC_Fortran_ReactionStepOperatorSplit
+    procedure, public :: GetAuxiliaryOutput  => BGC_Fortran_GetAuxiliaryOutput
+    procedure, public :: GetProblemMetaData  => BGC_Fortran_GetProblemMetaData
+  end type BGCFortranInterface
+
+  interface
+    subroutine CreateBGCInterface(engine_name, bgc_interface, status) bind(C, name='CreateBGCInterface')
+      use iso_C_binding, only: c_char
+      IMPORT
+      implicit none
+      character(kind=c_char) :: engine_name(*)
+      type(BGCInterface)      :: bgc_interface
+    end subroutine
+  end interface
+
+  ! Memory allocation subroutines
+
+  interface
+    subroutine AllocateBGCState(sizes, state) bind(C, name='AllocateBGCState')
+      use BGCContainers_module, only : BGCSizes, BGCState
+      implicit none
+      type(BGCSizes) :: sizes
+      type(BGCState) :: state
+    end subroutine
+  end interface
+  interface
+    subroutine FreeBGCState(state) bind(C, name='FreeBGCState')
+      use BGCContainers_module, only : BGCState
+      implicit none
+      type(BGCState) :: state
+    end subroutine
+  end interface
+
+  interface
+    subroutine AllocateBGCProperties(sizes, props) bind(C, name='AllocateBGCProperties')
+      use BGCContainers_module, only : BGCSizes, BGCProperties
+      implicit none
+      type(BGCSizes) :: sizes
+      type(BGCProperties) :: props
+    end subroutine
+  end interface
+  interface
+    subroutine FreeBGCProperties(props) bind(C, name='FreeBGCProperties')
+      use BGCContainers_module, only : BGCProperties
+      implicit none
+      type(BGCProperties) :: props
+    end subroutine
+  end interface
+
+  interface
+    subroutine AllocateBGCAuxiliaryData(sizes, aux_data) bind(C, name='AllocateBGCAuxiliaryData')
+      use BGCContainers_module, only : BGCSizes, BGCAuxiliaryData
+      implicit none
+      type(BGCSizes) :: sizes
+      type(BGCAuxiliaryData) :: aux_data
+    end subroutine
+  end interface
+  interface
+    subroutine FreeBGCAuxiliaryData(aux_data) bind(C, name='FreeBGCAuxiliaryData')
+      use BGCContainers_module, only : BGCAuxiliaryData
+      implicit none
+      type(BGCAuxiliaryData) :: aux_data
+    end subroutine
+  end interface
+
+  ! The following subroutines are methods of the engine itself
+
+  interface
+    subroutine Setup(props, state, aux_data, num_iterations, ncol) bind(C)
+
+      use, intrinsic :: iso_c_binding, only: c_char, c_bool, c_ptr, c_int
+      use BGCContainers_module, only : BGCEngineStatus,BGCEngineFunctionality,BGCSizes
+      IMPORT
+      implicit none
+
+      real(c_int),VALUE :: num_iterations
+      real(c_int),VALUE :: ncol
+
+      type(BGCProperties) :: props
+      type(BGCState) :: state
+      type(BGCAuxiliaryData) :: aux_data
+      type(BGCEngineStatus) :: status
+
+    end subroutine
+  end interface
+
+
+    !gracefully shutdown the engine, cleanup memory
+    interface
+      subroutine Shutdown() bind(C)
+        use, intrinsic :: iso_c_binding, only : c_ptr
+
+        implicit none
+
+      end subroutine
+    end interface
+
+    ! take one (or more?) reaction steps in operator split mode
+    interface
+      subroutine Advance(delta_t, props, state, aux_data, num_iterations, ncol) bind(C)
+        use, intrinsic :: iso_c_binding, only : c_ptr, c_double, c_int
+        use BGCContainers_module, only : BGCSizes,BGCProperties,&
+                 BGCState,BGCAuxiliaryData
+        implicit none
+
+        real(c_double),VALUE :: delta_t
+        real(c_int),VALUE :: num_iterations
+        real(c_int),VALUE :: ncol
+
+        type(BGCProperties) :: props
+        type(BGCState) :: state
+        type(BGCAuxiliaryData) :: aux_data
+        type(BGCEngineStatus) :: status
+      end subroutine
+    end interface
+
+  contains
+
+    subroutine BGC_Fortran_Setup(this, props, state, aux_data, num_iterations, ncol)
+      use, intrinsic :: iso_c_binding, only : c_ptr, c_int, c_double, c_f_procpointer
+      use BGCContainers_module, only : BGCSizes, BGCProperties,&
+               BGCState, BGCAuxiliaryData
+
+      implicit none
+      class(BGCFortranInterface) :: this
+
+      real(c_double) :: delta_t
+      real(c_int) :: n_col
+      real(c_int) :: num_iterations
+      type(BGCProperties) :: props
+      type(BGCState) :: state
+      type(BGCAuxiliaryData) :: aux_data
+      type(BGCEngineStatus) :: status
+
+      procedure(Setup), pointer :: engine_Setup
+
+      call c_f_procpointer(this%c_interface%Setup,engine_Setup)
+      call engine_Setup(props, state, aux_data, num_interations, ncol)
+    end subroutine
+
+    subroutine BGC_Fortran_Shutdown(this)
+      use, intrinsic :: iso_c_binding, only : c_ptr,c_f_procpointer
+
+      implicit none
+      class(BGCFortranInterface) :: this
+      procedure(Shutdown), pointer :: engine_Shutdown
+
+      call c_f_procpointer(this%c_interface%Shutdown,engine_Shutdown)
+      call engine_shutdown()
+
+    end subroutine BGC_Fortran_Shutdown
+
+  subroutine BGC_Fortran_Advance(this, delta_t, props, state, aux_data, num_iterations, ncol)
+    use, intrinsic :: iso_c_binding, only : c_ptr, c_int, c_double, c_f_procpointer
+    use BGCContainers_module, only : BGCSizes, BGCProperties,&
+             BGCState, BGCAuxiliaryData
+
+    implicit none
+    class(BGCFortranInterface) :: this
+
+    real(c_double) :: delta_t
+    real(c_int) :: n_col
+    real(c_int) :: num_iterations
+    type(BGCProperties) :: props
+    type(BGCState) :: state
+    type(BGCAuxiliaryData) :: aux_data
+    type(BGCEngineStatus) :: status
+
+    procedure(Advance), pointer :: engine_Advance
+
+    call c_f_procpointer(this%c_interface%Advance,engine_Advance)
+    call engine_Advance(delta_t, props, state, aux_data, num_interations, ncol)
+  end subroutine
+
+  subroutine Create_Fortran_BGC_Interface(this,engine_name, status)
+    use BGCContainers_module, only : BGCEngineStatus,kBGCMaxStringLength
+    use iso_C_binding, only: c_char,c_null_char
+    implicit none
+    class(BGCFortranInterface) :: this
+    character(kind=c_char,len=kBGCMaxStringLength) :: engine_name
+    type(BGCEngineStatus)   :: status
+
+    call CreateBGCInterface(trim(engine_name)//C_NULL_CHAR, this%c_interface, status)
+  end subroutine
+
+end module bgc_fortran_interface_mod

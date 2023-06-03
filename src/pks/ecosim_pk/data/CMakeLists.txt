@@ -9,6 +9,7 @@ set(ats_ecosim_data_src_files
   BGC_constants.cc
   BGC_memory.cc
   BGC_containers.cc
+  bgc_fortran_memory_mod.F90
 )
 set(ats_ecosim_data_inc_files
   BGC_constants.hh
