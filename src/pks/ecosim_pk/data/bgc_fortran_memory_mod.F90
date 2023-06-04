@@ -15,10 +15,7 @@ module bgc_fortran_memory_mod
 
     type(c_funptr) :: Setup
     type(c_funptr) :: Shutdown
-    type(c_funptr) :: ProcessCondition
-    type(c_funptr) :: ReactionStepOperatorSplit
-    type(c_funptr) :: GetAuxiliaryOutput
-    type(c_funptr) :: GetProblemMetaData
+    type(c_funptr) :: Advance
 
   end type BGCInterface
 
@@ -27,16 +24,13 @@ module bgc_fortran_memory_mod
 
   contains
     procedure, public :: CreateInterface => Create_Fortran_BGC_Interface
-    procedure, public :: Setup  =>  BGC_Fortran_setup
+    procedure, public :: Setup  =>  BGC_Fortran_Setup
     procedure, public :: Shutdown  => BGC_Fortran_Shutdown
-    procedure, public :: ProcessCondition  => BGC_Fortran_ProcessCondition
-    procedure, public :: ReactionStepOperatorSplit  => BGC_Fortran_ReactionStepOperatorSplit
-    procedure, public :: GetAuxiliaryOutput  => BGC_Fortran_GetAuxiliaryOutput
-    procedure, public :: GetProblemMetaData  => BGC_Fortran_GetProblemMetaData
+    procedure, public :: Advance => BGC_Fortran_Advance
   end type BGCFortranInterface
 
   interface
-    subroutine CreateBGCInterface(engine_name, bgc_interface, status) bind(C, name='CreateBGCInterface')
+    subroutine CreateBGCInterface(engine_name, bgc_interface) bind(C, name='CreateBGCInterface')
       use iso_C_binding, only: c_char
       IMPORT
       implicit none
@@ -155,7 +149,7 @@ module bgc_fortran_memory_mod
       class(BGCFortranInterface) :: this
 
       real(c_double) :: delta_t
-      integer(c_int) :: n_col
+      integer(c_int) :: ncol
       integer(c_int) :: num_iterations
       type(BGCProperties) :: props
       type(BGCState) :: state
@@ -164,7 +158,7 @@ module bgc_fortran_memory_mod
       procedure(Setup), pointer :: engine_Setup
 
       call c_f_procpointer(this%c_interface%Setup,engine_Setup)
-      call engine_Setup(props, state, aux_data, num_interations, ncol)
+      call engine_Setup(props, state, aux_data, num_iterations, ncol)
     end subroutine
 
     subroutine BGC_Fortran_Shutdown(this)
@@ -188,7 +182,7 @@ module bgc_fortran_memory_mod
     class(BGCFortranInterface) :: this
 
     real(c_double) :: delta_t
-    integer(c_int) :: n_col
+    integer(c_int) :: ncol
     integer(c_int) :: num_iterations
     type(BGCProperties) :: props
     type(BGCState) :: state
@@ -197,10 +191,10 @@ module bgc_fortran_memory_mod
     procedure(Advance), pointer :: engine_Advance
 
     call c_f_procpointer(this%c_interface%Advance,engine_Advance)
-    call engine_Advance(delta_t, props, state, aux_data, num_interations, ncol)
+    call engine_Advance(delta_t, props, state, aux_data, num_iterations, ncol)
   end subroutine
 
-  subroutine Create_Fortran_BGC_Interface(this,engine_name, status)
+  subroutine Create_Fortran_BGC_Interface(this,engine_name)
     use BGCContainers_module, only :kBGCMaxStringLength
     use iso_C_binding, only: c_char,c_null_char
     implicit none
