@@ -101,17 +101,16 @@ module bgc_fortran_memory_mod
     subroutine Setup(props, state, aux_data, num_iterations, ncol) bind(C)
 
       use, intrinsic :: iso_c_binding, only: c_char, c_bool, c_ptr, c_int
-      use BGCContainers_module, only : BGCEngineStatus,BGCEngineFunctionality,BGCSizes
+      use BGCContainers_module, only : BGCSizes
       IMPORT
       implicit none
 
-      real(c_int),VALUE :: num_iterations
-      real(c_int),VALUE :: ncol
+      integer(c_int),VALUE :: num_iterations
+      integer(c_int),VALUE :: ncol
 
       type(BGCProperties) :: props
       type(BGCState) :: state
       type(BGCAuxiliaryData) :: aux_data
-      type(BGCEngineStatus) :: status
 
     end subroutine
   end interface
@@ -136,13 +135,12 @@ module bgc_fortran_memory_mod
         implicit none
 
         real(c_double),VALUE :: delta_t
-        real(c_int),VALUE :: num_iterations
-        real(c_int),VALUE :: ncol
+        integer(c_int),VALUE :: num_iterations
+        integer(c_int),VALUE :: ncol
 
         type(BGCProperties) :: props
         type(BGCState) :: state
         type(BGCAuxiliaryData) :: aux_data
-        type(BGCEngineStatus) :: status
       end subroutine
     end interface
 
@@ -157,12 +155,11 @@ module bgc_fortran_memory_mod
       class(BGCFortranInterface) :: this
 
       real(c_double) :: delta_t
-      real(c_int) :: n_col
-      real(c_int) :: num_iterations
+      integer(c_int) :: n_col
+      integer(c_int) :: num_iterations
       type(BGCProperties) :: props
       type(BGCState) :: state
       type(BGCAuxiliaryData) :: aux_data
-      type(BGCEngineStatus) :: status
 
       procedure(Setup), pointer :: engine_Setup
 
@@ -191,12 +188,11 @@ module bgc_fortran_memory_mod
     class(BGCFortranInterface) :: this
 
     real(c_double) :: delta_t
-    real(c_int) :: n_col
-    real(c_int) :: num_iterations
+    integer(c_int) :: n_col
+    integer(c_int) :: num_iterations
     type(BGCProperties) :: props
     type(BGCState) :: state
     type(BGCAuxiliaryData) :: aux_data
-    type(BGCEngineStatus) :: status
 
     procedure(Advance), pointer :: engine_Advance
 
@@ -205,14 +201,13 @@ module bgc_fortran_memory_mod
   end subroutine
 
   subroutine Create_Fortran_BGC_Interface(this,engine_name, status)
-    use BGCContainers_module, only : BGCEngineStatus,kBGCMaxStringLength
+    use BGCContainers_module, only :kBGCMaxStringLength
     use iso_C_binding, only: c_char,c_null_char
     implicit none
     class(BGCFortranInterface) :: this
     character(kind=c_char,len=kBGCMaxStringLength) :: engine_name
-    type(BGCEngineStatus)   :: status
 
-    call CreateBGCInterface(trim(engine_name)//C_NULL_CHAR, this%c_interface, status)
+    call CreateBGCInterface(trim(engine_name)//C_NULL_CHAR, this%c_interface)
   end subroutine
 
-end module bgc_fortran_interface_mod
+end module bgc_fortran_memory_mod
