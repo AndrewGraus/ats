@@ -109,34 +109,33 @@ module bgc_fortran_memory_mod
     end subroutine
   end interface
 
+  !gracefully shutdown the engine, cleanup memory
+  interface
+    subroutine Shutdown() bind(C)
+      use, intrinsic :: iso_c_binding, only : c_ptr
 
-    !gracefully shutdown the engine, cleanup memory
-    interface
-      subroutine Shutdown() bind(C)
-        use, intrinsic :: iso_c_binding, only : c_ptr
+      implicit none
 
-        implicit none
+    end subroutine
+  end interface
 
-      end subroutine
-    end interface
+  ! take one (or more?) reaction steps in operator split mode
+  interface
+    subroutine Advance(delta_t, props, state, aux_data, num_iterations, ncol) bind(C)
+      use, intrinsic :: iso_c_binding, only : c_ptr, c_double, c_int
+      use BGCContainers_module, only : BGCSizes,BGCProperties,&
+               BGCState,BGCAuxiliaryData
+      implicit none
 
-    ! take one (or more?) reaction steps in operator split mode
-    interface
-      subroutine Advance(delta_t, props, state, aux_data, num_iterations, ncol) bind(C)
-        use, intrinsic :: iso_c_binding, only : c_ptr, c_double, c_int
-        use BGCContainers_module, only : BGCSizes,BGCProperties,&
-                 BGCState,BGCAuxiliaryData
-        implicit none
+      real(c_double),VALUE :: delta_t
+      integer(c_int),VALUE :: num_iterations
+      integer(c_int),VALUE :: ncol
 
-        real(c_double),VALUE :: delta_t
-        integer(c_int),VALUE :: num_iterations
-        integer(c_int),VALUE :: ncol
-
-        type(BGCProperties) :: props
-        type(BGCState) :: state
-        type(BGCAuxiliaryData) :: aux_data
-      end subroutine
-    end interface
+      type(BGCProperties) :: props
+      type(BGCState) :: state
+      type(BGCAuxiliaryData) :: aux_data
+    end subroutine
+  end interface
 
   contains
 
@@ -159,7 +158,8 @@ module bgc_fortran_memory_mod
 
       call c_f_procpointer(this%c_interface%Setup,engine_Setup)
       call engine_Setup(props, state, aux_data, num_iterations, ncol)
-    end subroutine
+
+    end subroutine BGC_Fortran_Setup
 
     subroutine BGC_Fortran_Shutdown(this)
       use, intrinsic :: iso_c_binding, only : c_ptr,c_f_procpointer
@@ -192,7 +192,7 @@ module bgc_fortran_memory_mod
 
     call c_f_procpointer(this%c_interface%Advance,engine_Advance)
     call engine_Advance(delta_t, props, state, aux_data, num_iterations, ncol)
-  end subroutine
+  end subroutine BGC_Fortran_Advance
 
   subroutine Create_Fortran_BGC_Interface(this,engine_name)
     use BGCContainers_module, only :kBGCMaxStringLength
@@ -202,6 +202,7 @@ module bgc_fortran_memory_mod
     character(kind=c_char,len=kBGCMaxStringLength) :: engine_name
 
     call CreateBGCInterface(trim(engine_name)//C_NULL_CHAR, this%c_interface)
+
   end subroutine
 
 end module bgc_fortran_memory_mod
