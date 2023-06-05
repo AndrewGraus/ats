@@ -70,6 +70,8 @@ class BGCEngine {
                         AlquimiaState& state,
                         AlquimiaAuxiliaryData& aux_data);*/
 
+  void DataTest(BGCProperties& props);
+
   bool Setup(BGCProperties& props,
                BGCState& state,
                BGCAuxiliaryData& aux_data,

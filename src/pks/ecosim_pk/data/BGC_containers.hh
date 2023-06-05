@@ -114,6 +114,10 @@ extern "C" {
   typedef struct {
     /* read data files/structures, initialize memory, basis management
        (includes reading database, swapping basis, etc.) */
+    void (*DataTest)(
+      BGCProperties* props
+    );
+
     void (*Setup)(
       BGCProperties* properties,
       BGCState* state,

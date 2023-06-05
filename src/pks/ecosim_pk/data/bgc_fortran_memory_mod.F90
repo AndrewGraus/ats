@@ -13,6 +13,7 @@ module bgc_fortran_memory_mod
 
   type, bind(c) :: BGCInterface
 
+    type(c_funptr) :: DataTest
     type(c_funptr) :: Setup
     type(c_funptr) :: Shutdown
     type(c_funptr) :: Advance
@@ -24,6 +25,7 @@ module bgc_fortran_memory_mod
 
   contains
     procedure, public :: CreateInterface => Create_Fortran_BGC_Interface
+    procedure, public :: DataTest => BGC_Fortran_DataTest
     procedure, public :: Setup  =>  BGC_Fortran_Setup
     procedure, public :: Shutdown  => BGC_Fortran_Shutdown
     procedure, public :: Advance => BGC_Fortran_Advance
@@ -92,6 +94,20 @@ module bgc_fortran_memory_mod
   ! The following subroutines are methods of the engine itself
 
   interface
+
+    subroutine DataTest(props) bind(C)
+      use, intrinsic :: iso_c_binding
+      use BGCContainers_module, only : BGCProperties
+      IMPORT
+      implicit none
+
+      type(BGCProperties) :: props
+
+    end subroutine
+  end interface
+
+
+  interface
     subroutine Setup(props, state, aux_data, num_iterations, ncol) bind(C)
 
       use, intrinsic :: iso_c_binding, only: c_char, c_bool, c_ptr, c_int
@@ -138,6 +154,22 @@ module bgc_fortran_memory_mod
   end interface
 
   contains
+
+  subroutine BGC_Fortran_DataTest(this, props)
+    use, intrinsic :: iso_c_binding
+    use BGCContainers_module, only : BGCProperties
+
+    implicit none
+    class(BGCFortranInterface) :: this
+
+    type(BGCProperties) :: props
+
+    procedure(DataTest), pointer :: engine_DataTest
+
+    call c_f_procpointer(this%c_interface%Setup,engine_DataTest)
+    call engine_DataTest(props, state, aux_data, num_iterations, ncol)
+
+  end subroutine BGC_Fortran_DataTest
 
     subroutine BGC_Fortran_Setup(this, props, state, aux_data, num_iterations, ncol)
       use, intrinsic :: iso_c_binding, only : c_ptr, c_int, c_double, c_f_procpointer

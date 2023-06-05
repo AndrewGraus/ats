@@ -39,6 +39,10 @@
 extern "C" {
 #endif /* __cplusplus */
 
+void ecosim_datatest(
+  BGCProperties* properties
+);
+
 void ecosim_setup(
   BGCProperties* properties,
   BGCState* state,

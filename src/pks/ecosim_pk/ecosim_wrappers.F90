@@ -30,6 +30,20 @@
 !
 ! **************************************************************************** !
 
+subroutine EcoSIM_DataTest(props) bind(c)
+
+  use, intrinsic :: iso_c_binding
+
+  use BGCContainers_module
+
+  implicit none
+
+  type (BGCProperties), intent(in) :: props
+
+  write(*,*) "Okay the properties work"
+
+end subroutine EcoSIM_DataTest
+
 subroutine EcoSIM_Setup(props, state, aux_data, &
                           num_iterations, ncol) bind(C)
 
