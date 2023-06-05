@@ -167,7 +167,7 @@ module bgc_fortran_memory_mod
     procedure(DataTest), pointer :: engine_DataTest
 
     call c_f_procpointer(this%c_interface%Setup,engine_DataTest)
-    call engine_DataTest(props, state, aux_data, num_iterations, ncol)
+    call engine_DataTest(props)
 
   end subroutine BGC_Fortran_DataTest
 
