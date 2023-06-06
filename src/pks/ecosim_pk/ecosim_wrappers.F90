@@ -30,7 +30,7 @@
 !
 ! **************************************************************************** !
 
-subroutine EcoSIM_DataTest(props) bind(c)
+subroutine EcoSIM_DataTest(ncol) bind(c)
 
   use, intrinsic :: iso_c_binding
 
@@ -38,7 +38,8 @@ subroutine EcoSIM_DataTest(props) bind(c)
 
   implicit none
 
-  type (BGCProperties), intent(in) :: props
+  !type (BGCProperties), intent(in) :: props
+  integer, intent(in) :: ncol
 
   write(*,*) "Okay the properties work"
 

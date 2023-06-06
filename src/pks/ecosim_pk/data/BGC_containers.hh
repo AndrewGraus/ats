@@ -115,7 +115,7 @@ extern "C" {
     /* read data files/structures, initialize memory, basis management
        (includes reading database, swapping basis, etc.) */
     void (*DataTest)(
-      BGCProperties* props
+      int ncol
     );
 
     void (*Setup)(
