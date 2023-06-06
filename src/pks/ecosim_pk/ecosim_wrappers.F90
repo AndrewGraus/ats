@@ -39,9 +39,9 @@ subroutine EcoSIM_DataTest(ncol) bind(c)
   implicit none
 
   !type (BGCProperties), intent(in) :: props
-  integer, intent(in) :: ncol
+  integer (c_int), value, intent(in) :: ncol
 
-  write(*,*) "Okay the properties work"
+  write(*,*) "Okay the int passing works"
 
 end subroutine EcoSIM_DataTest
 

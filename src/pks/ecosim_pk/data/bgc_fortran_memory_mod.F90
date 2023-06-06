@@ -162,12 +162,12 @@ module bgc_fortran_memory_mod
     implicit none
     class(BGCFortranInterface) :: this
 
-    type(BGCProperties) :: props
+    integer(c_int) :: ncol
 
     procedure(DataTest), pointer :: engine_DataTest
 
     call c_f_procpointer(this%c_interface%Setup,engine_DataTest)
-    call engine_DataTest(props)
+    call engine_DataTest(ncol)
 
   end subroutine BGC_Fortran_DataTest
 
