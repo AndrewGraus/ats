@@ -40,7 +40,7 @@ extern "C" {
 #endif /* __cplusplus */
 
 void ecosim_datatest(
-  BGCProperties* properties
+  int ncol
 );
 
 void ecosim_setup(

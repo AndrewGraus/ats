@@ -204,17 +204,17 @@ void BGCEngine::FreeState(BGCProperties& props,
   //FreeAlquimiaAuxiliaryOutputData(&aux_output);
 }
 
-void BGCEngine::DataTest(BGCProperties& props) {
+void BGCEngine::DataTest(int& ncol) {
 
   std::cout << "Data test for props" << std::endl;
-  bgc_.DataTest(&props);
+  bgc_.DataTest(&ncol);
 }
 
 bool BGCEngine::Setup(BGCProperties& props,
                               BGCState& state,
                               BGCAuxiliaryData& aux_data,
                               int& num_iterations,
-                              int& ncol);
+                              int& ncol)
 {
   std::cout << "Running BGC Engine Setup" << std::endl;
   // Advance the chemical reaction all operator-split-like.
