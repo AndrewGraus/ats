@@ -155,9 +155,9 @@ module bgc_fortran_memory_mod
 
   contains
 
-  subroutine BGC_Fortran_DataTest(this, props)
+  subroutine BGC_Fortran_DataTest(this, ncol)
     use, intrinsic :: iso_c_binding
-    use BGCContainers_module, only : BGCProperties
+    !use BGCContainers_module, only : BGCProperties
 
     implicit none
     class(BGCFortranInterface) :: this
