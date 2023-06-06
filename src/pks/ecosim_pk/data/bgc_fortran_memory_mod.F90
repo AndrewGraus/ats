@@ -95,13 +95,14 @@ module bgc_fortran_memory_mod
 
   interface
 
-    subroutine DataTest(props) bind(C)
+    subroutine DataTest(ncol) bind(C)
       use, intrinsic :: iso_c_binding
       use BGCContainers_module, only : BGCProperties
       IMPORT
       implicit none
 
-      type(BGCProperties) :: props
+      integer(c_int), value :: ncol
+      !type(BGCProperties) :: props
 
     end subroutine
   end interface
