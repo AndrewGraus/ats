@@ -35,8 +35,8 @@
 
 #include "ecosim_mod_test_wrapper.h"
 
-extern void ecosim_datatest_();
+extern void ecosim_datatest();
 
 void ecosim_datatest_wrapper() {
-  ecosim_datatest_();
+  ecosim_datatest();
 }
