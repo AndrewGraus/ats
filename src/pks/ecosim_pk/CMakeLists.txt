@@ -22,13 +22,16 @@ set(ats_ecosim_src_files
     EcoSIM_ATS_interface.cc
     BGCEngine.cc
     ecosim_wrappers.F90
+    ecosim_mod_test_wrapper.c
+    ecosim_mod_test.F90
     /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/BGC_containers.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/ATSCPLMod.F90	
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/c_f_interface_module.F90	 
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/data_kind_mod.F90	
+    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/ATSCPLMod.F90
+    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/c_f_interface_module.F90
+    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/data_kind_mod.F90
  )
 
 set(ats_ecosim_inc_files
+    ecosim_mod_test_wrapper.h
     EcoSIM_ATS_interface.hh
     BGCEngine.hh
     ecosim_interface.h
