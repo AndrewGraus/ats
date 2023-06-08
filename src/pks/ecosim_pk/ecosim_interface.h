@@ -40,7 +40,6 @@ extern "C" {
 #endif /* __cplusplus */
 
 void ecosim_datatest(
-  int ncol
 );
 
 void ecosim_setup(

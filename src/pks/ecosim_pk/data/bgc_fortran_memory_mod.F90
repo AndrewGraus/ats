@@ -95,14 +95,11 @@ module bgc_fortran_memory_mod
 
   interface
 
-    subroutine DataTest(ncol) bind(C)
+    subroutine DataTest() bind(C)
       use, intrinsic :: iso_c_binding
-      use BGCContainers_module, only : BGCProperties
       IMPORT
       implicit none
 
-      integer(c_int), value :: ncol
-      !type(BGCProperties) :: props
 
     end subroutine
   end interface
@@ -156,19 +153,16 @@ module bgc_fortran_memory_mod
 
   contains
 
-  subroutine BGC_Fortran_DataTest(this, ncol)
+  subroutine BGC_Fortran_DataTest(this)
     use, intrinsic :: iso_c_binding
-    !use BGCContainers_module, only : BGCProperties
 
     implicit none
     class(BGCFortranInterface) :: this
 
-    integer(c_int) :: ncol
-
     procedure(DataTest), pointer :: engine_DataTest
 
     call c_f_procpointer(this%c_interface%Setup,engine_DataTest)
-    call engine_DataTest(ncol)
+    call engine_DataTest()
 
   end subroutine BGC_Fortran_DataTest
 
@@ -202,7 +196,7 @@ module bgc_fortran_memory_mod
       procedure(Shutdown), pointer :: engine_Shutdown
 
       call c_f_procpointer(this%c_interface%Shutdown,engine_Shutdown)
-      call engine_shutdown()
+      call engine_Shutdown()
 
     end subroutine BGC_Fortran_Shutdown
 

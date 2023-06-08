@@ -38,9 +38,9 @@ subroutine EcoSIM_DataTest(ncol) bind(C)
 
   implicit none
 
-  integer (c_int), value, intent(in) :: ncol
+  !integer (c_int), value, intent(in) :: ncol
 
-  write(*,*) "Okay the int passing works"
+  write(*,*) "Okay calling the function works."
 
 end subroutine EcoSIM_DataTest
 

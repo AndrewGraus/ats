@@ -204,10 +204,10 @@ void BGCEngine::FreeState(BGCProperties& props,
   //FreeAlquimiaAuxiliaryOutputData(&aux_output);
 }
 
-void BGCEngine::DataTest(int ncol) {
+void BGCEngine::DataTest() {
 
-  std::cout << "Data test for props" << std::endl;
-  bgc_.DataTest(ncol);
+  std::cout << "Data test for calling function" << std::endl;
+  bgc_.DataTest();
 }
 
 bool BGCEngine::Setup(BGCProperties& props,
