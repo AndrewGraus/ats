@@ -30,7 +30,7 @@
 !
 ! **************************************************************************** !
 
-subroutine EcoSIM_DataTest(ncol) bind(C)
+subroutine EcoSIM_DataTest() bind(C)
 
   use, intrinsic :: iso_c_binding
 
