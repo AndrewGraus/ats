@@ -11,7 +11,7 @@ module bgc_fortran_memory_mod
 
   implicit none
 
-  type, bind(c) :: BGCInterface
+  type, bind(C) :: BGCInterface
 
     type(c_funptr) :: DataTest
     type(c_funptr) :: Setup
@@ -33,7 +33,7 @@ module bgc_fortran_memory_mod
 
   interface
     subroutine CreateBGCInterface(engine_name, bgc_interface) bind(C, name='CreateBGCInterface')
-      use iso_C_binding, only: c_char
+      use iso_c_binding, only: c_char
       IMPORT
       implicit none
       character(kind=c_char) :: engine_name(*)
@@ -229,7 +229,7 @@ module bgc_fortran_memory_mod
 
   subroutine Create_Fortran_BGC_Interface(this,engine_name)
     use BGCContainers_module, only :kBGCMaxStringLength
-    use iso_C_binding, only: c_char,c_null_char
+    use iso_c_binding, only: c_char,c_null_char
     implicit none
     class(BGCFortranInterface) :: this
     character(kind=c_char,len=kBGCMaxStringLength) :: engine_name

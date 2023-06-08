@@ -30,7 +30,7 @@
 !
 ! **************************************************************************** !
 
-subroutine EcoSIM_DataTest(ncol) bind(c)
+subroutine EcoSIM_DataTest(ncol) bind(C)
 
   use, intrinsic :: iso_c_binding
 
@@ -38,7 +38,6 @@ subroutine EcoSIM_DataTest(ncol) bind(c)
 
   implicit none
 
-  !type (BGCProperties), intent(in) :: props
   integer (c_int), value, intent(in) :: ncol
 
   write(*,*) "Okay the int passing works"
