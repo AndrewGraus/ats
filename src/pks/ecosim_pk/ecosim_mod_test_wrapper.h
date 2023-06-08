@@ -40,7 +40,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-void ecosim_datatest();
+void ecosim_datatest_wrapper();
 
 #ifdef __cplusplus
 }

@@ -12,6 +12,6 @@ contains
 
     write(*,*) "Okay calling the function works."
 
-  end subroutine EcoSIM_DataTest
+  end subroutine ecosim_datatest
 
 end module ecosim_datatest_mod
