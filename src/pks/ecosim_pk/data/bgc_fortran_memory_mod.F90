@@ -13,7 +13,7 @@ module bgc_fortran_memory_mod
 
   type, bind(C) :: BGCInterface
 
-    type(c_funptr) :: DataTest
+    !type(c_funptr) :: DataTest
     type(c_funptr) :: Setup
     type(c_funptr) :: Shutdown
     type(c_funptr) :: Advance
@@ -25,7 +25,7 @@ module bgc_fortran_memory_mod
 
   contains
     procedure, public :: CreateInterface => Create_Fortran_BGC_Interface
-    procedure, public :: DataTest => BGC_Fortran_DataTest
+    !procedure, public :: DataTest => BGC_Fortran_DataTest
     procedure, public :: Setup  =>  BGC_Fortran_Setup
     procedure, public :: Shutdown  => BGC_Fortran_Shutdown
     procedure, public :: Advance => BGC_Fortran_Advance
@@ -93,16 +93,13 @@ module bgc_fortran_memory_mod
 
   ! The following subroutines are methods of the engine itself
 
-  interface
-
-    subroutine DataTest() bind(C)
-      use, intrinsic :: iso_c_binding
-      IMPORT
-      implicit none
-
-
-    end subroutine
-  end interface
+  !interface
+  !  subroutine DataTest() bind(C)
+  !    use, intrinsic :: iso_c_binding
+  !    IMPORT
+  !    implicit none
+  !  end subroutine
+  !end interface
 
 
   interface
@@ -153,18 +150,17 @@ module bgc_fortran_memory_mod
 
   contains
 
-  subroutine BGC_Fortran_DataTest(this)
-    use, intrinsic :: iso_c_binding
-
-    implicit none
-    class(BGCFortranInterface) :: this
-
-    procedure(DataTest), pointer :: engine_DataTest
-
-    call c_f_procpointer(this%c_interface%Setup,engine_DataTest)
-    call engine_DataTest()
-
-  end subroutine BGC_Fortran_DataTest
+  !subroutine BGC_Fortran_DataTest(this)
+  !  use, intrinsic :: iso_c_binding
+  !
+  !  implicit none
+  !  class(BGCFortranInterface) :: this
+  !  procedure(DataTest), pointer :: engine_DataTest
+  !
+  !  call c_f_procpointer(this%c_interface%Setup,engine_DataTest)
+  !  call engine_DataTest()
+  !
+  !end subroutine BGC_Fortran_DataTest
 
     subroutine BGC_Fortran_Setup(this, props, state, aux_data, num_iterations, ncol)
       use, intrinsic :: iso_c_binding, only : c_ptr, c_int, c_double, c_f_procpointer

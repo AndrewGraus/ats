@@ -42,7 +42,7 @@ void CreateBGCInterface(const char* const engine_name, BGCInterface* interface)
    //interface->Shutdown = NULL;
    //interface->Advance = NULL;
 
-   interface->DataTest = &ecosim_datatest;
+   //interface->DataTest = &ecosim_datatest;
    interface->Setup = &ecosim_setup;
    interface->Shutdown = &ecosim_shutdown;
    interface->Advance = &ecosim_advance;
