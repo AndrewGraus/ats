@@ -3,12 +3,15 @@
 ! running F90 code within the interface
 !
 
-subroutine EcoSIM_DataTest() bind(C)
-
-  use, intrinsic :: iso_c_binding
-
+module ecosim_datatest_mod
   implicit none
+contains
+  subroutine ecosim_datatest() bind(C)
 
-  write(*,*) "Okay calling the function works."
+    use, intrinsic :: iso_c_binding
 
-end subroutine EcoSIM_DataTest
+    write(*,*) "Okay calling the function works."
+
+  end subroutine EcoSIM_DataTest
+
+end module ecosim_datatest_mod
