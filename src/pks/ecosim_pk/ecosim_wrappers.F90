@@ -30,20 +30,6 @@
 !
 ! **************************************************************************** !
 
-subroutine EcoSIM_DataTest() bind(C)
-
-  use, intrinsic :: iso_c_binding
-
-  use BGCContainers_module
-
-  implicit none
-
-  !integer (c_int), value, intent(in) :: ncol
-
-  write(*,*) "Okay calling the function works."
-
-end subroutine EcoSIM_DataTest
-
 subroutine EcoSIM_Setup(props, state, aux_data, &
                           num_iterations, ncol) bind(C)
 
