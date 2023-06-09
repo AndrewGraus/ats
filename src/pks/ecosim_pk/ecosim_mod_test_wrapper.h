@@ -40,6 +40,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include "data/BGC_containers.hh"
+
 void ecosim_datatest_wrapper(int col, BGCProperties props);
 
 #ifdef __cplusplus
