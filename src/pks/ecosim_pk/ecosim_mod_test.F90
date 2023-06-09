@@ -33,6 +33,12 @@ contains
 
     write(*,*) "Okay calling the props function works."
     write(*,*) "num col is: ", col
+    write(*,*) "printing the BGCProps data: "
+    do i = 1, props%size
+      write(*,*) props%volume%data(i)
+    end do
+
+    write(*,*)
 
   end subroutine ecosim_datatest
 
