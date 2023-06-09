@@ -34,7 +34,7 @@ contains
     write(*,*) "Okay calling the props function works."
     write(*,*) "num col is: ", col
     write(*,*) "printing the BGCProps data: "
-    do i = 1, props%size
+    do i = 1, props%volume%size
       write(*,*) props%volume%data(i)
     end do
 
