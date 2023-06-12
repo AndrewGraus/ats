@@ -46,14 +46,14 @@ contains
 
   subroutine SetBGCSizes(sizes)
 
-  use BGCContainers_module, only : BGCSizes
+    use BGCContainers_module, only : BGCSizes
 
-  implicit none
+    implicit none
 
-  type (BGCSizes), intent(out) :: sizes
+    type (BGCSizes), intent(out) :: sizes
 
-  sizes%ncells_per_col_ = 100
-  sizes%num_components = 1
+    sizes%num_components = 1
+    sizes%ncells_per_col_ = 100
 
   end subroutine SetBGCSizes
 

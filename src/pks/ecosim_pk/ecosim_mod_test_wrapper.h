@@ -42,7 +42,7 @@ extern "C" {
 
 #include "data/BGC_containers.hh"
 
-void ecosim_datatest_wrapper(int col, BGCProperties props, BGCSizes sizes);
+void ecosim_datatest_wrapper(int col, BGCProperties* props, BGCSizes* sizes);
 
 #ifdef __cplusplus
 }

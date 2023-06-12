@@ -35,8 +35,8 @@
 
 #include "ecosim_mod_test_wrapper.h"
 
-extern void ecosim_datatest(int col, BGCProperties props, BGCSizes sizes);
+extern void ecosim_datatest(int col, BGCProperties* props, BGCSizes* sizes);
 
-void ecosim_datatest_wrapper(int col, BGCProperties props, BGCSizes sizes) {
+void ecosim_datatest_wrapper(int col, BGCProperties* props, BGCSizes* sizes) {
   ecosim_datatest(col, props, sizes);
 }
