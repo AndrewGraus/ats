@@ -106,7 +106,8 @@ module bgc_fortran_memory_mod
     subroutine Setup(props, state, aux_data, num_iterations, ncol) bind(C)
 
       use, intrinsic :: iso_c_binding, only: c_char, c_bool, c_ptr, c_int
-      use BGCContainers_module, only : BGCSizes
+      use BGCContainers_module, only : BGCSizes,BGCProperties,&
+               BGCState,BGCAuxiliaryData
       IMPORT
       implicit none
 
@@ -162,39 +163,39 @@ module bgc_fortran_memory_mod
   !
   !end subroutine BGC_Fortran_DataTest
 
-    subroutine BGC_Fortran_Setup(this, props, state, aux_data, num_iterations, ncol)
-      use, intrinsic :: iso_c_binding, only : c_ptr, c_int, c_double, c_f_procpointer
-      use BGCContainers_module, only : BGCSizes, BGCProperties,&
-               BGCState, BGCAuxiliaryData
+  subroutine BGC_Fortran_Setup(this, props, state, aux_data, num_iterations, ncol)
+    use, intrinsic :: iso_c_binding, only : c_ptr, c_int, c_double, c_f_procpointer
+    use BGCContainers_module, only : BGCSizes, BGCProperties,&
+             BGCState, BGCAuxiliaryData
 
-      implicit none
-      class(BGCFortranInterface) :: this
+    implicit none
+    class(BGCFortranInterface) :: this
 
-      real(c_double) :: delta_t
-      integer(c_int) :: ncol
-      integer(c_int) :: num_iterations
-      type(BGCProperties) :: props
-      type(BGCState) :: state
-      type(BGCAuxiliaryData) :: aux_data
+    real(c_double) :: delta_t
+    integer(c_int) :: ncol
+    integer(c_int) :: num_iterations
+    type(BGCProperties) :: props
+    type(BGCState) :: state
+    type(BGCAuxiliaryData) :: aux_data
 
-      procedure(Setup), pointer :: engine_Setup
+    procedure(Setup), pointer :: engine_Setup
 
-      call c_f_procpointer(this%c_interface%Setup,engine_Setup)
-      call engine_Setup(props, state, aux_data, num_iterations, ncol)
+    call c_f_procpointer(this%c_interface%Setup,engine_Setup)
+    call engine_Setup(props, state, aux_data, num_iterations, ncol)
 
-    end subroutine BGC_Fortran_Setup
+  end subroutine BGC_Fortran_Setup
 
-    subroutine BGC_Fortran_Shutdown(this)
-      use, intrinsic :: iso_c_binding, only : c_ptr,c_f_procpointer
+  subroutine BGC_Fortran_Shutdown(this)
+    use, intrinsic :: iso_c_binding, only : c_ptr,c_f_procpointer
 
-      implicit none
-      class(BGCFortranInterface) :: this
-      procedure(Shutdown), pointer :: engine_Shutdown
+    implicit none
+    class(BGCFortranInterface) :: this
+    procedure(Shutdown), pointer :: engine_Shutdown
 
-      call c_f_procpointer(this%c_interface%Shutdown,engine_Shutdown)
-      call engine_Shutdown()
+    call c_f_procpointer(this%c_interface%Shutdown,engine_Shutdown)
+    call engine_Shutdown()
 
-    end subroutine BGC_Fortran_Shutdown
+  end subroutine BGC_Fortran_Shutdown
 
   subroutine BGC_Fortran_Advance(this, delta_t, props, state, aux_data, num_iterations, ncol)
     use, intrinsic :: iso_c_binding, only : c_ptr, c_int, c_double, c_f_procpointer

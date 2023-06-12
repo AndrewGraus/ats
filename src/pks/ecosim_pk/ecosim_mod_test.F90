@@ -8,14 +8,26 @@ module ecosim_datatest_mod
 
   implicit none
 
+  public :: &
+      ecosim_datatest
+
+  private :: &
+      SetBGCSizes
+
 contains
-  subroutine ecosim_datatest(col, props) bind(C)
+  subroutine ecosim_datatest(col, props, sizes) bind(C)
 
     use, intrinsic :: iso_c_binding
+
     integer (c_int), value, intent(in) :: col
-    type(BGCProperties) :: props
+    type(BGCProperties), intent(in) :: props
+    type(BGCSizes), intent(out) :: sizes
     integer :: i
     integer :: len
+
+    write(*,*) "calling set sizes"
+
+    call SetBGCSizes(sizes)
 
     write(*,*) "Okay calling the props function works."
     write(*,*) "num col is: ", col
@@ -31,5 +43,18 @@ contains
     write(*,*) "the properties are finished"
 
   end subroutine ecosim_datatest
+
+  subroutine SetBGCSizes(sizes)
+
+  use AlquimiaContainers_module, only : BGCSizes
+
+  implicit none
+
+  type (AlquimiaSizes), intent(out) :: sizes
+
+  sizes%ncells_per_col_ = 100
+  sizes%num_components = 1
+
+  end subroutine SetBGCSizes
 
 end module ecosim_datatest_mod
