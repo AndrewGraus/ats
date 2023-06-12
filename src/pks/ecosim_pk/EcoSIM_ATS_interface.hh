@@ -196,6 +196,7 @@ class EcoSIM : public PK_Physical {
   BGCState bgc_state_;
   BGCProperties bgc_props_;
   BGCAuxiliaryData bgc_aux_data_;
+  BGCSizes bgc_sizes_;
 
   bool bgc_initialized_;
   bool has_energy, has_gas, has_ice;

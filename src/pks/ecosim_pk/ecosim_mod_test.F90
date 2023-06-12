@@ -46,11 +46,11 @@ contains
 
   subroutine SetBGCSizes(sizes)
 
-  use AlquimiaContainers_module, only : BGCSizes
+  use BGCContainers_module, only : BGCSizes
 
   implicit none
 
-  type (AlquimiaSizes), intent(out) :: sizes
+  type (BGCSizes), intent(out) :: sizes
 
   sizes%ncells_per_col_ = 100
   sizes%num_components = 1
