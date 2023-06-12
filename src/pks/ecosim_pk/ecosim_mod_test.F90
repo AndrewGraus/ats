@@ -4,8 +4,6 @@
 !
 
 module ecosim_datatest_mod
-  use BGCContainers_module, only : BGCProperties, BGCSizes
-
   implicit none
 
   public :: &
@@ -18,7 +16,8 @@ contains
   subroutine ecosim_datatest(col, props, sizes) bind(C)
 
     use, intrinsic :: iso_c_binding
-
+    use BGCContainers_module, only : BGCSizes, &
+     BGCProperties
     integer (c_int), value, intent(in) :: col
     type(BGCProperties), intent(in) :: props
     type(BGCSizes), intent(out) :: sizes
@@ -26,6 +25,8 @@ contains
     integer :: len
 
     write(*,*) "calling set sizes"
+    write(*,*) "does sizes exist?"
+    write(*,*) sizes%num_components
 
     call SetBGCSizes(sizes)
 
