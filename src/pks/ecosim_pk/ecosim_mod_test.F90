@@ -8,22 +8,6 @@ module ecosim_datatest_mod
 
   implicit none
 
-interface
-  subroutine AllocateBGCProperties(sizes, props) bind(C, name='AllocateBGCProperties')
-    use BGCContainers_module, only : BGCSizes, BGCProperties
-    implicit none
-    type(BGCSizes) :: sizes
-    type(BGCProperties) :: props
-  end subroutine
-end interface
-interface
-  subroutine FreeBGCProperties(props) bind(C, name='FreeBGCProperties')
-    use BGCContainers_module, only : BGCProperties
-    implicit none
-    type(BGCProperties) :: props
-  end subroutine
-end interface
-
 contains
   subroutine ecosim_datatest(col, props) bind(C)
 
@@ -36,10 +20,10 @@ contains
     write(*,*) "Okay calling the props function works."
     write(*,*) "num col is: ", col
     write(*,*) "printing the BGCProps data: "
-    
+
     len = props%volume%size
 
-    write(*,*) "the length is: ", len    
+    write(*,*) "the length is: ", len
     !do i = 1, props%volume%size
     !  write(*,*) props%volume%data(i)
     !end do
