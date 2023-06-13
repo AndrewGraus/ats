@@ -25,6 +25,8 @@ contains
     type(BGCSizes), intent(out) :: sizes
     integer :: i
     integer :: len
+    integer(c_int), pointer :: idata(:)
+    real (c_double), pointer :: data(:)
 
     write(*,*) "calling set sizes"
     write(*,*) "does sizes exist?"
@@ -38,9 +40,10 @@ contains
 
     len = props%volume%size
 
+    call c_f_pointer(props%volume%data, data, (/len/))
     write(*,*) "the length is: ", len
     do i = 1, len
-      write(*,*) props%volume%data(i)
+      write(*,*) data(i)
     end do
 
     write(*,*) "the properties are finished"
