@@ -37,9 +37,9 @@ contains
     len = props%volume%size
 
     write(*,*) "the length is: ", len
-    !do i = 1, props%volume%size
-    !  write(*,*) props%volume%data(i)
-    !end do
+    do i = 1, len
+      write(*,*) props%volume%data(i)
+    end do
 
     write(*,*) "the properties are finished"
 

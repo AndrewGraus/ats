@@ -911,7 +911,7 @@ int EcoSIM::InitializeSingleColumn(int col)
   std::cout << "running wrapper" << std::endl;
   std::cout << "size: " << bgc_props_.volume.size  << std::endl;
 
-  ecosim_datatest_wrapper(col, bgc_props_, bgc_sizes_);
+  ecosim_datatest_wrapper(col, &bgc_props_, &bgc_sizes_);
   //bgc_engine_->DataTest();
 
   int num_iterations = 1;
