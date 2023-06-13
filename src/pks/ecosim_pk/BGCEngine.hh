@@ -75,8 +75,8 @@ class BGCEngine {
   bool Setup(BGCProperties& props,
                BGCState& state,
                BGCAuxiliaryData& aux_data,
-               int& num_iterations,
-               int& ncol);
+               int num_iterations,
+               int ncol);
 
   // Advances the species represented by the given array of concentrations, replacing old values
   // with new values. The order of the concentrations in the array matches that of the species names
@@ -86,8 +86,8 @@ class BGCEngine {
                BGCProperties& props,
                BGCState& state,
                BGCAuxiliaryData& aux_data,
-               int& num_iterations,
-               int& ncol);
+               int num_iterations,
+               int ncol);
 
   //Functions from the alquimia util section, I don't think I need the full code so I think
   //I can just copy these functions over

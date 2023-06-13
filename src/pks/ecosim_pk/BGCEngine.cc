@@ -213,8 +213,8 @@ void BGCEngine::FreeState(BGCProperties& props,
 bool BGCEngine::Setup(BGCProperties& props,
                               BGCState& state,
                               BGCAuxiliaryData& aux_data,
-                              int& num_iterations,
-                              int& ncol)
+                              int num_iterations,
+                              int ncol)
 {
   std::cout << "Running BGC Engine Setup" << std::endl;
   // Advance the chemical reaction all operator-split-like.
@@ -236,8 +236,8 @@ bool BGCEngine::Advance(const double delta_time,
                               BGCProperties& props,
                               BGCState& state,
                               BGCAuxiliaryData& aux_data,
-                              int& num_iterations,
-                              int& ncol)
+                              int num_iterations,
+                              int ncol)
 {
   std::cout << "Running BGC Engine Advance" << std::endl;
   // Advance the chemical reaction all operator-split-like.
