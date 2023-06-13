@@ -4,6 +4,8 @@
 !
 
 module ecosim_datatest_mod
+  use BGCContainers_module, only : BGCSizes, &
+   BGCProperties
   implicit none
 
   public :: &
