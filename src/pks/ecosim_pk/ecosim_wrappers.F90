@@ -30,7 +30,7 @@
 !
 ! **************************************************************************** !
 
-subroutine EcoSIM_Setup(props, state, aux_data, &
+subroutine EcoSIM_Setup(props, state, sizes, &
                           num_iterations, ncol) bind(C)
 
   use, intrinsic :: iso_c_binding
@@ -42,16 +42,16 @@ subroutine EcoSIM_Setup(props, state, aux_data, &
 
   ! function parameters
   !character(kind=c_char), dimension(*), intent(in) :: input_filename
-  !type (BGCSizes), intent(out) :: sizes
+  type (BGCSizes), intent(out) :: sizes
   type (BGCState), intent(inout) :: state
-  type (BGCAuxiliaryData), intent(inout) :: aux_data
+  !type (BGCAuxiliaryData), intent(inout) :: aux_data
   type (BGCProperties), intent(in) :: props
   integer :: ncol, jz, js
   integer, intent(in) :: num_iterations
 
   write(*,*) "starting driver transfer ATS2EcoSIMData"
 
-  call ATS2EcoSIMData(ncol, state, aux_data, props)
+  call ATS2EcoSIMData(ncol, state, props, sizes)
 
   write(*,*) "starting driver Init_EcoSIM"
 
