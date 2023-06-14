@@ -91,6 +91,8 @@ class EcoSIM : public PK_Physical {
 
   virtual std::string name(){return "EcoSIM for ATS";};
 
+  //This is not in the Alquimia_PK, for whatever reason it is defined in
+  //The Chemistry_PK even though it isn't used there, and then included
   Teuchos::RCP<BGCEngine> bgc_engine() { return bgc_engine_; }
 
   /*void CopyToEcoSIM(int col,

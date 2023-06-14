@@ -908,11 +908,10 @@ int EcoSIM::InitializeSingleColumn(int col)
 {
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-  std::cout << "running wrapper" << std::endl;
-  std::cout << "size: " << bgc_props_.volume.size  << std::endl;
+  std::cout << "running data test" << std::endl;
 
   //ecosim_datatest_wrapper(col, &bgc_props_, &bgc_sizes_);
-  //bgc_engine_->DataTest();
+  bgc_engine_->DataTest();
 
   int num_iterations = 1;
 
