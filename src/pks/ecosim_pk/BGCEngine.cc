@@ -212,7 +212,7 @@ void BGCEngine::FreeState(BGCProperties& props,
 
 bool BGCEngine::Setup(BGCProperties& props,
                               BGCState& state,
-                              BGCAuxiliaryData& aux_data,
+                              BGCSizes& sizes,
                               int num_iterations,
                               int ncol)
 {
@@ -220,7 +220,7 @@ bool BGCEngine::Setup(BGCProperties& props,
   // Advance the chemical reaction all operator-split-like.
   bgc_.Setup(&props,
                 &state,
-                &aux_data,
+                &sizes,
                 num_iterations,
                 ncol);
 
@@ -235,7 +235,7 @@ bool BGCEngine::Setup(BGCProperties& props,
 bool BGCEngine::Advance(const double delta_time,
                               BGCProperties& props,
                               BGCState& state,
-                              BGCAuxiliaryData& aux_data,
+                              BGCSizes% sizes,
                               int num_iterations,
                               int ncol)
 {
@@ -244,7 +244,7 @@ bool BGCEngine::Advance(const double delta_time,
   bgc_.Advance(delta_time,
                 &props,
                 &state,
-                &aux_data,
+                &sizes,
                 num_iterations,
                 ncol);
 

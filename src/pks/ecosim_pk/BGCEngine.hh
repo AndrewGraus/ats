@@ -74,7 +74,7 @@ class BGCEngine {
 
   bool Setup(BGCProperties& props,
                BGCState& state,
-               BGCAuxiliaryData& aux_data,
+               BGCSizes& sizes,
                int num_iterations,
                int ncol);
 
@@ -85,7 +85,7 @@ class BGCEngine {
   bool Advance(const double delta_time,
                BGCProperties& props,
                BGCState& state,
-               BGCAuxiliaryData& aux_data,
+               BGCSizes& sizes,
                int num_iterations,
                int ncol);
 
