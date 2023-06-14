@@ -945,7 +945,7 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
   *******************************************************************/
 
  bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
-                                         bgc_aux_data_, num_iterations, col);
+                                         bgc_sizes_, num_iterations, col);
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
   CopyEcoSIMStateToAmanzi(col,
