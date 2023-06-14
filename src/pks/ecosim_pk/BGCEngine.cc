@@ -235,7 +235,7 @@ bool BGCEngine::Setup(BGCProperties& props,
 bool BGCEngine::Advance(const double delta_time,
                               BGCProperties& props,
                               BGCState& state,
-                              BGCSizes% sizes,
+                              BGCSizes& sizes,
                               int num_iterations,
                               int ncol)
 {

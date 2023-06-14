@@ -106,12 +106,12 @@ subroutine EcoSIM_Advance( &
   real (c_double), value, intent(in) :: delta_t
   type (BGCProperties), intent(in) :: props
   type (BGCState), intent(inout) :: state
-  type (BGCAuxiliaryData), intent(inout) :: aux_data
+  type (BGCSizes), intent(out) :: sizes
   !type (BGCEngineStatus), intent(out) :: status
   integer :: ncol
   integer, intent(in) :: num_iterations
 
-  call ATS2EcoSIMData(ncol, state, aux_data, props)
+  call ATS2EcoSIMData(ncol, state, props, sizes)
 
   call Run_EcoSIM_one_step()
 

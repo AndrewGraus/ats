@@ -120,7 +120,7 @@ extern "C" {
     void (*Setup)(
       BGCProperties* properties,
       BGCState* state,
-      BGCAuxiliaryData* aux_data,
+      BGCSizes* sizes,
       int num_iterations,
       int ncol);
 
@@ -142,7 +142,7 @@ extern "C" {
       double delta_t,
       BGCProperties* properties,
       BGCState* state,
-      BGCAuxiliaryData* aux_data,
+      BGCSizes* sizes,
       int num_iterations,
       int ncol);
 

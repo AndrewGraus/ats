@@ -42,7 +42,7 @@ extern "C" {
 void ecosim_setup(
   BGCProperties* properties,
   BGCState* state,
-  BGCAuxiliaryData* aux_data,
+  BGCSizes* sizes,
   int num_iterations,
   int ncol
 );
@@ -53,7 +53,7 @@ void ecosim_advance(
   double delta_t,
   BGCProperties* properties,
   BGCState* state,
-  BGCAuxiliaryData* aux_data,
+  BGCSizes* sizes,
   int num_iterations,
   int ncol
 );
