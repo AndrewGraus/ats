@@ -76,6 +76,11 @@ BGCEngine::BGCEngine(const std::string& engineName,
 {
   Errors::Message msg;
 
+  std::cout << "Engine name is: " << engineName << std::endl;
+  std::cout << "Creating the BGC Engine interface" << std::endl;
+  CreateBGCInterface(bgc_engine_name_.c_str(),
+                    &bgc_);
+  /*
   bool hands_off = false;
   if (bgc_engine_name_ == "EcoSIM") hands_off = true;
 
@@ -87,10 +92,7 @@ BGCEngine::BGCEngine(const std::string& engineName,
     std::cout << "Creating the BGC Engine interface" << std::endl;
     CreateBGCInterface(bgc_engine_name_.c_str(),
                       &bgc_);
-
-    //std::cout << "Running bgc engine setup" << std::endl;
-    //bgc_.Setup(bgc_engine_inputfile_.c_str(),&sizes_);
-  }
+  }*/
 
   // All alquimia function calls require a status object.
   // AllocateAlquimiaEngineStatus is in the alquimia code in alquimia_memory.c
@@ -212,7 +214,7 @@ void BGCEngine::DataTest() {
 
 bool BGCEngine::Setup(BGCProperties& props,
                               BGCState& state,
-                              BGCSizes& sizes,
+                              BGCSizes& sizes_,
                               int num_iterations,
                               int ncol)
 {
@@ -220,7 +222,7 @@ bool BGCEngine::Setup(BGCProperties& props,
   // Advance the chemical reaction all operator-split-like.
   bgc_.Setup(&props,
                 &state,
-                &sizes,
+                &sizes_,
                 num_iterations,
                 ncol);
 
@@ -235,7 +237,7 @@ bool BGCEngine::Setup(BGCProperties& props,
 bool BGCEngine::Advance(const double delta_time,
                               BGCProperties& props,
                               BGCState& state,
-                              BGCSizes& sizes,
+                              BGCSizes& sizes_,
                               int num_iterations,
                               int ncol)
 {
@@ -244,7 +246,7 @@ bool BGCEngine::Advance(const double delta_time,
   bgc_.Advance(delta_time,
                 &props,
                 &state,
-                &sizes,
+                &sizes_,
                 num_iterations,
                 ncol);
 
