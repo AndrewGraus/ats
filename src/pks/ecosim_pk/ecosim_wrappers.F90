@@ -92,6 +92,7 @@ subroutine EcoSIM_Advance( &
      delta_t, &
      props, &
      state, &
+     sizes, &
      num_iterations, &
      ncol) bind(C)
 
