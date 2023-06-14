@@ -163,7 +163,7 @@ module bgc_fortran_memory_mod
   !
   !end subroutine BGC_Fortran_DataTest
 
-  subroutine BGC_Fortran_Setup(this, props, state, size, num_iterations, ncol)
+  subroutine BGC_Fortran_Setup(this, props, state, sizes, num_iterations, ncol)
     use, intrinsic :: iso_c_binding, only : c_ptr, c_int, c_double, c_f_procpointer
     use BGCContainers_module, only : BGCSizes, BGCProperties,&
              BGCState
