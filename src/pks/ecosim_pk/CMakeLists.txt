@@ -22,8 +22,6 @@ set(ats_ecosim_src_files
     EcoSIM_ATS_interface.cc
     BGCEngine.cc
     ecosim_wrappers.F90
-    ecosim_mod_test_wrapper.c
-    ecosim_mod_test.F90
     data/bgc_fortran_memory_mod.F90
     /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/BGC_containers.F90
     /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/ATSCPLMod.F90
