@@ -119,7 +119,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     atm_ch4_ = plist_->get<double>("atmospheric CH4");
     atm_n2o_ = plist_->get<double>("atmospheric N2O");
     atm_h2_ = plist_->get<double>("atmospheric H2");
-    atm_nh3e_ = plist_->get<double>("atmospheric NH3");
+    atm_nh3_ = plist_->get<double>("atmospheric NH3");
 
     // parameters
     // initial timestep
@@ -264,15 +264,6 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  //atm abundances
-  S_->GetEvaluator(key_atm_n2, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_o2, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_co2, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_ch4, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_n2o, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_h2, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_nh3, Tags::DEFAULT).Update(*S_, name_);
-
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "testing keys" << std::endl;
 
@@ -381,15 +372,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
-
-  //atm abundances
-  S_->GetEvaluator(key_atm_n2, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_o2, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_co2, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_ch4, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_n2o, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_h2, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(key_atm_nh3, Tags::DEFAULT).Update(*S_, name_);
 
   if (has_gas) {
     S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -769,7 +751,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     props.atm_n2 = atm_n2_;
     props.atm_o2 = atm_o2_;
     props.atm_co2 = atm_co2_;
-    props.atm_ch42 = atm_ch4_;
+    props.atm_ch4 = atm_ch4_;
     props.atm_n2o = atm_n2o_;
     props.atm_h2 = atm_h2_;
     props.atm_nh3 = atm_nh3_;

@@ -194,7 +194,7 @@ class EcoSIM : public PK_Physical {
 
   Teuchos::RCP<BGCEngine> bgc_engine_;
 
-  double atm_n2_, atm_o2_, atm_co2_, atm_ch4, atm_n2o_, atm_h2_, atm_nh3_;
+  double atm_n2_, atm_o2_, atm_co2_, atm_ch4_, atm_n2o_, atm_h2_, atm_nh3_;
 
  private:
   BGCState bgc_state_;
