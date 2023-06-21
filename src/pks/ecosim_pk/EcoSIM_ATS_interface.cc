@@ -112,6 +112,15 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     hydra_cond_key_ = Keys::readKey(*plist_, domain_, "hydraulic conductivity", "hydraulic_conductivity");
     //bulk_dens_key_ = Keys::readKey(*plist_, domain_, "bulk density", "bulk_density");
 
+    //Atmospheric abundance keys
+    atm_n2_ = plist_->get<double>("atmospheric N2");
+    atm_o2_ = plist_->get<double>("atmospheric O2");
+    atm_co2_ = plist_->get<double>("atmospheric CO2");
+    atm_ch4_ = plist_->get<double>("atmospheric CH4");
+    atm_n2o_ = plist_->get<double>("atmospheric N2O");
+    atm_h2_ = plist_->get<double>("atmospheric H2");
+    atm_nh3e_ = plist_->get<double>("atmospheric NH3");
+
     // parameters
     // initial timestep
     dt_ = plist_->get<double>("initial time step", 1.);
@@ -255,6 +264,15 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
 
+  //atm abundances
+  S_->GetEvaluator(key_atm_n2, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_o2, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_co2, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_ch4, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_n2o, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_h2, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_nh3, Tags::DEFAULT).Update(*S_, name_);
+
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "testing keys" << std::endl;
 
@@ -364,6 +382,15 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
 
+  //atm abundances
+  S_->GetEvaluator(key_atm_n2, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_o2, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_co2, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_ch4, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_n2o, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_h2, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(key_atm_nh3, Tags::DEFAULT).Update(*S_, name_);
+
   if (has_gas) {
     S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
     S_->GetEvaluator(gas_den_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -430,6 +457,12 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
     const Epetra_MultiVector& gas_saturation = *(*S_->Get<CompositeVector>("saturation_gas", tag_next_)
             .ViewComponent("cell",false))(0);
   }
+
+  //Atm abundances
+  S_->GetEvaluator("atm_n2", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& atm_n2 = *(*S_->Get<CompositeVector>("atm_n2", tag_next_)
+          .ViewComponent("cell",false))(0);
+
 
   if (has_ice) {
     S_->GetEvaluator("mass_density_ice", tag_next_).Update(*S_, name_);
@@ -730,6 +763,16 @@ void EcoSIM::CopyToEcoSIM(int col,
       props.thermal_conductivity.data[i] = (*col_cond)[i];
     }
 
+    //Fill the atmospheric abundances
+    //NOTE: probably want to add an if statement here to only do this only once
+
+    props.atm_n2 = atm_n2_;
+    props.atm_o2 = atm_o2_;
+    props.atm_co2 = atm_co2_;
+    props.atm_ch42 = atm_ch4_;
+    props.atm_n2o = atm_n2o_;
+    props.atm_h2 = atm_h2_;
+    props.atm_nh3 = atm_nh3_;
   }
   //mat_props.volume = mesh_->cell_volume(cell;z
   //mat_props.saturation = water_saturation[0][cell];

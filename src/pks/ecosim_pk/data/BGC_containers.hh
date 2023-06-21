@@ -104,6 +104,13 @@ extern "C" {
     BGCVectorDouble relative_permeability;
     BGCVectorDouble thermal_conductivity;
     BGCVectorDouble volume;
+    double atm_n2;
+    double atm_o2;
+    double atm_co2;
+    double atm_ch4;
+    double atm_n2o;
+    double atm_h2;
+    double atm_nh3;
   } BGCProperties;
 
   typedef struct {
