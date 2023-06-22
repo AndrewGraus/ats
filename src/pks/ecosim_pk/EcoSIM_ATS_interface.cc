@@ -112,6 +112,17 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     hydra_cond_key_ = Keys::readKey(*plist_, domain_, "hydraulic conductivity", "hydraulic_conductivity");
     //bulk_dens_key_ = Keys::readKey(*plist_, domain_, "bulk density", "bulk_density");
 
+    //Surface balance items
+    sw_key_ =
+      Keys::readKey(plist, domain_surf_, "incoming shortwave radiation", "incoming_shortwave_radiation");
+    lw_key_ =
+      Keys::readKey(plist, domain_, "incoming longwave radiation", "incoming_longwave_radiation");
+    air_temp_key_ = Keys::readKey(plist, domain_surf_, "air temperature", "air_temperature");
+    vp_air_key_ = Keys::readKey(plist, domain_surf_, "vapor pressure air", "vapor_pressure_air");
+    wind_speed_key_ = Keys::readKey(plist, domain_surf_, "wind speed", "wind_speed");
+    prain_key_ = Keys::readKey(plist, domain_surf_, "precipitation rain", "precipitation_rain");
+    //psnow_key_ = Keys::readKey(plist, domain_surf_, "precipitation snow", "precipitation");
+
     //Atmospheric abundance keys
     atm_n2_ = plist_->get<double>("atmospheric N2");
     atm_o2_ = plist_->get<double>("atmospheric O2");
@@ -267,6 +278,14 @@ void EcoSIM::Initialize() {
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "testing keys" << std::endl;
 
+  //Surface properties from met data
+  S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(prain_key_, Tags::DEFAULT).Update(*S_, name_);
+
   //Here we put the checks for the optional keys
   //Temperature, ice and gas
   //plist_->print(std::cout);
@@ -373,6 +392,14 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
 
+  //Surface data from met data
+  S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(prain_key_, Tags::DEFAULT).Update(*S_, name_);
+
   if (has_gas) {
     S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
     S_->GetEvaluator(gas_den_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -441,10 +468,29 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   }
 
   //Atm abundances
-  S_->GetEvaluator("atm_n2", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& atm_n2 = *(*S_->Get<CompositeVector>("atm_n2", tag_next_)
+  S_->GetEvaluator("incoming_shortwave_radiation", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& sw_rad = *(*S_->Get<CompositeVector>("incoming_shortwave_radiation", tag_next_)
           .ViewComponent("cell",false))(0);
 
+  S_->GetEvaluator("incoming_longwave_radiation", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& lw_rad = *(*S_->Get<CompositeVector>("incoming_longwave_radiation", tag_next_)
+          .ViewComponent("cell",false))(0);
+
+  S_->GetEvaluator("air_temperature", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& t_air = *(*S_->Get<CompositeVector>("air_temperature", tag_next_)
+          .ViewComponent("cell",false))(0);
+
+  S_->GetEvaluator("vapor_pressure_air", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& p_vap = *(*S_->Get<CompositeVector>("vapor_pressure_air", tag_next_)
+          .ViewComponent("cell",false))(0);
+
+  S_->GetEvaluator("wind_speed", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& v_wind = *(*S_->Get<CompositeVector>("wind_speed", tag_next_)
+          .ViewComponent("cell",false))(0);
+
+  S_->GetEvaluator("precipitation_rain", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& p_rain = *(*S_->Get<CompositeVector>("precipitation_rain", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   if (has_ice) {
     S_->GetEvaluator("mass_density_ice", tag_next_).Update(*S_, name_);
@@ -629,6 +675,16 @@ void EcoSIM::CopyToEcoSIM(int col,
   const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& hydraulic_conductivity = *(*S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false))(0);
 
+  //I think I can access the surface variables with col variable and it should
+  //be what I want
+  const Epetra_Vector& shortwave_radiation = *(*S_->Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& longwave_radiation = *(*S_->Get<CompositeVector>(lw_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& air_temperature = *(*S_->Get<CompositeVector>(air_temp_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& vapor_pressure_air = *(*S_->Get<CompositeVector>(vp_air_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& wind_speed= *(*S_->Get<CompositeVector>(wind_speed_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& precipitation = *(*S_->Get<CompositeVector>(prain_key_, water_tag).ViewComponent("cell", false))(0);
+
+
   //Define the column vectors to hold the data
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -745,9 +801,16 @@ void EcoSIM::CopyToEcoSIM(int col,
       props.thermal_conductivity.data[i] = (*col_cond)[i];
     }
 
+    //fill surface variables
+    props.shortwave_radiation = shortwave_radiation[col];
+    props.longwave_radiation = longwave_radiation[col];
+    props.air_temperature = air_temperature[col];
+    props.vapor_pressure_air = vapor_pressure_air[col];
+    props.wind_speed = wind_speed[col];
+    props.precipitation = precipitation[col];
+
     //Fill the atmospheric abundances
     //NOTE: probably want to add an if statement here to only do this only once
-
     props.atm_n2 = atm_n2_;
     props.atm_o2 = atm_o2_;
     props.atm_co2 = atm_co2_;

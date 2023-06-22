@@ -104,6 +104,12 @@ extern "C" {
     BGCVectorDouble relative_permeability;
     BGCVectorDouble thermal_conductivity;
     BGCVectorDouble volume;
+    double shortwave_radiation;
+    double longwave_radiation;
+    double air_temperature;
+    double vapor_pressure_air;
+    double wind_speed;
+    double precipitation;
     double atm_n2;
     double atm_o2;
     double atm_co2;
