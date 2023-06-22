@@ -114,13 +114,13 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
 
     //Surface balance items
     sw_key_ =
-      Keys::readKey(plist, domain_surf_, "incoming shortwave radiation", "incoming_shortwave_radiation");
+      Keys::readKey(*plist_, domain_surf_, "incoming shortwave radiation", "incoming_shortwave_radiation");
     lw_key_ =
-      Keys::readKey(plist, domain_, "incoming longwave radiation", "incoming_longwave_radiation");
-    air_temp_key_ = Keys::readKey(plist, domain_surf_, "air temperature", "air_temperature");
-    vp_air_key_ = Keys::readKey(plist, domain_surf_, "vapor pressure air", "vapor_pressure_air");
-    wind_speed_key_ = Keys::readKey(plist, domain_surf_, "wind speed", "wind_speed");
-    prain_key_ = Keys::readKey(plist, domain_surf_, "precipitation rain", "precipitation_rain");
+      Keys::readKey(*plist_,domain_surf_, "incoming longwave radiation", "incoming_longwave_radiation");
+    air_temp_key_ = Keys::readKey(*plist_, domain_surf_, "air temperature", "air_temperature");
+    vp_air_key_ = Keys::readKey(*plist_, domain_surf_, "vapor pressure air", "vapor_pressure_air");
+    wind_speed_key_ = Keys::readKey(*plist_, domain_surf_, "wind speed", "wind_speed");
+    prain_key_ = Keys::readKey(*plist_, domain_surf_, "precipitation rain", "precipitation_rain");
     //psnow_key_ = Keys::readKey(plist, domain_surf_, "precipitation snow", "precipitation");
 
     //Atmospheric abundance keys
