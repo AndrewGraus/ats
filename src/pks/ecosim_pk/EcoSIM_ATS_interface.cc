@@ -279,12 +279,12 @@ void EcoSIM::Initialize() {
   *vo_->os() << "testing keys" << std::endl;
 
   //Surface properties from met data
-  S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(prain_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(sw_key_, tag_next_).Update(*S_, name_);
+  S_->GetEvaluator(lw_key_, tag_next_).Update(*S_, name_);
+  S_->GetEvaluator(air_temp_key_, tag_next_).Update(*S_, name_);
+  S_->GetEvaluator(vp_air_key_, tag_next_).Update(*S_, name_);
+  S_->GetEvaluator(wind_speed_key_, tag_next_).Update(*S_, name_);
+  S_->GetEvaluator(prain_key_, tag_next_).Update(*S_, name_);
 
   //Here we put the checks for the optional keys
   //Temperature, ice and gas
