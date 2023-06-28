@@ -279,12 +279,12 @@ void EcoSIM::Initialize() {
   *vo_->os() << "testing keys" << std::endl;
 
   //Surface properties from met data
-  S_->GetEvaluator(sw_key_, Tags::CURRENT).Update(*S_, name_);
-  S_->GetEvaluator(lw_key_, Tags::CURRENT).Update(*S_, name_);
-  S_->GetEvaluator(air_temp_key_, Tags::CURRENT).Update(*S_, name_);
-  S_->GetEvaluator(vp_air_key_, Tags::CURRENT).Update(*S_, name_);
-  S_->GetEvaluator(wind_speed_key_, Tags::CURRENT).Update(*S_, name_);
-  S_->GetEvaluator(prain_key_, Tags::CURRENT).Update(*S_, name_);
+  S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(prain_key_, Tags::DEFAULT).Update(*S_, name_);  
+  S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Here we put the checks for the optional keys
   //Temperature, ice and gas
@@ -920,7 +920,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   }
 
   if (has_energy) {
-    auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "energy").ViewComponent("cell",false))(0);
+    auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "subsurface energy").ViewComponent("cell",false))(0);
     auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(therm_cond_key_, Amanzi::Tags::NEXT, therm_cond_key_).ViewComponent("cell",false))(0);
 
     for (int i=0; i < ncells_per_col_; ++i) {
