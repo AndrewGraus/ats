@@ -208,6 +208,9 @@ class EcoSIM : public PK_Physical {
   BGCAuxiliaryData bgc_aux_data_;
   BGCSizes bgc_sizes_;
 
+  Teuchos::RCP<Epetra_SerialDenseVector> col_vol_save;
+  Teuchos::RCP<Epetra_SerialDenseVector> col_wc_save;
+
   bool bgc_initialized_;
   bool has_energy, has_gas, has_ice;
   std::vector<std::string> component_names_;
