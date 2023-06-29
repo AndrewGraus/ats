@@ -281,7 +281,7 @@ void EcoSIM::Initialize() {
   //Surface properties from met data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(prain_key_, Tags::DEFAULT).Update(*S_, name_);  
+  S_->GetEvaluator(prain_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -944,14 +944,24 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_vol)[i] = props.volume.data[i];
   }
 
+  *vo_->os() << "printing volume: " << std::endl;
+  for (int i=0; i < ncells_per_col_; ++i) {
+    *vo_->os() << "i "<< i << "col[i]: " << (*col_vol)[i] << " data[i]: " << props.volume.data[i] << std::endl;
+  }
+
+  *vo_->os() << "printing water content: " << std::endl;
+  for (int i=0; i < ncells_per_col_; ++i) {
+    *vo_->os() << "i "<< i << "col[i]: " << (*col_wc)[i] << " data[i]: " << state.water_content.data[i] << std::endl;
+  }
+
   //Take new values from Ecosim state and put them into the secondary data structure
   //for backing back into amanzi state
   for (int j=0; j < tcc_num; ++j) {
-    *vo_->os() << "component: "<< j << std::endl;
+    //*vo_->os() << "component: "<< j << std::endl;
     for (int i=0; i < ncells_per_col_; ++i) {
-      *vo_->os() << "cell: "<< i << std::endl;
-      *vo_->os() << "col arr: "<< (*col_tcc)(i,j) << std::endl;
-      *vo_->os() << "m_arr: "<< state.total_component_concentration.data[j][i] << std::endl;
+      //*vo_->os() << "cell: "<< i << std::endl;
+      //*vo_->os() << "col arr: "<< (*col_tcc)(i,j) << std::endl;
+      //*vo_->os() << "m_arr: "<< state.total_component_concentration.data[j][i] << std::endl;
       (*col_tcc)(i,j) = state.total_component_concentration.data[j][i];
     }
   }
