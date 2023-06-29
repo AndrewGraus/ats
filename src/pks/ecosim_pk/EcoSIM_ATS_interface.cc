@@ -702,8 +702,8 @@ void EcoSIM::CopyToEcoSIM(int col,
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_h_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
-  Teuchos::RCP<Epetra_SerialDenseVector> col_vol_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  Teuchos::RCP<Epetra_SerialDenseVector> col_wc_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  col_vol_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  col_wc_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   //For the concentration I do not want a vector but a matrix
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
