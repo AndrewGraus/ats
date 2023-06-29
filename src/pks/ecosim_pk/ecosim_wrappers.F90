@@ -39,7 +39,7 @@ subroutine EcoSIM_DataTest() bind(c)
 
   end subroutine EcoSIM_DataTest
 
-! **************************************************************************** !    
+! **************************************************************************** !
 
 subroutine EcoSIM_Setup(props, state, sizes, &
                           num_iterations, ncol) bind(C)
@@ -72,7 +72,7 @@ subroutine EcoSIM_Setup(props, state, sizes, &
 
   write(*,*) "starting driver transfer EcoSIM2ATSData"
 
-  !call EcoSIM2ATSData()
+  call EcoSIM2ATSData(ncol, state, sizes)
 
 end subroutine EcoSIM_Setup
 
