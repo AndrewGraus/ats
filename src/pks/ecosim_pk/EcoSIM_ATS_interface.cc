@@ -896,9 +896,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_h_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
-  auto col_vol_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_wc_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-
   if (has_gas) {
     auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell", false))(0);
     auto& gas_density = *(*S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell", false))(0);
