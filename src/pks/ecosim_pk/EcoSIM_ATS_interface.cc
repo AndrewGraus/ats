@@ -702,7 +702,8 @@ void EcoSIM::CopyToEcoSIM(int col,
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_h_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
-
+  auto col_vol_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_wc_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   //For the concentration I do not want a vector but a matrix
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
@@ -722,6 +723,9 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   MatrixFieldToColumn_(col, tcc, col_tcc.ptr());
 
+
+  FieldToColumn_(col,cell_volume,col_vol_save.ptr());
+  FieldToColumn_(col,water_content,col_wc_save.ptr());
   /**vo_->os() << "Total Comp: " << tcc_num << std::endl;
   *vo_->os() << "Total cells: " << ncells_per_col_ << std::endl;
   for (int i=0; i < tcc_num; ++i) {
@@ -892,6 +896,9 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_h_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
+  auto col_vol_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_wc_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+
   if (has_gas) {
     auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell", false))(0);
     auto& gas_density = *(*S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell", false))(0);
@@ -946,12 +953,12 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 
   *vo_->os() << "printing volume: " << std::endl;
   for (int i=0; i < ncells_per_col_; ++i) {
-    *vo_->os() << "i "<< i << "col[i]: " << (*col_vol)[i] << " data[i]: " << props.volume.data[i] << std::endl;
+    *vo_->os() << "i "<< i << " col[i]: " << (*col_vol_save)[i] << " data[i]: " << props.volume.data[i] << std::endl;
   }
 
   *vo_->os() << "printing water content: " << std::endl;
   for (int i=0; i < ncells_per_col_; ++i) {
-    *vo_->os() << "i "<< i << "col[i]: " << (*col_wc)[i] << " data[i]: " << state.water_content.data[i] << std::endl;
+    *vo_->os() << "i "<< i << " col[i]: " << (*col_wc_save)[i] << " data[i]: " << state.water_content.data[i] << std::endl;
   }
 
   //Take new values from Ecosim state and put them into the secondary data structure
