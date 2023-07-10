@@ -822,7 +822,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     props.wind_speed = wind_speed[col];
     props.precipitation = precipitation[col];
     props.plant_wilting_factor = plant_wilting_factor[col];
-    props.elevation = elevation[col]
+    props.elevation = elevation[col];
 
     //Fill the atmospheric abundances
     //NOTE: probably want to add an if statement here to only do this only once
