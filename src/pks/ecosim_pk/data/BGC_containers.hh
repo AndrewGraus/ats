@@ -101,7 +101,6 @@ extern "C" {
     BGCVectorDouble liquid_saturation;
     BGCVectorDouble gas_saturation;
     BGCVectorDouble ice_saturation;
-    BGCVectorDouble elevation;
     BGCVectorDouble relative_permeability;
     BGCVectorDouble thermal_conductivity;
     BGCVectorDouble volume;
