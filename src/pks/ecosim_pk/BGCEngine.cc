@@ -54,7 +54,6 @@ void CopyBGCProperties(BGCProperties* dest, BGCProperties* src)
   memcpy(dest->liquid_saturation.data, src->liquid_saturation.data, sizeof(double) * src->liquid_saturation.size);
   memcpy(dest->gas_saturation.data, src->gas_saturation.data, sizeof(double) * src->gas_saturation.size);
   memcpy(dest->ice_saturation.data, src->ice_saturation.data, sizeof(double) * src->ice_saturation.size);
-  memcpy(dest->elevation.data, src->elevation.data, sizeof(double) * src->elevation.size);
   memcpy(dest->relative_permeability.data, src->relative_permeability.data, sizeof(double) * src->relative_permeability.size);
   memcpy(dest->thermal_conductivity.data, src->thermal_conductivity.data, sizeof(double) * src->thermal_conductivity.size);
   memcpy(dest->volume.data, src->volume.data, sizeof(double) * src->volume.size);

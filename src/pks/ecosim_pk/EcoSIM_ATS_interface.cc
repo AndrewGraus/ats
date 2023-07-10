@@ -120,7 +120,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     vp_air_key_ = Keys::readKey(*plist_, domain_surf_, "vapor pressure air", "vapor_pressure_air");
     wind_speed_key_ = Keys::readKey(*plist_, domain_surf_, "wind speed", "wind_speed");
     prain_key_ = Keys::readKey(*plist_, domain_surf_, "precipitation rain", "precipitation_rain");
-    f_wp_key_ = Keys::readKey(plist_, domain_, "plant wilting factor", "plant_wilting_factor");
+    f_wp_key_ = Keys::readKey(*plist_, domain_, "plant wilting factor", "plant_wilting_factor");
     elev_key_ = Keys::readKey(*plist_, domain_, "elevation", "elevation");
     //psnow_key_ = Keys::readKey(plist, domain_surf_, "precipitation snow", "precipitation");
 
@@ -230,8 +230,7 @@ void EcoSIM::Setup() {
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::CELL, 1);
-
-  requireAtCurrent(bulk_dens_key_, tag_current_, *S_, name_);*/
+  requireAtCurrent(bulk_dens_key_, tag_current_, *S_, name_);
 
 
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
