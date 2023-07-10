@@ -318,7 +318,6 @@ void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* props,
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->liquid_saturation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->gas_saturation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->ice_saturation));
-  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->elevation));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->relative_permeability));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->thermal_conductivity));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->volume));
@@ -331,7 +330,6 @@ void FreeBGCProperties(BGCProperties* props) {
     FreeBGCVectorDouble(&(props->liquid_saturation));
     FreeBGCVectorDouble(&(props->gas_saturation));
     FreeBGCVectorDouble(&(props->ice_saturation));
-    FreeBGCVectorDouble(&(props->elevation));
     FreeBGCVectorDouble(&(props->relative_permeability));
     FreeBGCVectorDouble(&(props->thermal_conductivity));
     FreeBGCVectorDouble(&(props->volume));
