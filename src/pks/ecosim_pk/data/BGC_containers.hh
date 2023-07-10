@@ -93,7 +93,7 @@ extern "C" {
     BGCVectorDouble temperature;
     BGCVectorDouble total_mobile;
     BGCVectorDouble hydraulic_conductivity;
-    BGCVectorDouble bulk_density
+    BGCVectorDouble bulk_density;
     BGCMatrixDouble total_component_concentration;
   } BGCState;
 
@@ -114,7 +114,7 @@ extern "C" {
     double wind_speed;
     double precipitation;
     double plant_wilting_factor;
-    double elevation
+    double elevation;
     double atm_n2;
     double atm_o2;
     double atm_co2;
