@@ -197,6 +197,7 @@ class EcoSIM : public PK_Physical {
   Key vp_air_key_;
   Key wind_speed_key_;
   Key prain_key_;
+  Key f_wp_key_;
 
   Teuchos::RCP<BGCEngine> bgc_engine_;
 

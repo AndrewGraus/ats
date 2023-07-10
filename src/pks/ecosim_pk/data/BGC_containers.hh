@@ -93,6 +93,7 @@ extern "C" {
     BGCVectorDouble temperature;
     BGCVectorDouble total_mobile;
     BGCVectorDouble hydraulic_conductivity;
+    BGCVectorDouble bulk_density
     BGCMatrixDouble total_component_concentration;
   } BGCState;
 
@@ -104,12 +105,16 @@ extern "C" {
     BGCVectorDouble relative_permeability;
     BGCVectorDouble thermal_conductivity;
     BGCVectorDouble volume;
+    BGCVectorDouble depth;
+    BGCVectorDouble dz;
     double shortwave_radiation;
     double longwave_radiation;
     double air_temperature;
     double vapor_pressure_air;
     double wind_speed;
     double precipitation;
+    double plant_wilting_factor;
+    double elevation
     double atm_n2;
     double atm_o2;
     double atm_co2;

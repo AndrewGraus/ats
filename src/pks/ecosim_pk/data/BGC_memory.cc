@@ -262,6 +262,7 @@ void AllocateBGCState(BGCSizes* sizes, BGCState* state,
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->water_content));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->temperature));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->hydraulic_conductivity));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->bulk_density));
   AllocateBGCMatrixDouble(sizes->ncells_per_col_,sizes->num_components, &(state->total_component_concentration));
   //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
@@ -276,6 +277,7 @@ void FreeBGCState(BGCState* state) {
     FreeBGCVectorDouble(&(state->water_content));
     FreeBGCVectorDouble(&(state->temperature));
     FreeBGCVectorDouble(&(state->hydraulic_conductivity));
+    FreeBGCVectorDouble(&(state->bulk_density));
     FreeBGCMatrixDouble(&(state->total_component_concentration));
   }
 }  /* end FreeAlquimiaState() */
@@ -320,6 +322,8 @@ void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* props,
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->relative_permeability));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->thermal_conductivity));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->volume));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->depth));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->dz));
 }  /* end AllocateAlquimiaProperties() */
 
 void FreeBGCProperties(BGCProperties* props) {
