@@ -821,7 +821,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     props.vapor_pressure_air = vapor_pressure_air[col];
     props.wind_speed = wind_speed[col];
     props.precipitation = precipitation[col];
-    props.plant_wilting_factor = plant_wilting_factor[col]
+    props.plant_wilting_factor = plant_wilting_factor[col];
     props.elevation = elevation[col]
 
     //Fill the atmospheric abundances
@@ -887,7 +887,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto& rock_density = *(*S_->GetW<CompositeVector>(rock_den_key_, Amanzi::Tags::NEXT, rock_den_key_).ViewComponent("cell",false))(0);
   auto& cell_volume = *(*S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false))(0);
   auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydra_cond_key_, Amanzi::Tags::NEXT, hydra_cond_key_).ViewComponent("cell",false))(0);
-  auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_dens_key_), Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
+  auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_dens_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
 
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
