@@ -84,7 +84,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     saturation_ice_key_ = Keys::readKey(*plist_,domain_,"saturation ice", "saturation_ice");
     water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
     rel_perm_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
-    suc_key_ = Keys::readKey
+    //suc_key_ = Keys::readKey
 
     //densities
     //If we need bulk density do we need volume fractions of each quantity?
