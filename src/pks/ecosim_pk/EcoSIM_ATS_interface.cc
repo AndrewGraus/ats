@@ -84,6 +84,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     saturation_ice_key_ = Keys::readKey(*plist_,domain_,"saturation ice", "saturation_ice");
     water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
     rel_perm_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
+    suc_key_ = Keys::readKey
 
     //densities
     //If we need bulk density do we need volume fractions of each quantity?
@@ -120,8 +121,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     vp_air_key_ = Keys::readKey(*plist_, domain_surf_, "vapor pressure air", "vapor_pressure_air");
     wind_speed_key_ = Keys::readKey(*plist_, domain_surf_, "wind speed", "wind_speed");
     prain_key_ = Keys::readKey(*plist_, domain_surf_, "precipitation rain", "precipitation_rain");
-    f_wp_key_ = Keys::readKey(*plist_, domain_, "plant wilting factor", "plant_wilting_factor");
-    elev_key_ = Keys::readKey(*plist_, domain_, "elevation", "elevation");
+    //f_wp_key_ = Keys::readKey(*plist_, domain_, "plant wilting factor", "plant_wilting_factor");
+    elev_key_ = Keys::readKey(*plist_, domain_surf_, "elevation", "elevation");
     //psnow_key_ = Keys::readKey(plist, domain_surf_, "precipitation snow", "precipitation");
 
     //Atmospheric abundance keys
@@ -284,7 +285,7 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Here we put the checks for the optional keys
@@ -397,7 +398,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(prain_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
 
   if (has_gas) {
@@ -488,9 +489,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& p_rain = *(*S_->Get<CompositeVector>("precipitation_rain", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("plant_wilting_factor", tag_next_).Update(*S_, name_);
+  /*S_->GetEvaluator("plant_wilting_factor", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& plant_wilting_factor = *(*S_->Get<CompositeVector>("plant_wilting_factor", tag_next_)
-          .ViewComponent("cell",false))(0);
+          .ViewComponent("cell",false))(0);*/
 
   S_->GetEvaluator("elevation", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("elevation", tag_next_)
@@ -686,7 +687,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   const Epetra_Vector& vapor_pressure_air = *(*S_->Get<CompositeVector>(vp_air_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& wind_speed= *(*S_->Get<CompositeVector>(wind_speed_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& precipitation = *(*S_->Get<CompositeVector>(prain_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& elevation = *(*S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false))(0);
 
   //Define the column vectors to hold the data
@@ -821,7 +822,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     props.vapor_pressure_air = vapor_pressure_air[col];
     props.wind_speed = wind_speed[col];
     props.precipitation = precipitation[col];
-    props.plant_wilting_factor = plant_wilting_factor[col];
+    //props.plant_wilting_factor = plant_wilting_factor[col];
     props.elevation = elevation[col];
 
     //Fill the atmospheric abundances
