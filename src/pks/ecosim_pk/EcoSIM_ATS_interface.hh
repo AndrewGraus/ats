@@ -198,6 +198,9 @@ class EcoSIM : public PK_Physical {
   Key wind_speed_key_;
   Key prain_key_;
   Key f_wp_key_;
+  Key suc_key_;
+  Key aspect_key_;
+  Key slope_key_;
 
   Teuchos::RCP<BGCEngine> bgc_engine_;
 

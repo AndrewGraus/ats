@@ -90,6 +90,7 @@ extern "C" {
     BGCVectorDouble ice_density;
     BGCVectorDouble porosity;
     BGCVectorDouble water_content;
+    BGCVectorDouble suction_head;
     BGCVectorDouble temperature;
     BGCVectorDouble total_mobile;
     BGCVectorDouble hydraulic_conductivity;
@@ -114,6 +115,8 @@ extern "C" {
     double precipitation;
     double plant_wilting_factor;
     double elevation;
+    double aspect;
+    double slope;
     double atm_n2;
     double atm_o2;
     double atm_co2;

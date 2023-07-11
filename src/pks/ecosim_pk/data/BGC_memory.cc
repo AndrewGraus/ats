@@ -260,6 +260,7 @@ void AllocateBGCState(BGCSizes* sizes, BGCState* state,
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->ice_density));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->porosity));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->water_content));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->suction_head));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->temperature));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->hydraulic_conductivity));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(state->bulk_density));
@@ -275,6 +276,7 @@ void FreeBGCState(BGCState* state) {
     FreeBGCVectorDouble(&(state->ice_density));
     FreeBGCVectorDouble(&(state->porosity));
     FreeBGCVectorDouble(&(state->water_content));
+    FreeBGCVectorDouble(&(state->suction_head));
     FreeBGCVectorDouble(&(state->temperature));
     FreeBGCVectorDouble(&(state->hydraulic_conductivity));
     FreeBGCVectorDouble(&(state->bulk_density));
