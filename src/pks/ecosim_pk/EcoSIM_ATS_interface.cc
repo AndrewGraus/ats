@@ -714,12 +714,12 @@ void EcoSIM::CopyToEcoSIM(int col,
   //const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& elevation = *(*S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& aspect = *(*S_->Get<CompositeVector>(aspect_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key_, water_tag).ViewComponent("cell", false))(0);
 
   //Define the column vectors to hold the data
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));  
   auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_suc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));

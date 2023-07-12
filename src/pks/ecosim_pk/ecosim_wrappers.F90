@@ -126,8 +126,8 @@ subroutine EcoSIM_Advance( &
 
   call ATS2EcoSIMData(ncol, state, props, sizes)
 
-  call Run_EcoSIM_one_step()
+  !call Run_EcoSIM_one_step()
 
-  call EcoSIM2ATSData()
+  call EcoSIM2ATSData(ncol, state, sizes)
 
 end subroutine EcoSIM_Advance
