@@ -269,6 +269,11 @@ void EcoSIM::Initialize() {
 
   int ierr = 0;
 
+  if (!S->HasField(suc_key_)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "has suction key." << std::endl;
+  }
+
   // Ensure dependencies are filled
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(poro_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -277,7 +282,7 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "testing keys" << std::endl;
@@ -396,7 +401,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Surface data from met data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -451,9 +456,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>("relative_permeability", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("suction_head", tag_next_).Update(*S_, name_);
+  /*S_->GetEvaluator("suction_head", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& suction_head = *(*S_->Get<CompositeVector>("suction_head", tag_next_)
-          .ViewComponent("cell",false))(0);
+          .ViewComponent("cell",false))(0);*/
 
   S_->GetEvaluator("mass_density_liquid", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& liquid_density = *(*S_->Get<CompositeVector>("mass_density_liquid", tag_next_)
@@ -700,7 +705,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   const Epetra_Vector& rock_density = *(*S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& hydraulic_conductivity = *(*S_->Get<CompositeVector>(hydra_cond_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& suction_head = *(*S_->Get<CompositeVector>(suc_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& suction_head = *(*S_->Get<CompositeVector>(suc_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_dens_key_, water_tag).ViewComponent("cell", false))(0);
   //const Epetra_Vector& rooting_depth = *(*S_->Get<CompositeVector>(bulk_dens_key_, water_tag).ViewComponent("cell", false))(0);
   //I think I can access the surface variables with col variable and it should
@@ -719,7 +724,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   //Define the column vectors to hold the data
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));  
+  auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_suc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -748,7 +753,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,porosity,col_poro.ptr());
   FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
   FieldToColumn_(col,water_content,col_wc.ptr());
-  FieldToColumn_(col,suction_head,col_suc.ptr());
+  //FieldToColumn_(col,suction_head,col_suc.ptr());
   FieldToColumn_(col,relative_permeability,col_rel_perm.ptr());
   FieldToColumn_(col,liquid_density,col_l_dens.ptr());
   FieldToColumn_(col,rock_density,col_r_dens.ptr());
@@ -822,7 +827,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     state.water_content.data[i] = (*col_wc)[i];
     state.hydraulic_conductivity.data[i] = (*col_h_cond)[i];
     state.bulk_density.data[i] = (*col_b_dens)[i];
-    state.suction_head.data[i] = (*col_suc)[i];
+    //state.suction_head.data[i] = (*col_suc)[i];
     props.liquid_saturation.data[i] = (*col_l_sat)[i];
     props.relative_permeability.data[i] = (*col_rel_perm)[i];
     props.volume.data[i] = (*col_vol)[i];
@@ -914,7 +919,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Amanzi::Tags::NEXT, saturation_liquid_key_).ViewComponent("cell",false))(0);
   //auto& elevation = S_->GetPtrW<CompositeVector>(elev_key_, Amanzi::Tags::NEXT, passwd_).ViewComponent("cell");
   auto& water_content = *(*S_->GetW<CompositeVector>(water_content_key_, Amanzi::Tags::NEXT, water_content_key_).ViewComponent("cell",false))(0);
-  auto& suction_head = *(*S_->GetW<CompositeVector>(suc_key_, Amanzi::Tags::NEXT, suc_key_).ViewComponent("cell",false))(0);
+  //auto& suction_head = *(*S_->GetW<CompositeVector>(suc_key_, Amanzi::Tags::NEXT, suc_key_).ViewComponent("cell",false))(0);
   auto& relative_permeability = *(*S_->GetW<CompositeVector>(rel_perm_key_, Amanzi::Tags::NEXT, rel_perm_key_).ViewComponent("cell",false))(0);
   auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_den_key_, Amanzi::Tags::NEXT, liquid_den_key_).ViewComponent("cell",false))(0);
   auto& rock_density = *(*S_->GetW<CompositeVector>(rock_den_key_, Amanzi::Tags::NEXT, rock_den_key_).ViewComponent("cell",false))(0);
@@ -986,7 +991,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_l_dens)[i] = state.liquid_density.data[i];
     (*col_poro)[i] = state.porosity.data[i];
     (*col_wc)[i] = state.water_content.data[i];
-    (*col_suc)[i] = state.suction_head.data[i];
+    //(*col_suc)[i] = state.suction_head.data[i];
     (*col_l_sat)[i] = props.liquid_saturation.data[i];
     //(*col_elev)[i] = props.elevation.data[i];
     (*col_rel_perm)[i] = props.relative_permeability.data[i];
