@@ -269,7 +269,7 @@ void EcoSIM::Initialize() {
 
   int ierr = 0;
 
-  if (S->HasRecord(suc_key_, Tags::DEFAULT)) {
+  if (S_->HasRecord(suc_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "has suction key." << std::endl;
   } else {
@@ -448,7 +448,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
       .ViewComponent("cell",false))(0);
 
   *vo_->os() << "Printing porositry Map" << std::endl;
-  const Epetra_BlockMap& blockMap = *(porosity.Map());
+  const Epetra_BlockMap* blockMap = porosity.Map();
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "  Num global elements: " << blockMap.NumGlobalElements() << std::endl;
   *vo_->os() << "  Num my elements: " << blockMap.NumMyElements() << std::endl;
@@ -1057,7 +1057,7 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   ColumnToField_(col,liquid_saturation,col_l_sat.ptr());
   //ColumnToField_(col,elevation,col_elev.ptr());
   ColumnToField_(col,water_content,col_wc.ptr());
-  ColumnToField_(col,suction_head,col_suc.ptr());
+  //ColumnToField_(col,suction_head,col_suc.ptr());
   ColumnToField_(col,relative_permeability,col_rel_perm.ptr());
   ColumnToField_(col,liquid_density,col_l_dens.ptr());
   ColumnToField_(col,rock_density,col_r_dens.ptr());
