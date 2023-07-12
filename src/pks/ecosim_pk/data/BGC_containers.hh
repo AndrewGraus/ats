@@ -92,7 +92,6 @@ extern "C" {
     BGCVectorDouble water_content;
     BGCVectorDouble suction_head;
     BGCVectorDouble temperature;
-    BGCVectorDouble total_mobile;
     BGCVectorDouble hydraulic_conductivity;
     BGCVectorDouble bulk_density;
     BGCMatrixDouble total_component_concentration;
