@@ -269,9 +269,12 @@ void EcoSIM::Initialize() {
 
   int ierr = 0;
 
-  if (!S->HasField(suc_key_)) {
+  if (S->HasRecord(suc_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "has suction key." << std::endl;
+  } else {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "Does not have suction key at default." << std::endl;
   }
 
   // Ensure dependencies are filled
