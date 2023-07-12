@@ -444,6 +444,13 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>("porosity", tag_next_)
       .ViewComponent("cell",false))(0);
 
+  *vo_->os() << "Printing porositry Map" << std::endl;
+  const Epetra_BlockMap& blockMap = *(porosity.Map());
+  Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "  Num global elements: " << blockMap.NumGlobalElements() << std::endl;
+  *vo_->os() << "  Num my elements: " << blockMap.NumMyElements() << std::endl;
+  *vo_->os() << "  Index base: " << blockMap.IndexBase() << std::endl;
+
   S_->GetEvaluator("saturation_liquid", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& liquid_saturation = *(*S_->Get<CompositeVector>("saturation_liquid", tag_next_)
           .ViewComponent("cell",false))(0);
