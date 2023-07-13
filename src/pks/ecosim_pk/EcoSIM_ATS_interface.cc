@@ -269,6 +269,9 @@ void EcoSIM::Initialize() {
 
   int ierr = 0;
 
+  Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "printing bool:" << std::endl;
+  *vo_->os() << (S_->HasRecord(suc_key_, Tags::DEFAULT)) << std::endl;
   if (S_->HasRecord(suc_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "has suction key." << std::endl;
@@ -289,6 +292,16 @@ void EcoSIM::Initialize() {
 
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "testing keys" << std::endl;
+
+  const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>("porosity", tag_next_)
+      .ViewComponent("cell",false))(0);
+
+  *vo_->os() << "Printing porositry Map" << std::endl;
+  const Epetra_BlockMap* blockMap = porosity.Map();
+  Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "  Num global elements: " << blockMap.NumGlobalElements() << std::endl;
+  *vo_->os() << "  Num my elements: " << blockMap.NumMyElements() << std::endl;
+  *vo_->os() << "  Index base: " << blockMap.IndexBase() << std::endl;
 
   //Surface properties from met data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -446,13 +459,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator("porosity", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>("porosity", tag_next_)
       .ViewComponent("cell",false))(0);
-
-  *vo_->os() << "Printing porositry Map" << std::endl;
-  const Epetra_BlockMap* blockMap = porosity.Map();
-  Teuchos::OSTab tab = vo_->getOSTab();
-  *vo_->os() << "  Num global elements: " << blockMap.NumGlobalElements() << std::endl;
-  *vo_->os() << "  Num my elements: " << blockMap.NumMyElements() << std::endl;
-  *vo_->os() << "  Index base: " << blockMap.IndexBase() << std::endl;
 
   S_->GetEvaluator("saturation_liquid", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& liquid_saturation = *(*S_->Get<CompositeVector>("saturation_liquid", tag_next_)
