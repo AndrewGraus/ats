@@ -290,15 +290,15 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  Teuchos::OSTab tab = vo_->getOSTab();
+  //Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "testing keys" << std::endl;
 
   const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>("porosity", tag_next_)
       .ViewComponent("cell",false))(0);
 
   *vo_->os() << "Printing porositry Map" << std::endl;
-  const Epetra_BlockMap* blockMap = porosity.Map();
-  Teuchos::OSTab tab = vo_->getOSTab();
+  const Epetra_BlockMap blockMap = porosity.Map();
+  //Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "  Num global elements: " << blockMap.NumGlobalElements() << std::endl;
   *vo_->os() << "  Num my elements: " << blockMap.NumMyElements() << std::endl;
   *vo_->os() << "  Index base: " << blockMap.IndexBase() << std::endl;
