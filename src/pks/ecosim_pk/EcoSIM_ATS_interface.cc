@@ -279,6 +279,20 @@ void EcoSIM::Initialize() {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "Does not have suction key at default." << std::endl;
   }
+  if (S_->HasRecord(suc_key_, Tags::CURRENT)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "has suction key at current" << std::endl;
+  } else {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "Does not have suction key at current" << std::endl;
+  }
+  if (S_->HasRecord(suc_key_, Tags::NEXT)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "has suction key at next" << std::endl;
+  } else {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "Does not have suction key at next" << std::endl;
+  }
 
   // Ensure dependencies are filled
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -302,6 +316,13 @@ void EcoSIM::Initialize() {
   *vo_->os() << "  Num global elements: " << blockMap.NumGlobalElements() << std::endl;
   *vo_->os() << "  Num my elements: " << blockMap.NumMyElements() << std::endl;
   *vo_->os() << "  Index base: " << blockMap.IndexBase() << std::endl;
+
+  const int* myGlobalElements = blockMap.MyGlobalElements();
+  int numMyElements = blockMap.NumMyElements();
+  *vo_->os() << "Processor " << comm.MyPID() << " has the following elements:" << std::endl;
+  for (int i = 0; i < numMyElements; ++i) {
+    *vo_->os() << "  " << myGlobalElements[i] << std::endl;
+  }
 
   //Surface properties from met data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
