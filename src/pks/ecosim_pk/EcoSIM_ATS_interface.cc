@@ -22,6 +22,8 @@
 #include "Epetra_Vector.h"
 #include "Epetra_SerialDenseVector.h"
 #include "Epetra_SerialDenseMatrix.h"
+#include "Epetra_MpiComm.h"
+#include "Epetra_Map.h"
 #include "Teuchos_RCPDecl.hpp"
 #include "Teuchos_ParameterList.hpp"
 
@@ -307,15 +309,29 @@ void EcoSIM::Initialize() {
   //Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "testing keys" << std::endl;
 
-  const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>("porosity", tag_next_)
+  const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>("water_content", tag_next_)
       .ViewComponent("cell",false))(0);
 
-  *vo_->os() << "Printing porositry Map" << std::endl;
-  const Epetra_BlockMap blockMap = porosity.Map();
+  *vo_->os() << "Printing WC Map" << std::endl;
+  const Epetra_BlockMap blockMap = water_content.Map();
+  
   //Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "  Num global elements: " << blockMap.NumGlobalElements() << std::endl;
   *vo_->os() << "  Num my elements: " << blockMap.NumMyElements() << std::endl;
   *vo_->os() << "  Index base: " << blockMap.IndexBase() << std::endl;
+  if (blockMap.LinearMap()==true) {
+    *vo_->os() << "  Map is linear." << std::endl;
+  } else {
+    *vo_->os() << "  Map is NOT linear." << std::endl;
+  }
+
+  if (blockMap.DistributedGlobal()==true) {
+    *vo_->os() << "  Map is Distributed." << std::endl;
+  } else {
+    *vo_->os() << "  Map is NOT Distributed." << std::endl;
+  }
+
+  Epetra_MpiComm comm(MPI_COMM_WORLD);
 
   const int* myGlobalElements = blockMap.MyGlobalElements();
   int numMyElements = blockMap.NumMyElements();
