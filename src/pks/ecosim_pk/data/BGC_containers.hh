@@ -106,6 +106,8 @@ extern "C" {
     BGCVectorDouble volume;
     BGCVectorDouble depth;
     BGCVectorDouble dz;
+    BGCVectorDouble plant_wilting_factor;
+    BGCVectorDouble rooting_depth_fraction;
     double shortwave_radiation;
     double longwave_radiation;
     double air_temperature;

@@ -325,6 +325,8 @@ void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* props,
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->volume));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->depth));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->dz));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->plant_wilting_factor));
+  AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->rooting_depth_fraction));
 }  /* end AllocateAlquimiaProperties() */
 
 void FreeBGCProperties(BGCProperties* props) {
@@ -335,6 +337,10 @@ void FreeBGCProperties(BGCProperties* props) {
     FreeBGCVectorDouble(&(props->relative_permeability));
     FreeBGCVectorDouble(&(props->thermal_conductivity));
     FreeBGCVectorDouble(&(props->volume));
+    FreeBGCVectorDouble(&(props->depth));
+    FreeBGCVectorDouble(&(props->dz));
+    FreeBGCVectorDouble(&(props->plant_wilting_factor));
+    FreeBGCVectorDouble(&(props->rooting_depth_fraction));
   }
 }  /* end FreeAlquimiaProperties() */
 

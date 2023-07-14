@@ -109,7 +109,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     cv_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
     min_vol_frac_key_ = Keys::readKey(*plist_, domain_, "mineral volume fractions", "mineral_volume_fractions");
     ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
-
+    f_wp_key_ = Keys::readKey(*plist_, domain_, "plant wilting factor", "plant_wilting_factor");
+    f_root_key_ = Keys::readKey(*plist_, domain_, "rooting depth fraction", "rooting_depth_fraction");
     //Evaluator keys
     hydra_cond_key_ = Keys::readKey(*plist_, domain_, "hydraulic conductivity", "hydraulic_conductivity");
     bulk_dens_key_ = Keys::readKey(*plist_, domain_, "bulk density", "bulk_density");
@@ -304,6 +305,8 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Teuchos::OSTab tab = vo_->getOSTab();
@@ -314,7 +317,7 @@ void EcoSIM::Initialize() {
 
   *vo_->os() << "Printing WC Map" << std::endl;
   const Epetra_BlockMap blockMap = water_content.Map();
-  
+
   //Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "  Num global elements: " << blockMap.NumGlobalElements() << std::endl;
   *vo_->os() << "  Num my elements: " << blockMap.NumMyElements() << std::endl;
@@ -347,7 +350,6 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
-  //S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -454,6 +456,8 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Surface data from met data
@@ -525,6 +529,14 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& cell_volume = *(*S_->Get<CompositeVector>("cell_volume", tag_next_)
           .ViewComponent("cell",false))(0);
 
+  S_->GetEvaluator("plant_wilting_factor", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& plant_wilting_factor = *(*S_->Get<CompositeVector>("plant_wilting_factor", tag_next_)
+          .ViewComponent("cell",false))(0);
+
+  S_->GetEvaluator("rooting_depth_fraction", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& plant_wilting_factor = *(*S_->Get<CompositeVector>("rooting_depth_fraction", tag_next_)
+          .ViewComponent("cell",false))(0);
+
   if (has_gas) {
     S_->GetEvaluator("mass_density_gas", tag_next_).Update(*S_, name_);
     const Epetra_MultiVector& gas_density = *(*S_->Get<CompositeVector>("mass_density_gas", tag_next_)
@@ -559,10 +571,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator("precipitation_rain", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& p_rain = *(*S_->Get<CompositeVector>("precipitation_rain", tag_next_)
           .ViewComponent("cell",false))(0);
-
-  /*S_->GetEvaluator("plant_wilting_factor", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& plant_wilting_factor = *(*S_->Get<CompositeVector>("plant_wilting_factor", tag_next_)
-          .ViewComponent("cell",false))(0);*/
 
   S_->GetEvaluator("elevation", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("elevation", tag_next_)
@@ -760,7 +768,8 @@ void EcoSIM::CopyToEcoSIM(int col,
   const Epetra_Vector& hydraulic_conductivity = *(*S_->Get<CompositeVector>(hydra_cond_key_, water_tag).ViewComponent("cell", false))(0);
   //const Epetra_Vector& suction_head = *(*S_->Get<CompositeVector>(suc_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_dens_key_, water_tag).ViewComponent("cell", false))(0);
-  //const Epetra_Vector& rooting_depth = *(*S_->Get<CompositeVector>(bulk_dens_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& rooting_depth = *(*S_->Get<CompositeVector>(f_root_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
   //I think I can access the surface variables with col variable and it should
   //be what I want
   const Epetra_Vector& shortwave_radiation = *(*S_->Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false))(0);
@@ -769,7 +778,6 @@ void EcoSIM::CopyToEcoSIM(int col,
   const Epetra_Vector& vapor_pressure_air = *(*S_->Get<CompositeVector>(vp_air_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& wind_speed= *(*S_->Get<CompositeVector>(wind_speed_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& precipitation = *(*S_->Get<CompositeVector>(prain_key_, water_tag).ViewComponent("cell", false))(0);
-  //const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& elevation = *(*S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& aspect = *(*S_->Get<CompositeVector>(aspect_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key_, water_tag).ViewComponent("cell", false))(0);
@@ -793,6 +801,8 @@ void EcoSIM::CopyToEcoSIM(int col,
   auto col_b_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_depth = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_dz = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_wp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_rf = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
   col_vol_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   col_wc_save = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -813,6 +823,8 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,cell_volume,col_vol.ptr());
   FieldToColumn_(col,hydraulic_conductivity,col_h_cond.ptr());
   FieldToColumn_(col,bulk_density,col_b_dens.ptr());
+  FieldToColumn_(col,plant_wilting_factor,col_wp.ptr());
+  FieldToColumn_(col,rooting_depth_fraction,col_rf.ptr());
 
   MatrixFieldToColumn_(col, tcc, col_tcc.ptr());
 
@@ -863,7 +875,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   // I think I need to loop over the column data and save it to the data
   // structures. Eventually I could probably rewrite FieldToColumn_ to do this
   // have to fill tcc separately (I think)
-
+  /*
   for (int j=0; j < tcc_num; ++j) {
     *vo_->os() << "component: "<< j << std::endl;
     for (int i=0; i < ncells_per_col_; ++i) {
@@ -872,7 +884,7 @@ void EcoSIM::CopyToEcoSIM(int col,
       *vo_->os() << "m_arr: "<< state.total_component_concentration.data[j][i] << std::endl;
       state.total_component_concentration.data[j][i] = (*col_tcc)(i,j);
     }
-  }
+  }*/
 
   for (int i=0; i < ncells_per_col_; ++i) {
     state.liquid_density.data[i] = (*col_l_dens)[i];
@@ -881,6 +893,8 @@ void EcoSIM::CopyToEcoSIM(int col,
     state.hydraulic_conductivity.data[i] = (*col_h_cond)[i];
     state.bulk_density.data[i] = (*col_b_dens)[i];
     //state.suction_head.data[i] = (*col_suc)[i];
+    props.plant_wilting_factor.data[i] = (*col_wp)[i];
+    props.rooting_depth_fraction.data[i] = (*col_rf)[i];
     props.liquid_saturation.data[i] = (*col_l_sat)[i];
     props.relative_permeability.data[i] = (*col_rel_perm)[i];
     props.volume.data[i] = (*col_vol)[i];
@@ -909,7 +923,6 @@ void EcoSIM::CopyToEcoSIM(int col,
     props.vapor_pressure_air = vapor_pressure_air[col];
     props.wind_speed = wind_speed[col];
     props.precipitation = precipitation[col];
-    //props.plant_wilting_factor = plant_wilting_factor[col];
     props.elevation = elevation[col];
     props.aspect = aspect[col];
     props.slope = slope[col];
@@ -970,7 +983,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 
   auto& porosity = *(*S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false))(0);
   auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Amanzi::Tags::NEXT, saturation_liquid_key_).ViewComponent("cell",false))(0);
-  //auto& elevation = S_->GetPtrW<CompositeVector>(elev_key_, Amanzi::Tags::NEXT, passwd_).ViewComponent("cell");
   auto& water_content = *(*S_->GetW<CompositeVector>(water_content_key_, Amanzi::Tags::NEXT, water_content_key_).ViewComponent("cell",false))(0);
   //auto& suction_head = *(*S_->GetW<CompositeVector>(suc_key_, Amanzi::Tags::NEXT, suc_key_).ViewComponent("cell",false))(0);
   auto& relative_permeability = *(*S_->GetW<CompositeVector>(rel_perm_key_, Amanzi::Tags::NEXT, rel_perm_key_).ViewComponent("cell",false))(0);
@@ -982,7 +994,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 
   auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  //auto col_elev = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_suc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
