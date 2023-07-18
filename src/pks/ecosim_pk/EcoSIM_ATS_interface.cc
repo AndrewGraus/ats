@@ -310,7 +310,6 @@ void EcoSIM::Initialize() {
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Teuchos::OSTab tab = vo_->getOSTab();
-  *vo_->os() << "testing keys" << std::endl;
 
   const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>("water_content", tag_next_)
       .ViewComponent("cell",false))(0);
@@ -319,8 +318,10 @@ void EcoSIM::Initialize() {
   ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
   ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
-  *vo_->os() << "Global Columns: " << ncols_global << std::endl;
-  *vo_->os() << "Local Columns: " << ncols_local << std::endl;
+  //Using cout because it prints for every process instead of just
+  //rank 0 (might be a way to use vo, but not implemented)
+  std::cout << "Global Columns: " << ncols_global << std::endl;
+  std::cout << "Local Columns: " << ncols_local << std::endl;
 
   //Surface properties from met data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -417,7 +418,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   //  dt_prev_ = dt;
   //}
 
-  std::cout << "\nBegin Advance\n";
   Teuchos::OSTab out = vo_->getOSTab();
   if (vo_->os_OK(Teuchos::VERB_HIGH))
     *vo_->os() << "----------------------------------------------------------------" << std::endl
@@ -591,10 +591,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
     //Copy to EcoSIM structures
 
-    std::cout << "\nAdvancing col "<< col <<"\n";
     AdvanceSingleColumn(dt, col);
-    std::cout << "\nfinished advancing column\n";
-
   } // end loop over columns
 
   // mark primaries as changed
@@ -605,7 +602,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
   //return failed;
 
-  std::cout << "\nEnd Advance\n";
 }
 
 // helper function for pushing field to column
@@ -808,19 +804,6 @@ void EcoSIM::CopyToEcoSIM(int col,
 
   FieldToColumn_(col,cell_volume,col_vol_save.ptr());
   FieldToColumn_(col,water_content,col_wc_save.ptr());
-  /**vo_->os() << "Total Comp: " << tcc_num << std::endl;
-  *vo_->os() << "Total cells: " << ncells_per_col_ << std::endl;
-  for (int i=0; i < tcc_num; ++i) {
-    Epetra_SerialDenseVector col_comp(ncells_per_col_);
-    Epetra_SerialDenseVector tcc_comp(ncells_per_col_);
-    *vo_->os() << "Component: " << i << std::endl;
-    for (int j=0; j<ncells_per_col_; ++j){
-      *vo_->os() << "Cell: " << j << std::endl;
-      col_comp(j) = (*col_tcc)(i,j);
-      tcc_comp[j] = tcc[i][j];
-    }
-    FieldToColumn_(col,Teuchos::ptr(&tcc_comp),Teuchos::ptr(&col_comp));
-  }*/
 
   if (has_gas) {
     const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
@@ -853,16 +836,6 @@ void EcoSIM::CopyToEcoSIM(int col,
   // I think I need to loop over the column data and save it to the data
   // structures. Eventually I could probably rewrite FieldToColumn_ to do this
   // have to fill tcc separately (I think)
-  /*
-  for (int j=0; j < tcc_num; ++j) {
-    *vo_->os() << "component: "<< j << std::endl;
-    for (int i=0; i < ncells_per_col_; ++i) {
-      *vo_->os() << "cell: "<< i << std::endl;
-      *vo_->os() << "col arr: "<< (*col_tcc)(i,j) << std::endl;
-      *vo_->os() << "m_arr: "<< state.total_component_concentration.data[j][i] << std::endl;
-      state.total_component_concentration.data[j][i] = (*col_tcc)(i,j);
-    }
-  }*/
 
   for (int i=0; i < ncells_per_col_; ++i) {
     state.liquid_density.data[i] = (*col_l_dens)[i];
@@ -1043,24 +1016,10 @@ void EcoSIM::CopyFromEcoSIM(const int col,
     (*col_vol)[i] = props.volume.data[i];
   }
 
-  *vo_->os() << "printing volume: " << std::endl;
-  for (int i=0; i < ncells_per_col_; ++i) {
-    *vo_->os() << "i "<< i << " col[i]: " << (*col_vol_save)[i] << " data[i]: " << props.volume.data[i] << std::endl;
-  }
-
-  *vo_->os() << "printing water content: " << std::endl;
-  for (int i=0; i < ncells_per_col_; ++i) {
-    *vo_->os() << "i "<< i << " col[i]: " << (*col_wc_save)[i] << " data[i]: " << state.water_content.data[i] << std::endl;
-  }
-
   //Take new values from Ecosim state and put them into the secondary data structure
   //for backing back into amanzi state
   for (int j=0; j < tcc_num; ++j) {
-    //*vo_->os() << "component: "<< j << std::endl;
     for (int i=0; i < ncells_per_col_; ++i) {
-      //*vo_->os() << "cell: "<< i << std::endl;
-      //*vo_->os() << "col arr: "<< (*col_tcc)(i,j) << std::endl;
-      //*vo_->os() << "m_arr: "<< state.total_component_concentration.data[j][i] << std::endl;
       (*col_tcc)(i,j) = state.total_component_concentration.data[j][i];
     }
   }
@@ -1105,8 +1064,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
 int EcoSIM::InitializeSingleColumn(int col)
 {
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
-
-  std::cout << "running data test" << std::endl;
 
   //ecosim_datatest_wrapper(col, &bgc_props_, &bgc_sizes_);
   bgc_engine_->DataTest();

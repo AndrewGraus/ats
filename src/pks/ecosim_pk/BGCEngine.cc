@@ -75,8 +75,6 @@ BGCEngine::BGCEngine(const std::string& engineName,
 {
   Errors::Message msg;
 
-  std::cout << "Engine name is: " << engineName << std::endl;
-  std::cout << "Creating the BGC Engine interface" << std::endl;
   CreateBGCInterface(bgc_engine_name_.c_str(),
                     &bgc_);
   /*
@@ -181,12 +179,8 @@ void BGCEngine::InitState(BGCProperties& props,
                                 int ncells_per_col_,
                                 int num_components)
 {
-  std::cout << "Allocating Properties" << std::endl;
-  std::cout << "Size of columns: " << ncells_per_col_ << std::endl;
   AllocateBGCProperties(&sizes_, &props, ncells_per_col_);
-  std::cout << "Allocating State" << std::endl;
   AllocateBGCState(&sizes_, &state, ncells_per_col_, num_components);
-  std::cout << "Allocating aux" << std::endl;
   AllocateBGCAuxiliaryData(&sizes_, &aux_data, ncells_per_col_);
   //AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);
 
@@ -207,7 +201,6 @@ void BGCEngine::FreeState(BGCProperties& props,
 
 void BGCEngine::DataTest() {
 
-  std::cout << "Data test for calling function" << std::endl;
   bgc_.DataTest();
 }
 
@@ -217,7 +210,6 @@ bool BGCEngine::Setup(BGCProperties& props,
                               int num_iterations,
                               int ncol)
 {
-  std::cout << "Running BGC Engine Setup" << std::endl;
   // Advance the chemical reaction all operator-split-like.
   bgc_.Setup(&props,
                 &state,
@@ -240,7 +232,6 @@ bool BGCEngine::Advance(const double delta_time,
                               int num_iterations,
                               int ncol)
 {
-  std::cout << "Running BGC Engine Advance" << std::endl;
   // Advance the chemical reaction all operator-split-like.
   bgc_.Advance(delta_time,
                 &props,
