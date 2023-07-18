@@ -114,7 +114,6 @@ extern "C" {
     double vapor_pressure_air;
     double wind_speed;
     double precipitation;
-    double plant_wilting_factor;
     double elevation;
     double aspect;
     double slope;
