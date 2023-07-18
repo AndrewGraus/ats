@@ -109,8 +109,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     cv_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
     min_vol_frac_key_ = Keys::readKey(*plist_, domain_, "mineral volume fractions", "mineral_volume_fractions");
     ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
-    //f_wp_key_ = Keys::readKey(*plist_, domain_, "plant wilting factor", "plant_wilting_factor");
-    f_root_key_ = Keys::readKey(*plist_, domain_, "rooting depth fraction", "rooting_depth_fraction");
+    f_wp_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
+    f_root_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
     //Evaluator keys
     hydra_cond_key_ = Keys::readKey(*plist_, domain_, "hydraulic conductivity", "hydraulic_conductivity");
     bulk_dens_key_ = Keys::readKey(*plist_, domain_, "bulk density", "bulk_density");
@@ -305,7 +305,7 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
-  //S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
@@ -435,7 +435,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
-  //S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
@@ -446,7 +446,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(prain_key_, Tags::DEFAULT).Update(*S_, name_);
-  //S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -510,11 +509,11 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
   /*S_->GetEvaluator("plant_wilting_factor", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& plant_wilting_factor = *(*S_->Get<CompositeVector>("plant_wilting_factor", tag_next_)
-          .ViewComponent("cell",false))(0);*/
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("rooting_depth_fraction", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& rooting_depth_fraction = *(*S_->Get<CompositeVector>("rooting_depth_fraction", tag_next_)
-          .ViewComponent("cell",false))(0);
+          .ViewComponent("cell",false))(0);*/
 
   if (has_gas) {
     S_->GetEvaluator("mass_density_gas", tag_next_).Update(*S_, name_);
@@ -748,7 +747,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   //const Epetra_Vector& suction_head = *(*S_->Get<CompositeVector>(suc_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_dens_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& rooting_depth_fraction = *(*S_->Get<CompositeVector>(f_root_key_, water_tag).ViewComponent("cell", false))(0);
-  //const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
   //I think I can access the surface variables with col variable and it should
   //be what I want
   const Epetra_Vector& shortwave_radiation = *(*S_->Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false))(0);
@@ -802,7 +801,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,cell_volume,col_vol.ptr());
   FieldToColumn_(col,hydraulic_conductivity,col_h_cond.ptr());
   FieldToColumn_(col,bulk_density,col_b_dens.ptr());
-  //FieldToColumn_(col,plant_wilting_factor,col_wp.ptr());
+  FieldToColumn_(col,plant_wilting_factor,col_wp.ptr());
   FieldToColumn_(col,rooting_depth_fraction,col_rf.ptr());
 
   MatrixFieldToColumn_(col, tcc, col_tcc.ptr());
@@ -872,7 +871,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     state.hydraulic_conductivity.data[i] = (*col_h_cond)[i];
     state.bulk_density.data[i] = (*col_b_dens)[i];
     //state.suction_head.data[i] = (*col_suc)[i];
-    //props.plant_wilting_factor.data[i] = (*col_wp)[i];
+    props.plant_wilting_factor.data[i] = (*col_wp)[i];
     props.rooting_depth_fraction.data[i] = (*col_rf)[i];
     props.liquid_saturation.data[i] = (*col_l_sat)[i];
     props.relative_permeability.data[i] = (*col_rel_perm)[i];
