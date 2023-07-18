@@ -109,7 +109,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     cv_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
     min_vol_frac_key_ = Keys::readKey(*plist_, domain_, "mineral volume fractions", "mineral_volume_fractions");
     ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
-    f_wp_key_ = Keys::readKey(*plist_, domain_, "plant wilting factor", "plant_wilting_factor");
+    //f_wp_key_ = Keys::readKey(*plist_, domain_, "plant wilting factor", "plant_wilting_factor");
     f_root_key_ = Keys::readKey(*plist_, domain_, "rooting depth fraction", "rooting_depth_fraction");
     //Evaluator keys
     hydra_cond_key_ = Keys::readKey(*plist_, domain_, "hydraulic conductivity", "hydraulic_conductivity");
@@ -305,7 +305,7 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
@@ -315,33 +315,12 @@ void EcoSIM::Initialize() {
   const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>("water_content", tag_next_)
       .ViewComponent("cell",false))(0);
 
-  *vo_->os() << "Printing WC Map" << std::endl;
-  const Epetra_BlockMap blockMap = water_content.Map();
 
-  //Teuchos::OSTab tab = vo_->getOSTab();
-  *vo_->os() << "  Num global elements: " << blockMap.NumGlobalElements() << std::endl;
-  *vo_->os() << "  Num my elements: " << blockMap.NumMyElements() << std::endl;
-  *vo_->os() << "  Index base: " << blockMap.IndexBase() << std::endl;
-  if (blockMap.LinearMap()==true) {
-    *vo_->os() << "  Map is linear." << std::endl;
-  } else {
-    *vo_->os() << "  Map is NOT linear." << std::endl;
-  }
+  ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
+  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
-  if (blockMap.DistributedGlobal()==true) {
-    *vo_->os() << "  Map is Distributed." << std::endl;
-  } else {
-    *vo_->os() << "  Map is NOT Distributed." << std::endl;
-  }
-
-  Epetra_MpiComm comm(MPI_COMM_WORLD);
-
-  const int* myGlobalElements = blockMap.MyGlobalElements();
-  int numMyElements = blockMap.NumMyElements();
-  *vo_->os() << "Processor " << comm.MyPID() << " has the following elements:" << std::endl;
-  for (int i = 0; i < numMyElements; ++i) {
-    *vo_->os() << "  " << myGlobalElements[i] << std::endl;
-  }
+  *vo_->os() << "Global Columns: " << ncols_global << std::endl;
+  *vo_->os() << "Local Columns: " << ncols_local << std::endl;
 
   //Surface properties from met data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -456,7 +435,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
@@ -529,12 +508,12 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& cell_volume = *(*S_->Get<CompositeVector>("cell_volume", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("plant_wilting_factor", tag_next_).Update(*S_, name_);
+  /*S_->GetEvaluator("plant_wilting_factor", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& plant_wilting_factor = *(*S_->Get<CompositeVector>("plant_wilting_factor", tag_next_)
-          .ViewComponent("cell",false))(0);
+          .ViewComponent("cell",false))(0);*/
 
   S_->GetEvaluator("rooting_depth_fraction", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& plant_wilting_factor = *(*S_->Get<CompositeVector>("rooting_depth_fraction", tag_next_)
+  const Epetra_MultiVector& rooting_depth_fraction = *(*S_->Get<CompositeVector>("rooting_depth_fraction", tag_next_)
           .ViewComponent("cell",false))(0);
 
   if (has_gas) {
@@ -769,7 +748,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   //const Epetra_Vector& suction_head = *(*S_->Get<CompositeVector>(suc_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_dens_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& rooting_depth = *(*S_->Get<CompositeVector>(f_root_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
   //I think I can access the surface variables with col variable and it should
   //be what I want
   const Epetra_Vector& shortwave_radiation = *(*S_->Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false))(0);
@@ -823,7 +802,7 @@ void EcoSIM::CopyToEcoSIM(int col,
   FieldToColumn_(col,cell_volume,col_vol.ptr());
   FieldToColumn_(col,hydraulic_conductivity,col_h_cond.ptr());
   FieldToColumn_(col,bulk_density,col_b_dens.ptr());
-  FieldToColumn_(col,plant_wilting_factor,col_wp.ptr());
+  //FieldToColumn_(col,plant_wilting_factor,col_wp.ptr());
   FieldToColumn_(col,rooting_depth_fraction,col_rf.ptr());
 
   MatrixFieldToColumn_(col, tcc, col_tcc.ptr());
@@ -893,7 +872,7 @@ void EcoSIM::CopyToEcoSIM(int col,
     state.hydraulic_conductivity.data[i] = (*col_h_cond)[i];
     state.bulk_density.data[i] = (*col_b_dens)[i];
     //state.suction_head.data[i] = (*col_suc)[i];
-    props.plant_wilting_factor.data[i] = (*col_wp)[i];
+    //props.plant_wilting_factor.data[i] = (*col_wp)[i];
     props.rooting_depth_fraction.data[i] = (*col_rf)[i];
     props.liquid_saturation.data[i] = (*col_l_sat)[i];
     props.relative_permeability.data[i] = (*col_rel_perm)[i];
