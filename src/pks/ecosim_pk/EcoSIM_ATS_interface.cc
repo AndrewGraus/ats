@@ -318,10 +318,24 @@ void EcoSIM::Initialize() {
   ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
   ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
+  *vo_->os() << "total processes: " << ncols_global << std::endl;
+  //Trying to loop over processors now:
+  int numProcesses, p_rank;
+  MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  for (int k = 0; k < numProcesses; ++k) {
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank = =k) {
+      std::cout << "on processor " << rank << std::endl;
+      ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+    }
+  }
+
   //Using cout because it prints for every process instead of just
   //rank 0 (might be a way to use vo, but not implemented)
-  std::cout << "Global Columns: " << ncols_global << std::endl;
-  std::cout << "Local Columns: " << ncols_local << std::endl;
+  //std::cout << "Global Columns: " << ncols_global << std::endl;
+  //std::cout << "Local Columns: " << ncols_local << std::endl;
+
 
   //Surface properties from met data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
