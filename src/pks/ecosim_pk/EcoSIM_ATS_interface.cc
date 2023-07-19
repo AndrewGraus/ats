@@ -322,12 +322,13 @@ void EcoSIM::Initialize() {
   //Trying to loop over processors now:
   int numProcesses, p_rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
   for (int k = 0; k < numProcesses; ++k) {
     MPI_Barrier(MPI_COMM_WORLD);
-    if (rank = =k) {
-      std::cout << "on processor " << rank << std::endl;
+    if (p_rank==k) {
+      std::cout << "on processor " << p_rank << std::endl;
       ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+      std::cout << ncols_local << std::endl;
     }
   }
 
