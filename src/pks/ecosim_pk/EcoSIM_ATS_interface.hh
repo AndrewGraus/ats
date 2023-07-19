@@ -169,6 +169,7 @@ class EcoSIM : public PK_Physical {
   int num_cols_;
   int ncols_local;
   int ncols_global;
+  int ncols_global_ptype;
   double saved_time_;
   double current_time_;
 

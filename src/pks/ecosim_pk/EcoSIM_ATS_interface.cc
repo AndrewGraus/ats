@@ -317,8 +317,10 @@ void EcoSIM::Initialize() {
 
   ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
   ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  ncols_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
 
-  *vo_->os() << "total processes: " << ncols_global << std::endl;
+  *vo_->os() << "total columns cell_map: " << ncols_global << std::endl;
+  *vo_->os() << "total columns from num_entities: " << ncols_global << std::endl;
   //Trying to loop over processors now:
   int numProcesses, p_rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
