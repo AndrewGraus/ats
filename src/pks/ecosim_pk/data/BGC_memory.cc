@@ -62,7 +62,7 @@ static inline int nearest_power_of_2(int n)
 
 /*******************************************************************************
  **
- **  Alquimia Vectors
+ **  BGC Vectors
  **
  *******************************************************************************/
 void AllocateBGCVectorDouble(const int size, BGCVectorDouble* vector) {
@@ -207,39 +207,89 @@ void FreeBGCMatrixInt(BGCMatrixInt* matrix) {
   }
 }  /* end FreeBGCMatrixInt() */
 
-/*Not quite sure how to do the string version, so I'm punting for now as
-I don't think we need it yet
-void AllocateBGCmatrixString(const int rows, const int cols, BGCmatrixString* matrix) {
-  int i;
-  if (size > 0) {
-    matrix->rows = rows;
-    matrix->cols = cols;
-    matrix->capacity = nearest_power_of_2(rows * cols);
-    matrix->data = (char**) calloc((size_t)matrix->capacity, sizeof(char*));
-    //ALQUIMIA_ASSERT(NULL != matrix->data);
-    for (i = 0; i < matrix->size; ++i) {
-      matrix->data[i] = (char*) calloc((size_t)kBGCMaxStringLength, sizeof(char));
-      //ALQUIMIA_ASSERT(NULL != matrix->data[i]);
-    }
-  } else {
-    matrix->size = 0;
-    matrix->capacity = 0;
-    matrix->data = NULL;
-  }
-}  end AllocateBGCmatrixString()
+/*******************************************************************************
+ **
+ **  BGC Tensor
+ **
+ *******************************************************************************/
 
-void FreeBGCmatrixString(BGCmatrixString* matrix) {
-  int i;
-  if (matrix != NULL) {
-    for (i = 0; i < matrix->size; ++i) {
-      free(matrix->data[i]);
+void AllocateBGCTensorDouble(const int rows, const int cols, const int procs, BGCTensorDouble* tensor) {
+  if ((rows > 0 ) || (cols > 0) || (procs > 0)){
+    tensor->rows = rows;
+    tensor->cols = cols;
+    tensor->procs = procs;
+
+    tensor->cap_rows = nearest_power_of_2(rows);
+    tensor->cap_cols = nearest_power_of_2(cols);
+    tensor->cap_procs = nearest_power_of_2(procs);
+
+    tensor->data = (double***) calloc((size_t)tensor->cap_rows, sizeof(double**));
+    for (int i = 0; i < tensor->rows; ++i) {
+      tensor->data[i] = (double**) calloc((size_t)tensor->cap_cols, sizeof(double*));
+      for (int j = 0; j < tensor->procs; j++) {
+        tensor->data[i][j] = (double*) calloc((size_t)tensor->cap_procs, sizeof(double));
+      }
     }
-    free(matrix->data);
-    matrix->data = NULL;
-    matrix->size = 0;
-    matrix->capacity = 0;
+    //ALQUIMIA_ASSERT(NULL != matrix->data);
+  } else {
+    tensor->rows = 0;
+    tensor->cols = 0;
+    tensor->procs = 0;
+    tensor->cap_rows = 0;
+    tensor->cap_cols = 0;
+    tensor->data = NULL;
   }
-}  end FreeBGCmatrixString() */
+}  /* end AllocateBGCmatrixDouble() */
+
+void FreeBGCTensorDouble(BGCTensorDouble* tensor) {
+  if (tensor != NULL) {
+    free(tensor->data);
+    tensor->data = NULL;
+    tensor->rows = 0;
+    tensor->cols = 0;
+    tensor->cap_rows = 0;
+    tensor->cap_cols = 0;
+  }
+}  /* end FreeBGCmatrixDouble() */
+
+void AllocateBGCTensorInt(const int rows, const int cols, const int procs, BGCTensorInt* tensor) {
+  if ((rows > 0 ) || (cols > 0) || (procs > 0)){
+    tensor->rows = rows;
+    tensor->cols = cols;
+    tensor->procs = procs;
+
+    tensor->cap_rows = nearest_power_of_2(rows);
+    tensor->cap_cols = nearest_power_of_2(cols);
+    tensor->cap_procs = nearest_power_of_2(procs);
+
+    tensor->data = (int***) calloc((size_t)tensor->cap_rows, sizeof(int**));
+    for (int i = 0; i < tensor->rows; ++i) {
+      tensor->data[i] = (int**) calloc((size_t)tensor->cap_cols, sizeof(int*));
+      for (int j = 0; j < tensor->procs; j++) {
+        tensor->data[i][j] = (int*) calloc((size_t)tensor->cap_procs, sizeof(int));
+      }
+    }
+    //ALQUIMIA_ASSERT(NULL != matrix->data);
+  } else {
+    tensor->rows = 0;
+    tensor->cols = 0;
+    tensor->procs = 0;
+    tensor->cap_rows = 0;
+    tensor->cap_cols = 0;
+    tensor->data = NULL;
+  }
+}  /* end AllocateBGCmatrixint() */
+
+void FreeBGCTensorint(BGCTensorint* tensor) {
+  if (tensor != NULL) {
+    free(tensor->data);
+    tensor->data = NULL;
+    tensor->rows = 0;
+    tensor->cols = 0;
+    tensor->cap_rows = 0;
+    tensor->cap_cols = 0;
+  }
+}  /* end FreeBGCmatrixint() */
 
 /*******************************************************************************
  **
@@ -252,6 +302,118 @@ For reference the old function call was:
 void AllocateBGCState(const BGCSizes* const sizes,
                            BGCState* state)*/
 
+ void AllocateBGCState(BGCSizes* sizes, BGCState* state,
+                       int ncells_per_col_, int num_components, int num_procs) {
+   sizes->ncells_per_col_ = ncells_per_col_;
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->liquid_density));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->gas_density));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->ice_density));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->porosity));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->water_content));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->suction_head));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->temperature));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->hydraulic_conductivity));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->bulk_density));
+   AllocateBGCTensorDouble(sizes->ncells_per_col_, sizes->num_components, sizes->num_procs, &(state->total_component_concentration));
+   //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
+
+ }  /* end AllocateBGCState() */
+
+ void FreeBGCState(BGCState* state) {
+   if (state != NULL) {
+     FreeBGCMatrixDouble(&(state->liquid_density));
+     FreeBGCMatrixDouble(&(state->gas_density));
+     FreeBGCMatrixDouble(&(state->ice_density));
+     FreeBGCMatrixDouble(&(state->porosity));
+     FreeBGCMatrixDouble(&(state->water_content));
+     FreeBGCMatrixDouble(&(state->suction_head));
+     FreeBGCMatrixDouble(&(state->temperature));
+     FreeBGCMatrixDouble(&(state->hydraulic_conductivity));
+     FreeBGCMatrixDouble(&(state->bulk_density));
+     FreeBGCTensorDouble(&(state->total_component_concentration));
+   }
+ }  /* end FreeAlquimiaState() */
+
+ /*******************************************************************************
+  **
+  **  Auxiliary Data
+  **
+  *******************************************************************************/
+
+ void AllocateBGCAuxiliaryData(const BGCSizes* const sizes, BGCAuxiliaryData* aux_data,
+                               int ncells_per_col_) {
+   AllocateBGCMatrixInt(sizes->ncells_per_col_,
+                             &(aux_data->aux_ints));
+
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_,
+                                &(aux_data->aux_doubles));
+
+ }  /* end AllocateAlquimiaAuxiliaryData() */
+
+ void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
+   if (aux_data != NULL) {
+     FreeBGCMatrixInt(&(aux_data->aux_ints));
+     FreeBGCMatrixDouble(&(aux_data->aux_doubles));
+   }
+ }  /* end FreeAlquimiaAuxiliaryData() */
+
+ /*******************************************************************************
+  **
+  **  Properties
+  **
+  *******************************************************************************/
+
+ void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* props,
+                           int ncells_per_col_, int num_procs) {
+   sizes->ncells_per_col_ = ncells_per_col_;
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->liquid_saturation));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->gas_saturation));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->ice_saturation));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->relative_permeability));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->thermal_conductivity));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->volume));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->depth));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->dz));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->plant_wilting_factor));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->rooting_depth_fraction));
+
+   AllocateBGCVectrorDouble(sizes->num_procs, &(props->shortwave_radiation));
+   AllocateBGCVectrorDouble(sizes->num_procs, &(props->longwave_radiation));
+   AllocateBGCVectrorDouble(sizes->num_procs, &(props->air_temperature));
+   AllocateBGCVectrorDouble(sizes->num_procs, &(props->vapor_pressure_air));
+   AllocateBGCVectrorDouble(sizes->num_procs, &(props->wind_speed));
+   AllocateBGCVectrorDouble(sizes->num_procs, &(props->precipitation));
+   AllocateBGCVectrorDouble(sizes->num_procs, &(props->elevation));
+   AllocateBGCVectrorDouble(sizes->num_procs, &(props->aspect));
+   AllocateBGCVectrorDouble(sizes->num_procs, &(props->slope));
+ }  /* end AllocateAlquimiaProperties() */
+
+ void FreeBGCProperties(BGCProperties* props) {
+   if (props != NULL) {
+     FreeBGCMatrixDouble(&(props->liquid_saturation));
+     FreeBGCMatrixDouble(&(props->gas_saturation));
+     FreeBGCMatrixDouble(&(props->ice_saturation));
+     FreeBGCMatrixDouble(&(props->relative_permeability));
+     FreeBGCMatrixDouble(&(props->thermal_conductivity));
+     FreeBGCMatrixDouble(&(props->volume));
+     FreeBGCMatrixDouble(&(props->depth));
+     FreeBGCMatrixDouble(&(props->dz));
+     FreeBGCMatrixDouble(&(props->plant_wilting_factor));
+     FreeBGCMatrixDouble(&(props->rooting_depth_fraction));
+
+     FreeBGCVectrorDouble(&(props->shortwave_radiation));
+     FreeBGCVectrorDouble(&(props->longwave_radiation));
+     FreeBGCVectrorDouble(&(props->air_temperature));
+     FreeBGCVectrorDouble(&(props->vapor_pressure_air));
+     FreeBGCVectrorDouble(&(props->wind_speed));
+     FreeBGCVectrorDouble(&(props->precipitation));
+     FreeBGCVectrorDouble(&(props->elevation));
+     FreeBGCVectrorDouble(&(props->aspect));
+     FreeBGCVectrorDouble(&(props->slope));
+   }
+ }
+
+/* OLD VERSION OF THE DATA MODULES
 void AllocateBGCState(BGCSizes* sizes, BGCState* state,
                       int ncells_per_col_, int num_components) {
   sizes->ncells_per_col_ = ncells_per_col_;
@@ -267,7 +429,7 @@ void AllocateBGCState(BGCSizes* sizes, BGCState* state,
   AllocateBGCMatrixDouble(sizes->ncells_per_col_,sizes->num_components, &(state->total_component_concentration));
   //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
-}  /* end AllocateBGCState() */
+}
 
 void FreeBGCState(BGCState* state) {
   if (state != NULL) {
@@ -282,13 +444,7 @@ void FreeBGCState(BGCState* state) {
     FreeBGCVectorDouble(&(state->bulk_density));
     FreeBGCMatrixDouble(&(state->total_component_concentration));
   }
-}  /* end FreeAlquimiaState() */
-
-/*******************************************************************************
- **
- **  Auxiliary Data
- **
- *******************************************************************************/
+}
 
 void AllocateBGCAuxiliaryData(const BGCSizes* const sizes, BGCAuxiliaryData* aux_data,
                               int ncells_per_col_) {
@@ -298,20 +454,14 @@ void AllocateBGCAuxiliaryData(const BGCSizes* const sizes, BGCAuxiliaryData* aux
   AllocateBGCVectorDouble(sizes->ncells_per_col_,
                                &(aux_data->aux_doubles));
 
-}  /* end AllocateAlquimiaAuxiliaryData() */
+}
 
 void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
   if (aux_data != NULL) {
     FreeBGCVectorInt(&(aux_data->aux_ints));
     FreeBGCVectorDouble(&(aux_data->aux_doubles));
   }
-}  /* end FreeAlquimiaAuxiliaryData() */
-
-/*******************************************************************************
- **
- **  Properties
- **
- *******************************************************************************/
+}
 
 void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* props,
                           int ncells_per_col_) {
@@ -327,7 +477,7 @@ void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* props,
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->dz));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->plant_wilting_factor));
   AllocateBGCVectorDouble(sizes->ncells_per_col_, &(props->rooting_depth_fraction));
-}  /* end AllocateAlquimiaProperties() */
+}
 
 void FreeBGCProperties(BGCProperties* props) {
   if (props != NULL) {
@@ -342,7 +492,7 @@ void FreeBGCProperties(BGCProperties* props) {
     FreeBGCVectorDouble(&(props->plant_wilting_factor));
     FreeBGCVectorDouble(&(props->rooting_depth_fraction));
   }
-}  /* end FreeAlquimiaProperties() */
+}
 
 /*******************************************************************************
  **

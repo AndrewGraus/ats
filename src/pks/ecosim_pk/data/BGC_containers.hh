@@ -80,10 +80,69 @@ extern "C" {
   } BGCMatrixString;
 
   typedef struct {
+    int rows, cols, procs, cap_rows, cap_cols, cap_procs;
+    double*** data;
+  } BGCTensorDouble;
+
+  typedef struct {
+    int rows, cols, procs, cap_rows, cap_cols, cap_procs;
+    int*** data;
+  } BGCTensorInt;
+
+  typedef struct {
+    int rows, cols, procs, capacity;
+    char*** data;
+  } BGCTensorString;
+
+  typedef struct {
     int ncells_per_col_;
     int num_components;
+    int num_procs;
   } BGCSizes;
 
+  typedef struct {
+    BGCMatrixDouble liquid_density;
+    BGCMatrixDouble gas_density;
+    BGCMatrixDouble ice_density;
+    BGCMatrixDouble porosity;
+    BGCMatrixDouble water_content;
+    BGCMatrixDouble suction_head;
+    BGCMatrixDouble temperature;
+    BGCMatrixDouble hydraulic_conductivity;
+    BGCMatrixDouble bulk_density;
+    BGCTensorDouble total_component_concentration;
+  } BGCState;
+
+  typedef struct {
+    BGCMatrixDouble liquid_saturation;
+    BGCMatrixDouble gas_saturation;
+    BGCMatrixDouble ice_saturation;
+    BGCMatrixDouble relative_permeability;
+    BGCMatrixDouble thermal_conductivity;
+    BGCMatrixDouble volume;
+    BGCMatrixDouble depth;
+    BGCMatrixDouble dz;
+    BGCMatrixDouble plant_wilting_factor;
+    BGCMatrixDouble rooting_depth_fraction;
+    BGCVectorDouble shortwave_radiation;
+    BGCVectorDouble longwave_radiation;
+    BGCVectorDouble air_temperature;
+    BGCVectorDouble vapor_pressure_air;
+    BGCVectorDouble wind_speed;
+    BGCVectorDouble precipitation;
+    BGCVectorDouble elevation;
+    BGCVectorDouble aspect;
+    BGCVectorDouble slope;
+    double atm_n2;
+    double atm_o2;
+    double atm_co2;
+    double atm_ch4;
+    double atm_n2o;
+    double atm_h2;
+    double atm_nh3;
+  } BGCProperties;
+
+  /*
   typedef struct {
     BGCVectorDouble liquid_density;
     BGCVectorDouble gas_density;
@@ -125,6 +184,7 @@ extern "C" {
     double atm_h2;
     double atm_nh3;
   } BGCProperties;
+  */
 
   typedef struct {
     BGCVectorInt aux_ints;  /* [-] */
