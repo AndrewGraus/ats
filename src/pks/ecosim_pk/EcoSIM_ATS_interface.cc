@@ -32,7 +32,7 @@
 #include "exceptions.hh"
 #include "Mesh.hh"
 
-// include evaluators here
+// include custom evaluators here
 #include "hydraulic_conductivity_evaluator.hh"
 #include "bulk_density_evaluator.hh"
 
@@ -51,29 +51,9 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
   ncells_per_col_(-1),
   saved_time_(0.0)
   {
-    //grab the relevant domains, surface is needed to find the columns later
+    //grab the surface and subsurface domains
     domain_ = plist_->get<std::string>("domain name", "domain");
     domain_surf_ = Keys::readDomainHint(*plist_, domain_, "subsurface", "surface");
-
-    // obtain key of fields
-    // grid position (X,Y,Z) - can we just pass Z and assume X and Y are 0?
-    // Aspect in geometric format
-    // water table depth - There's a water table evaluator in
-    // /src/constitutive_relations/column_integrators/ but I don't see it used
-    // anywhere can we just use it here?
-
-
-    //For now a few of the evaluators don't work because they are no initialized
-    // I've commented out elevation and replaced others with something that does
-    //exist:
-    //
-    // mass_density_ice
-    // mass_gas_density
-    //
-    // additionally temperature doesn't work because it is owned by energy
-    //
-    //
-    // Simple tests with the keys
 
     // transport
     tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
@@ -87,20 +67,12 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
     rel_perm_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
     suc_key_ = Keys::readKey(*plist_,domain_,"suction","suction_head");
-
-    //densities
-    //If we need bulk density do we need volume fractions of each quantity?
-    //This can be computed from the saturations and porosity (I think) via:
-    // f_rock = (1 - porosity)
-    // f_liq = S_liq * porosity
-    // f_gas = S_gas * porosity
-    // f_ice = S_ice * porosity
-
     liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
     ice_den_key_ = Keys::readKey(*plist_, domain_, "mass density ice", "mass_density_ice");
     gas_den_key_ = Keys::readKey(*plist_, domain_,"mass density gas", "mass_density_gas");
     gas_den_key_test_ = Keys::readKey(*plist_, domain_, "mass density gas", "mass_density_gas");
     rock_den_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
+
     //energy
     T_key_ = Keys::readKey(*plist_, domain_, "temperature", "temperature");
     therm_cond_key_ = Keys::readKey(*plist_, domain_, "thermal conductivity", "thermal_conductivity");
@@ -111,7 +83,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
     f_wp_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
     f_root_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
-    //Evaluator keys
+
+    //Custom Evaluator keys
     hydra_cond_key_ = Keys::readKey(*plist_, domain_, "hydraulic conductivity", "hydraulic_conductivity");
     bulk_dens_key_ = Keys::readKey(*plist_, domain_, "bulk density", "bulk_density");
 
@@ -128,9 +101,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     aspect_key_ = Keys::readKey(*plist_, domain_surf_, "aspect", "aspect");
     slope_key_ = Keys::readKey(*plist_, domain_surf_, "slope", "slope_magnitude");
 
-    //f_wp_key_ = Keys::readKey(*plist_, domain_, "plant wilting factor", "plant_wilting_factor");
-    //psnow_key_ = Keys::readKey(plist, domain_surf_, "precipitation snow", "precipitation");
-
     //Atmospheric abundance keys
     atm_n2_ = plist_->get<double>("atmospheric N2");
     atm_o2_ = plist_->get<double>("atmospheric O2");
@@ -140,16 +110,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     atm_h2_ = plist_->get<double>("atmospheric H2");
     atm_nh3_ = plist_->get<double>("atmospheric NH3");
 
-    // parameters
-    // initial timestep
     dt_ = plist_->get<double>("initial time step", 1.);
-    //Heat capacity looks like the default units are molar heat capacity
     c_m_ = plist_->get<double>("heat capacity [J mol^-1 K^-1]");
-
-    //They also sometimes use a version of heat capacity that is just this
-    //quantity times 1e-6:
-    //ka_ = 1.e-6 * plist_.get<double>("heat capacity [J kg^-1 K^-1]");
-    //Unclear what we need
 
     //This initialized the engine (found in BGCEngine.cc) This is the code that
     //actually points to the driver
@@ -249,19 +211,6 @@ void EcoSIM::Setup() {
 
 // -- Initialize owned (dependent) variables.
 void EcoSIM::Initialize() {
-  //Now we have to initalize the variables (i.e. give them initial values)
-  //In our PK it will only be done for variables owned by the PK
-  //Keeping an example of how it's done generically here:
-  //S_->GetW<CompositeVector>("co2_decomposition", tag_next_, name_).PutScalar(0.);
-  //S_->GetRecordW("co2_decomposition", tag_next_, name_).set_initialized();
-
-  //In alquimia they initialize the axuiliary data via a function called InitializeCVField
-  //which can be found in Amanzi/src/PKs/PK_Physical.cc:
-
-  // initialize fields as soon as possible
-  /*for (size_t i = 0; i < aux_names_.size(); ++i) {
-    InitializeCVField(S_, *vo_, aux_names_[i], tag_next_, passwd_, 0.0);
-  }*/
 
   //Need to know the number of components to initialize data structures
   const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, Tags::DEFAULT)->ViewComponent("cell"));
@@ -309,11 +258,6 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  //Teuchos::OSTab tab = vo_->getOSTab();
-
-  const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>("water_content", tag_next_)
-      .ViewComponent("cell",false))(0);
-
   //Surface properties from met data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -324,10 +268,6 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
-
-  //Here we put the checks for the optional keys
-  //Temperature, ice and gas
-  //plist_->print(std::cout);
 
   if (S_->HasRecord(gas_den_key_test_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
@@ -946,10 +886,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
                                    const BGCAuxiliaryData& aux_data,
                                   const Tag& water_tag)
 {
-  // If the chemistry has modified the porosity and/or density, it needs to
-  // be updated here.
-  // (this->water_density())[cell] = state.water_density;
-  // (this->porosity())[cell] = state.porosity;
 
   Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, Amanzi::Tags::NEXT, "state")->ViewComponent("cell",false));
   int tcc_num = tcc.NumVectors();
@@ -1104,8 +1040,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_dens_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& rooting_depth_fraction = *(*S_->Get<CompositeVector>(f_root_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
-  //I think I can access the surface variables with col variable and it should
-  //be what I want
+
   const Epetra_Vector& shortwave_radiation = *(*S_->Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& longwave_radiation = *(*S_->Get<CompositeVector>(lw_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& air_temperature = *(*S_->Get<CompositeVector>(air_temp_key_, water_tag).ViewComponent("cell", false))(0);
@@ -1138,12 +1073,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   auto col_rf = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(tcc_num,ncells_per_col_));
-
-  //Maybe loop over number of processes, then number of columns on that process and append them to their respective datasets?
-  //Here is where we should do the various field-to-column calls to then pass along
-  //to the data structures that will pass the data to EcoSIM
-  //Format is:
-  //FieldToColumn_(column index, dataset to copy from, vector to put the data in)
 
   //Gather columns on this process:
   ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
@@ -1202,9 +1131,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       FieldToColumn_(col,thermal_conductivity,col_cond.ptr());
     }
 
-    //Initializing depth here, because it's calculated by a function and not saved in state
-    //it works a bit differently:
+    // This is for computing depth
     ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
+
     for (int i=0; i < ncells_per_col_; ++i) {
       state.liquid_density.data[col][i] = (*col_l_dens)[i];
       state.porosity.data[col][i] = (*col_poro)[i];
@@ -1263,24 +1192,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   props.atm_n2o = atm_n2o_;
   props.atm_h2 = atm_h2_;
   props.atm_nh3 = atm_nh3_;
-  //mat_props.volume = mesh_->cell_volume(cell;z
-  //mat_props.saturation = water_saturation[0][cell];
 
-  // Auxiliary data -- block copy.
-  /*if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
-    aux_data_ = S_->GetW<CompositeVector>(bgc_aux_data_key_, tag_next_, passwd_).ViewComponent("cell");
-    int num_aux_ints = bgc_engine_->Sizes().num_aux_integers;
-    int num_aux_doubles = bgc_engine_->Sizes().num_aux_doubles;
-
-    for (int i = 0; i < num_aux_ints; i++) {
-      double* cell_aux_ints = (*aux_data_)[i];
-      aux_data.aux_ints.data[i] = (int)cell_aux_ints[cell];
-    }
-    for (int i = 0; i < num_aux_doubles; i++) {
-      double* cell_aux_doubles = (*aux_data_)[i + num_aux_ints];
-      aux_data.aux_doubles.data[i] = cell_aux_doubles[cell];
-    }
-  }*/
 }
 
 void EcoSIM::CopyFromEcoSIM_process(const int col,
@@ -1289,10 +1201,6 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
                                    const BGCAuxiliaryData& aux_data,
                                   const Tag& water_tag)
 {
-  // If the chemistry has modified the porosity and/or density, it needs to
-  // be updated here.
-  // (this->water_density())[cell] = state.water_density;
-  // (this->porosity())[cell] = state.porosity;
 
   Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, Amanzi::Tags::NEXT, "state")->ViewComponent("cell",false));
   int tcc_num = tcc.NumVectors();
@@ -1435,15 +1343,6 @@ int EcoSIM::InitializeSingleColumn(int col)
   bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, col);
   CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-  // ETC: hacking to get consistent solution -- if there is no water
-  // (e.g. surface system, we still need to call EnforceCondition() as it also
-  // gets aux data set up correctly.  But the concentrations need to be
-  // overwritten as 0 to get expected output.  Therefore we manually overwrite
-  // this now.  Previously this happened due to a bug in ATS's reactive
-  // transport coupler -- happy accidents.
-  //if (alq_mat_props_.saturation <= saturation_tolerance_)
-  //  for (int i=0; i!=aqueous_components_->NumVectors(); ++i) (*aqueous_components_)[i][cell] = 0.;
-  //return 0;
 }
 
 /* *******************************************************************
@@ -1482,15 +1381,6 @@ int EcoSIM::InitializeSingleProcess(int proc)
   bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, col);
   CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-  // ETC: hacking to get consistent solution -- if there is no water
-  // (e.g. surface system, we still need to call EnforceCondition() as it also
-  // gets aux data set up correctly.  But the concentrations need to be
-  // overwritten as 0 to get expected output.  Therefore we manually overwrite
-  // this now.  Previously this happened due to a bug in ATS's reactive
-  // transport coupler -- happy accidents.
-  //if (alq_mat_props_.saturation <= saturation_tolerance_)
-  //  for (int i=0; i!=aqueous_components_->NumVectors(); ++i) (*aqueous_components_)[i][cell] = 0.;
-  //return 0;
 }
 
 int EcoSIM::AdvanceSingleProcess(double dt, int proc)
@@ -1500,11 +1390,8 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
   CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   int num_iterations = 1;
-/*****************************************************************
-   ADVANCE CALL GOES HERE
-  *******************************************************************/
 
- bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
+  bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
                                          bgc_sizes_, num_iterations, col);
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
