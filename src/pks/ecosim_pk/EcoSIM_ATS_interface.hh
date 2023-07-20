@@ -119,6 +119,10 @@ class EcoSIM : public PK_Physical {
 
    int AdvanceSingleColumn(double dt, int col);
 
+   int InitializeSingleProcess(int col);
+
+   int AdvanceSingleProcess(double dt, int col);
+
    void CopyEcoSIMStateToAmanzi(
        const int cell,
        const BGCProperties& props,

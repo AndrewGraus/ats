@@ -126,7 +126,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     prain_key_ = Keys::readKey(*plist_, domain_surf_, "precipitation rain", "precipitation_rain");
     elev_key_ = Keys::readKey(*plist_, domain_surf_, "elevation", "elevation");
     aspect_key_ = Keys::readKey(*plist_, domain_surf_, "aspect", "aspect");
-    slope_key_ = Keys::readKey(*plist_, domain_surf_, "slope magnitude", "slope_magnitude");
+    slope_key_ = Keys::readKey(*plist_, domain_surf_, "slope", "slope_magnitude");
 
     //f_wp_key_ = Keys::readKey(*plist_, domain_, "plant wilting factor", "plant_wilting_factor");
     //psnow_key_ = Keys::readKey(plist, domain_surf_, "precipitation snow", "precipitation");
@@ -314,32 +314,6 @@ void EcoSIM::Initialize() {
   const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>("water_content", tag_next_)
       .ViewComponent("cell",false))(0);
 
-
-  ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
-  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  ncols_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
-
-  *vo_->os() << "total columns cell_map: " << ncols_global << std::endl;
-  *vo_->os() << "total columns from num_entities: " << ncols_global << std::endl;
-  //Trying to loop over processors now:
-  int numProcesses, p_rank;
-  MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
-  MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
-  for (int k = 0; k < numProcesses; ++k) {
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (p_rank==k) {
-      std::cout << "on processor " << p_rank << std::endl;
-      ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-      std::cout << ncols_local << std::endl;
-    }
-  }
-
-  //Using cout because it prints for every process instead of just
-  //rank 0 (might be a way to use vo, but not implemented)
-  //std::cout << "Global Columns: " << ncols_global << std::endl;
-  //std::cout << "Local Columns: " << ncols_local << std::endl;
-
-
   //Surface properties from met data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -402,9 +376,32 @@ void EcoSIM::Initialize() {
   int num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
   //Looping over the columns and initializing
-  for (int col=0; col!=num_cols_; ++col) {
+  /*for (int col=0; col!=num_cols_; ++col) {
     ierr = InitializeSingleColumn(col);
+  }*/
+
+  //loop over processes instead:
+  ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
+  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  ncols_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+
+  *vo_->os() << "total columns cell_map: " << ncols_global << std::endl;
+  *vo_->os() << "total columns from num_entities: " << ncols_global << std::endl;
+  //Trying to loop over processors now:
+  int numProcesses, p_rank;
+  MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
+  MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
+  for (int k = 0; k < numProcesses; ++k) {
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (p_rank==k) {
+      std::cout << "on processor " << p_rank << std::endl;
+      ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+      std::cout << ncols_local << std::endl;
+
+      InitializeSingleProcess(p_rank);
+    }
   }
+
   // verbose message
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
@@ -543,41 +540,40 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   }
 
   //Atm abundances
-  S_->GetEvaluator("incoming_shortwave_radiation", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& sw_rad = *(*S_->Get<CompositeVector>("incoming_shortwave_radiation", tag_next_)
+  S_->GetEvaluator("surface-incoming_shortwave_radiation", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& sw_rad = *(*S_->Get<CompositeVector>("surface-incoming_shortwave_radiation", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("incoming_longwave_radiation", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& lw_rad = *(*S_->Get<CompositeVector>("incoming_longwave_radiation", tag_next_)
+  S_->GetEvaluator("surface-incoming_longwave_radiation", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& lw_rad = *(*S_->Get<CompositeVector>("surface-incoming_longwave_radiation", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("air_temperature", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& t_air = *(*S_->Get<CompositeVector>("air_temperature", tag_next_)
+  S_->GetEvaluator("surface-air_temperature", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& t_air = *(*S_->Get<CompositeVector>("surface-air_temperature", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("vapor_pressure_air", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& p_vap = *(*S_->Get<CompositeVector>("vapor_pressure_air", tag_next_)
+  S_->GetEvaluator("surface-vapor_pressure_air", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& p_vap = *(*S_->Get<CompositeVector>("surface-vapor_pressure_air", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("wind_speed", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& v_wind = *(*S_->Get<CompositeVector>("wind_speed", tag_next_)
+  S_->GetEvaluator("surface-wind_speed", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& v_wind = *(*S_->Get<CompositeVector>("surface-wind_speed", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("precipitation_rain", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& p_rain = *(*S_->Get<CompositeVector>("precipitation_rain", tag_next_)
+  S_->GetEvaluator("surface-precipitation_rain", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& p_rain = *(*S_->Get<CompositeVector>("surface-precipitation_rain", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("elevation", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("elevation", tag_next_)
+  S_->GetEvaluator("surface-elevation", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("surface-elevation", tag_next_)
           .ViewComponent("cell",false);
 
-  S_->GetEvaluator("aspect", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& aspect = *S_->Get<CompositeVector>("aspect", tag_next_)
+  S_->GetEvaluator("surface-aspect", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& aspect = *S_->Get<CompositeVector>("surface-aspect", tag_next_)
           .ViewComponent("cell",false);
 
-
-  S_->GetEvaluator("slope", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& slope = *S_->Get<CompositeVector>("slope", tag_next_)
+  S_->GetEvaluator("surface-slope_magnitude", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& slope = *S_->Get<CompositeVector>("surface-slope_magnitude", tag_next_)
           .ViewComponent("cell",false);
 
   if (has_ice) {
@@ -600,24 +596,27 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
             .ViewComponent("cell",false))(0);
   }
 
-  // loop over columns and apply the model
-  for (AmanziMesh::Entity_ID col=0; col!=num_cols_; ++col) {
+  //loop over processes instead:
+  ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
+  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  ncols_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
 
-    auto& col_iter = mesh_->cells_of_column(col);
-    ncells_per_col_ = col_iter.size();
+  *vo_->os() << "total columns cell_map: " << ncols_global << std::endl;
+  *vo_->os() << "total columns from num_entities: " << ncols_global << std::endl;
+  //Trying to loop over processors now:
+  int numProcesses, p_rank;
+  MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
+  MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
+  for (int k = 0; k < numProcesses; ++k) {
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (p_rank==k) {
+      std::cout << "on processor " << p_rank << std::endl;
+      ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+      std::cout << ncols_local << std::endl;
 
-    //Copy to EcoSIM structures
-
-    AdvanceSingleColumn(dt, col);
-  } // end loop over columns
-
-  // mark primaries as changed
-
-  // Compute the next time step.
-  // * will we need to do this? *
-  //ComputeNextTimeStep();
-
-  //return failed;
+      AdvanceSingleProcess(p_rank);
+    }
+  }
 
 }
 
@@ -905,6 +904,12 @@ void EcoSIM::CopyToEcoSIM(int col,
     props.atm_h2 = atm_h2_;
     props.atm_nh3 = atm_nh3_;
   }
+
+  for (int j=0; j < tcc_num; ++j) {
+    for (int i=0; i < ncells_per_col_; ++i) {
+      state.total_component_concentration.data[j][i] = (*col_tcc)(i,j);
+    }
+  }
   //mat_props.volume = mesh_->cell_volume(cell;z
   //mat_props.saturation = water_saturation[0][cell];
 
@@ -968,8 +973,6 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  //For the concentration I do not want a vector but a matrix
-  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
   auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -978,6 +981,8 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_h_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_b_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
   if (has_gas) {
     auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell", false))(0);
@@ -1075,6 +1080,346 @@ void EcoSIM::CopyFromEcoSIM(const int col,
   MatrixColumnToField_(col, tcc, col_tcc.ptr());
 }
 
+//Copy to EcoSIM
+void EcoSIM::CopyToEcoSIM_process(int proc_rank,
+                                 BGCProperties& props,
+                                 BGCState& state,
+                                 BGCAuxiliaryData& aux_data,
+                               const Tag& water_tag)
+{
+  //This is the copy function for a loop over a single process instead of a single column
+  //Fill state with ATS variables that are going to be changed by EcoSIM
+  const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, water_tag)->ViewComponent("cell"));
+  int tcc_num = tcc.NumVectors();
+
+  const Epetra_Vector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& water_content = *(*S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& relative_permeability = *(*S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& liquid_density = *(*S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& rock_density = *(*S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& hydraulic_conductivity = *(*S_->Get<CompositeVector>(hydra_cond_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& suction_head = *(*S_->Get<CompositeVector>(suc_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_dens_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& rooting_depth_fraction = *(*S_->Get<CompositeVector>(f_root_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
+  //I think I can access the surface variables with col variable and it should
+  //be what I want
+  const Epetra_Vector& shortwave_radiation = *(*S_->Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& longwave_radiation = *(*S_->Get<CompositeVector>(lw_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& air_temperature = *(*S_->Get<CompositeVector>(air_temp_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& vapor_pressure_air = *(*S_->Get<CompositeVector>(vp_air_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& wind_speed= *(*S_->Get<CompositeVector>(wind_speed_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& precipitation = *(*S_->Get<CompositeVector>(prain_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& elevation = *(*S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& aspect = *(*S_->Get<CompositeVector>(aspect_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key_, water_tag).ViewComponent("cell", false))(0);
+
+  auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_suc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_i_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_h_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_b_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_depth = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_dz = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_wp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_rf = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(tcc_num,ncells_per_col_));
+
+  //Maybe loop over number of processes, then number of columns on that process and append them to their respective datasets?
+  //Here is where we should do the various field-to-column calls to then pass along
+  //to the data structures that will pass the data to EcoSIM
+  //Format is:
+  //FieldToColumn_(column index, dataset to copy from, vector to put the data in)
+
+  //Gather columns on this process:
+  ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
+  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  ncols_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+
+  *vo_->os() << "total columns cell_map: " << ncols_global << std::endl;
+  *vo_->os() << "total columns from num_entities: " << ncols_global_ptype << std::endl;
+  //Trying to loop over processors now:
+  int p_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  std::cout << "on processor " << p_rank << std::endl;
+  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  std::cout << ncols_local << std::endl;
+
+  //Loop over columns on this process
+  for (int col=0; col!=ncols_local; ++col) {
+    FieldToColumn_(col,porosity,col_poro.ptr());
+    FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
+    FieldToColumn_(col,water_content,col_wc.ptr());
+    FieldToColumn_(col,relative_permeability,col_rel_perm.ptr());
+    FieldToColumn_(col,liquid_density,col_l_dens.ptr());
+    FieldToColumn_(col,rock_density,col_r_dens.ptr());
+    FieldToColumn_(col,cell_volume,col_vol.ptr());
+    FieldToColumn_(col,hydraulic_conductivity,col_h_cond.ptr());
+    FieldToColumn_(col,bulk_density,col_b_dens.ptr());
+    FieldToColumn_(col,plant_wilting_factor,col_wp.ptr());
+    FieldToColumn_(col,rooting_depth_fraction,col_rf.ptr());
+
+    //Have to make like a tensor version here
+    FieldToColumn_(col, tcc, col_tcc.ptr());
+
+    if (has_gas) {
+      const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
+      const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false))(0);
+
+      FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
+      FieldToColumn_(col,gas_density,col_g_dens.ptr());
+    }
+
+    if (has_ice) {
+      const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
+      const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
+
+      FieldToColumn_(col,ice_saturation,col_i_sat.ptr());
+      FieldToColumn_(col,ice_density,col_i_dens.ptr());
+    }
+
+    if (has_energy) {
+      const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
+      const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(therm_cond_key_, water_tag).ViewComponent("cell", false))(0);
+
+      FieldToColumn_(col,temp, col_temp.ptr());
+      FieldToColumn_(col,thermal_conductivity,col_cond.ptr());
+    }
+
+    //Initializing depth here, because it's calculated by a function and not saved in state
+    //it works a bit differently:
+    ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
+    for (int i=0; i < ncells_per_col_; ++i) {
+      state.liquid_density.data[col][i] = (*col_l_dens)[i];
+      state.porosity.data[col][i] = (*col_poro)[i];
+      state.water_content.data[col][i] = (*col_wc)[i];
+      state.hydraulic_conductivity.data[col][i] = (*col_h_cond)[i];
+      state.bulk_density.data[col][i] = (*col_b_dens)[i];
+      //state.suction_head.data[i] = (*col_suc)[i];
+      props.plant_wilting_factor.data[col][i] = (*col_wp)[i];
+      props.rooting_depth_fraction.data[col][i] = (*col_rf)[i];
+      props.liquid_saturation.data[col][i] = (*col_l_sat)[i];
+      props.relative_permeability.data[col][i] = (*col_rel_perm)[i];
+      props.volume.data[col][i] = (*col_vol)[i];
+      props.depth.data[col][i] = (*col_depth)[i];
+      props.dz.data[col][i] = (*col_dz)[i];
+
+      if (has_gas) {
+        props.gas_saturation.data[col][i] = (*col_g_sat)[i];
+        state.gas_density.data[col][i] = (*col_g_dens)[i];
+      }
+
+      if (has_ice) {
+        state.ice_density.data[col][i] = (*col_i_dens)[i];
+        props.ice_saturation.data[col][i] = (*col_i_sat)[i];
+      }
+
+      if (has_energy) {
+        state.temperature.data[col][i] = (*col_temp)[i];
+        props.thermal_conductivity.data[col][i] = (*col_cond)[i];
+      }
+    }
+
+    //fill surface variables
+    props.shortwave_radiation[col] = shortwave_radiation[col];
+    props.longwave_radiation[col] = longwave_radiation[col];
+    props.air_temperature[col] = air_temperature[col];
+    props.vapor_pressure_air[col] = vapor_pressure_air[col];
+    props.wind_speed[col] = wind_speed[col];
+    props.precipitation[col] = precipitation[col];
+    props.elevation[col] = elevation[col];
+    props.aspect[col] = aspect[col];
+    props.slope[col] = slope[col];
+  }
+
+  for (int component=0; component < tcc_num; ++component) {
+    for (int i=0; i < ncells_per_col_; ++i) {
+      state.total_component_concentration.data[col][component][i] = (*col_tcc)(i,component);
+    }
+  }
+
+  //Fill the atmospheric abundances
+  //NOTE: probably want to add an if statement here to only do this only once
+  props.atm_n2 = atm_n2_;
+  props.atm_o2 = atm_o2_;
+  props.atm_co2 = atm_co2_;
+  props.atm_ch4 = atm_ch4_;
+  props.atm_n2o = atm_n2o_;
+  props.atm_h2 = atm_h2_;
+  props.atm_nh3 = atm_nh3_;
+  //mat_props.volume = mesh_->cell_volume(cell;z
+  //mat_props.saturation = water_saturation[0][cell];
+
+  // Auxiliary data -- block copy.
+  /*if (S_->HasRecord(bgc_aux_data_key_, tag_next_)) {
+    aux_data_ = S_->GetW<CompositeVector>(bgc_aux_data_key_, tag_next_, passwd_).ViewComponent("cell");
+    int num_aux_ints = bgc_engine_->Sizes().num_aux_integers;
+    int num_aux_doubles = bgc_engine_->Sizes().num_aux_doubles;
+
+    for (int i = 0; i < num_aux_ints; i++) {
+      double* cell_aux_ints = (*aux_data_)[i];
+      aux_data.aux_ints.data[i] = (int)cell_aux_ints[cell];
+    }
+    for (int i = 0; i < num_aux_doubles; i++) {
+      double* cell_aux_doubles = (*aux_data_)[i + num_aux_ints];
+      aux_data.aux_doubles.data[i] = cell_aux_doubles[cell];
+    }
+  }*/
+}
+
+void EcoSIM::CopyFromEcoSIM_process(const int col,
+                                   const BGCProperties& props,
+                                   const BGCState& state,
+                                   const BGCAuxiliaryData& aux_data,
+                                  const Tag& water_tag)
+{
+  // If the chemistry has modified the porosity and/or density, it needs to
+  // be updated here.
+  // (this->water_density())[cell] = state.water_density;
+  // (this->porosity())[cell] = state.porosity;
+
+  Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, Amanzi::Tags::NEXT, "state")->ViewComponent("cell",false));
+  int tcc_num = tcc.NumVectors();
+
+  auto& porosity = *(*S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false))(0);
+  auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Amanzi::Tags::NEXT, saturation_liquid_key_).ViewComponent("cell",false))(0);
+  auto& water_content = *(*S_->GetW<CompositeVector>(water_content_key_, Amanzi::Tags::NEXT, water_content_key_).ViewComponent("cell",false))(0);
+  //auto& suction_head = *(*S_->GetW<CompositeVector>(suc_key_, Amanzi::Tags::NEXT, suc_key_).ViewComponent("cell",false))(0);
+  auto& relative_permeability = *(*S_->GetW<CompositeVector>(rel_perm_key_, Amanzi::Tags::NEXT, rel_perm_key_).ViewComponent("cell",false))(0);
+  auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_den_key_, Amanzi::Tags::NEXT, liquid_den_key_).ViewComponent("cell",false))(0);
+  auto& rock_density = *(*S_->GetW<CompositeVector>(rock_den_key_, Amanzi::Tags::NEXT, rock_den_key_).ViewComponent("cell",false))(0);
+  auto& cell_volume = *(*S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false))(0);
+  auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydra_cond_key_, Amanzi::Tags::NEXT, hydra_cond_key_).ViewComponent("cell",false))(0);
+  auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_dens_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
+
+  auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_suc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_g_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_i_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_i_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_temp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_h_cond = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_b_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
+
+  //Gather columns on this process:
+  ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
+  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  ncols_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+
+  *vo_->os() << "total columns cell_map: " << ncols_global << std::endl;
+  *vo_->os() << "total columns from num_entities: " << ncols_global_ptype << std::endl;
+  //Trying to loop over processors now:
+  int p_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  std::cout << "on processor " << p_rank << std::endl;
+  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  std::cout << ncols_local << std::endl;
+
+  //Loop over columns on this process
+  for (int col=0; col!=ncols_local; ++col) {
+
+    if (has_gas) {
+      const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
+      const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false))(0);
+
+      for (int i=0; i < ncells_per_col_; ++i) {
+        (*col_g_dens)[i] = state.gas_density.data[col][i];
+        (*col_g_sat)[i] = props.gas_saturation.data[col][i];
+      }
+
+      FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
+      FieldToColumn_(col,gas_density,col_g_dens.ptr());
+    }
+
+    if (has_ice) {
+      const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
+      const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
+
+      for (int i=0; i < ncells_per_col_; ++i) {
+        (*col_i_dens)[i] = state.ice_density.data[col][i];
+        (*col_i_sat)[i] = props.ice_saturation.data[col][i];
+      }
+
+      ColumnToField_(col,ice_saturation,col_i_sat.ptr());
+      ColumnToField_(col,ice_density,col_i_dens.ptr());
+    }
+
+    if (has_energy) {
+      const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
+      const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(therm_cond_key_, water_tag).ViewComponent("cell", false))(0);
+
+      for (int i=0; i < ncells_per_col_; ++i) {
+        (*col_temp)[i] = state.temperature.data[col][i];
+        (*col_cond)[i] = props.thermal_conductivity.data[col][i];
+      }
+
+      ColumnToField_(col,temp, col_temp.ptr());
+      ColumnToField_(col,thermal_conductivity,col_cond.ptr());
+    }
+
+    for (int i=0; i < ncells_per_col_; ++i) {
+      (*col_l_dens)[i] = state.liquid_density.data[col][i];
+      (*col_poro)[i] = state.porosity.data[col][i];
+      (*col_wc)[i] = state.water_content.data[col][i];
+      (*col_h_cond)[i] = state.hydraulic_conductivity.data[col][i];
+      (*col_b_dens)[i] = state.bulk_density.data[col][i];
+
+      if (has_gas) {
+        (*col_g_dens)[i] = state.gas_density.data[col][i];
+      }
+
+      if (has_ice) {
+        (*col_i_dens)[i] = state.ice_density.data[col][i];
+      }
+
+      if (has_energy) {
+        (*col_temp)[i] = state.temperature.data[col][i];
+      }
+    }
+
+    ColumnToField_(col,porosity,col_poro.ptr());
+    ColumnToField_(col,liquid_saturation,col_l_sat.ptr());
+    ColumnToField_(col,water_content,col_wc.ptr());
+    ColumnToField_(col,relative_permeability,col_rel_perm.ptr());
+    ColumnToField_(col,liquid_density,col_l_dens.ptr());
+    ColumnToField_(col,rock_density,col_r_dens.ptr());
+    ColumnToField_(col,cell_volume,col_vol.ptr());
+    ColumnToField_(col,hydraulic_conductivity,col_h_cond.ptr());
+    ColumnToField_(col,bulk_density,col_b_dens.ptr());
+    ColumnToField_(col,plant_wilting_factor,col_wp.ptr());
+    ColumnToField_(col,rooting_depth_fraction,col_rf.ptr());
+  }
+
+}
+
 /* *******************************************************************
 * This helper performs initialization on a single column within Amanzi's state.
 ******************************************************************* */
@@ -1120,6 +1465,50 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
   CopyEcoSIMStateToAmanzi(col,
+                            bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+
+  return num_iterations;
+}
+
+int EcoSIM::InitializeSingleProcess(int proc)
+{
+  CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+
+  //ecosim_datatest_wrapper(col, &bgc_props_, &bgc_sizes_);
+  bgc_engine_->DataTest();
+
+  int num_iterations = 1;
+
+  bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, col);
+  CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+
+  // ETC: hacking to get consistent solution -- if there is no water
+  // (e.g. surface system, we still need to call EnforceCondition() as it also
+  // gets aux data set up correctly.  But the concentrations need to be
+  // overwritten as 0 to get expected output.  Therefore we manually overwrite
+  // this now.  Previously this happened due to a bug in ATS's reactive
+  // transport coupler -- happy accidents.
+  //if (alq_mat_props_.saturation <= saturation_tolerance_)
+  //  for (int i=0; i!=aqueous_components_->NumVectors(); ++i) (*aqueous_components_)[i][cell] = 0.;
+  //return 0;
+}
+
+int EcoSIM::AdvanceSingleProcess(double dt, int proc)
+{
+  // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
+  // should use the same tag as transport.  See #673
+  CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+
+  int num_iterations = 1;
+/*****************************************************************
+   ADVANCE CALL GOES HERE
+  *******************************************************************/
+
+ bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
+                                         bgc_sizes_, num_iterations, col);
+
+  // Move the information back into Amanzi's state, updating the given total concentration vector.
+  CopyFromEcoSIM_process(proc,
                             bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   return num_iterations;
