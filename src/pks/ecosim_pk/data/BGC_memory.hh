@@ -59,6 +59,12 @@ extern "C" {
   void AllocateBGCMatrixString(const int rows, const int cols, BGCMatrixString* matrix);
   void FreeBGCMatrixString(BGCMatrixString* matrix);
 
+  void AllocateBGCTensorDouble(const int rows, const int cols, BGCTensorDouble* tensor);
+  void FreeBGCMatrixDouble(BGCMatrixDouble* tensor);
+
+  void AllocateBGCTensorInt(const int rows, const int cols, BGCTensorInt* tensor);
+  void FreeBGCTensorInt(BGCTensorInt* tensor);
+
   /* State */
   void AllocateBGCState(BGCSizes* sizes,
                         BGCState* state,

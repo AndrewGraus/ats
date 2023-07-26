@@ -280,7 +280,7 @@ void AllocateBGCTensorInt(const int rows, const int cols, const int procs, BGCTe
   }
 }  /* end AllocateBGCmatrixint() */
 
-void FreeBGCTensorint(BGCTensorint* tensor) {
+void FreeBGCTensorInt(BGCTensorint* tensor) {
   if (tensor != NULL) {
     free(tensor->data);
     tensor->data = NULL;
@@ -377,15 +377,15 @@ void AllocateBGCState(const BGCSizes* const sizes,
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->plant_wilting_factor));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->rooting_depth_fraction));
 
-   AllocateBGCVectrorDouble(sizes->num_procs, &(props->shortwave_radiation));
-   AllocateBGCVectrorDouble(sizes->num_procs, &(props->longwave_radiation));
-   AllocateBGCVectrorDouble(sizes->num_procs, &(props->air_temperature));
-   AllocateBGCVectrorDouble(sizes->num_procs, &(props->vapor_pressure_air));
-   AllocateBGCVectrorDouble(sizes->num_procs, &(props->wind_speed));
-   AllocateBGCVectrorDouble(sizes->num_procs, &(props->precipitation));
-   AllocateBGCVectrorDouble(sizes->num_procs, &(props->elevation));
-   AllocateBGCVectrorDouble(sizes->num_procs, &(props->aspect));
-   AllocateBGCVectrorDouble(sizes->num_procs, &(props->slope));
+   AllocateBGCVectorDouble(sizes->num_procs, &(props->shortwave_radiation));
+   AllocateBGCVectorDouble(sizes->num_procs, &(props->longwave_radiation));
+   AllocateBGCVectorDouble(sizes->num_procs, &(props->air_temperature));
+   AllocateBGCVectorDouble(sizes->num_procs, &(props->vapor_pressure_air));
+   AllocateBGCVectorDouble(sizes->num_procs, &(props->wind_speed));
+   AllocateBGCVectorDouble(sizes->num_procs, &(props->precipitation));
+   AllocateBGCVectorDouble(sizes->num_procs, &(props->elevation));
+   AllocateBGCVectorDouble(sizes->num_procs, &(props->aspect));
+   AllocateBGCVectorDouble(sizes->num_procs, &(props->slope));
  }  /* end AllocateAlquimiaProperties() */
 
  void FreeBGCProperties(BGCProperties* props) {
@@ -401,15 +401,15 @@ void AllocateBGCState(const BGCSizes* const sizes,
      FreeBGCMatrixDouble(&(props->plant_wilting_factor));
      FreeBGCMatrixDouble(&(props->rooting_depth_fraction));
 
-     FreeBGCVectrorDouble(&(props->shortwave_radiation));
-     FreeBGCVectrorDouble(&(props->longwave_radiation));
-     FreeBGCVectrorDouble(&(props->air_temperature));
-     FreeBGCVectrorDouble(&(props->vapor_pressure_air));
-     FreeBGCVectrorDouble(&(props->wind_speed));
-     FreeBGCVectrorDouble(&(props->precipitation));
-     FreeBGCVectrorDouble(&(props->elevation));
-     FreeBGCVectrorDouble(&(props->aspect));
-     FreeBGCVectrorDouble(&(props->slope));
+     FreeBGCVectorDouble(&(props->shortwave_radiation));
+     FreeBGCVectorDouble(&(props->longwave_radiation));
+     FreeBGCVectorDouble(&(props->air_temperature));
+     FreeBGCVectorDouble(&(props->vapor_pressure_air));
+     FreeBGCVectorDouble(&(props->wind_speed));
+     FreeBGCVectorDouble(&(props->precipitation));
+     FreeBGCVectorDouble(&(props->elevation));
+     FreeBGCVectorDouble(&(props->aspect));
+     FreeBGCVectorDouble(&(props->slope));
    }
  }
 
