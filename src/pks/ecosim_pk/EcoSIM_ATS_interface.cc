@@ -215,7 +215,11 @@ void EcoSIM::Initialize() {
   //Need to know the number of components to initialize data structures
   const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, Tags::DEFAULT)->ViewComponent("cell"));
   int tcc_num = tcc.NumVectors();
+
   num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "columns on processor: " << num_cols_ << std::endl;
+
   //Now we call the engine's init state function which allocates the data
   bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num, num_cols_);
 
@@ -823,6 +827,10 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       }
     }
 
+    *vo_->os() << "filling surface props" << std::endl;
+    *vo_->os() << "size of shortwave in struct is: " << props.shortwave_radiation.data->size << std::endl; 
+    *vo_->os() << "size of shortwave in state is: " << shortwave_radiation.MyLength() << std::endl;
+
     //fill surface variables
     props.shortwave_radiation.data[col] = shortwave_radiation[col];
     props.longwave_radiation.data[col] = longwave_radiation[col];
@@ -1045,7 +1053,7 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
 
   int num_iterations = 1;
   int ncols = 1;
-  
+
   bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
                                          bgc_sizes_, num_iterations, ncols);
 

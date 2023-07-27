@@ -44,11 +44,14 @@ module bgc_fortran_memory_mod
   ! Memory allocation subroutines
 
   interface
-    subroutine AllocateBGCState(sizes, state) bind(C, name='AllocateBGCState')
+    subroutine AllocateBGCState(sizes, state, ncells_per_col_, num_components, num_procs) bind(C, name='AllocateBGCState')
       use BGCContainers_module, only : BGCSizes, BGCState
       implicit none
       type(BGCSizes) :: sizes
       type(BGCState) :: state
+      integer(c_int),VALUE :: ncells_per_col_
+      integer(c_int),VALUE :: num_components
+      integer(c_int),VALUE :: num_procs
     end subroutine
   end interface
   interface
@@ -60,11 +63,13 @@ module bgc_fortran_memory_mod
   end interface
 
   interface
-    subroutine AllocateBGCProperties(sizes, props) bind(C, name='AllocateBGCProperties')
+    subroutine AllocateBGCProperties(sizes, props, ncells_per_col_, num_procs) bind(C, name='AllocateBGCProperties')
       use BGCContainers_module, only : BGCSizes, BGCProperties
       implicit none
       type(BGCSizes) :: sizes
       type(BGCProperties) :: props
+      integer(c_int),VALUE :: ncells_per_col_
+      integer(c_int),VALUE :: num_procs
     end subroutine
   end interface
   interface
