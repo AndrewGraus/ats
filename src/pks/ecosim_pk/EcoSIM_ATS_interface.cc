@@ -215,9 +215,9 @@ void EcoSIM::Initialize() {
   //Need to know the number of components to initialize data structures
   const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, Tags::DEFAULT)->ViewComponent("cell"));
   int tcc_num = tcc.NumVectors();
-
+  num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
   //Now we call the engine's init state function which allocates the data
-  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num);
+  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num, num_cols_);
 
   int ierr = 0;
 
@@ -731,7 +731,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   auto col_wp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_rf = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
-  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseVector(tcc_num,ncells_per_col_));
+  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
   //Gather columns on this process:
   ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
@@ -912,7 +912,6 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
 
   //Loop over columns on this process
   for (int col=0; col!=ncols_local; ++col) {
-
     if (has_gas) {
       const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
       const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false))(0);

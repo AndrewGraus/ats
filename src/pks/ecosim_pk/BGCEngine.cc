@@ -29,10 +29,8 @@
 namespace Amanzi {
 namespace EcoSIM {
 
-namespace {
-
-//Here are the major function that the engine will need
-/*void CopyBGCState(BGCState* dest, BGCState* src)
+/*namespace {
+void CopyBGCState(BGCState* dest, BGCState* src)
 {
   memcpy(dest->liquid_density.data, src->liquid_density.data, sizeof(double) * src->liquid_density.size);
   memcpy(dest->gas_density.data, src->gas_density.data, sizeof(double) * src->gas_density.size);
@@ -65,7 +63,7 @@ void CopyBGCAuxiliaryData(BGCAuxiliaryData* dest, BGCAuxiliaryData* src)
   memcpy(dest->aux_doubles.data, src->aux_doubles.data, sizeof(double) * src->aux_doubles.size);
 }
 
-} // */
+}*/
 
 
 BGCEngine::BGCEngine(const std::string& engineName,
@@ -177,11 +175,12 @@ void BGCEngine::InitState(BGCProperties& props,
                                 BGCState& state,
                                 BGCAuxiliaryData& aux_data,
                                 int ncells_per_col_,
-                                int num_components)
+                                int num_components,
+                                int cols_on_proc)
 {
-  AllocateBGCProperties(&sizes_, &props, ncells_per_col_);
-  AllocateBGCState(&sizes_, &state, ncells_per_col_, num_components);
-  AllocateBGCAuxiliaryData(&sizes_, &aux_data, ncells_per_col_);
+  AllocateBGCProperties(&sizes_, &props, ncells_per_col_,cols_on_proc);
+  AllocateBGCState(&sizes_, &state, ncells_per_col_, num_components,cols_on_proc);
+  //AllocateBGCAuxiliaryData(&sizes_, &aux_data, ncells_per_col_);
   //AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);
 
   // Make sure the auxiliary ints/doubles are zeroed out.
