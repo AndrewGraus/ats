@@ -280,7 +280,7 @@ void AllocateBGCTensorInt(const int rows, const int cols, const int procs, BGCTe
   }
 }  /* end AllocateBGCmatrixint() */
 
-void FreeBGCTensorInt(BGCTensorint* tensor) {
+void FreeBGCTensorInt(BGCTensorInt* tensor) {
   if (tensor != NULL) {
     free(tensor->data);
     tensor->data = NULL;
@@ -339,7 +339,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
   **  Auxiliary Data
   **
   *******************************************************************************/
-
+ /*
  void AllocateBGCAuxiliaryData(const BGCSizes* const sizes, BGCAuxiliaryData* aux_data,
                                int ncells_per_col_) {
    AllocateBGCMatrixInt(sizes->ncells_per_col_,
@@ -348,14 +348,15 @@ void AllocateBGCState(const BGCSizes* const sizes,
    AllocateBGCMatrixDouble(sizes->ncells_per_col_,
                                 &(aux_data->aux_doubles));
 
- }  /* end AllocateAlquimiaAuxiliaryData() */
+ }  // end AllocateAlquimiaAuxiliaryData()
 
  void FreeBGCAuxiliaryData(BGCAuxiliaryData* aux_data) {
    if (aux_data != NULL) {
      FreeBGCMatrixInt(&(aux_data->aux_ints));
      FreeBGCMatrixDouble(&(aux_data->aux_doubles));
    }
- }  /* end FreeAlquimiaAuxiliaryData() */
+ }  // end FreeAlquimiaAuxiliaryData()
+ */
 
  /*******************************************************************************
   **
@@ -368,7 +369,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
    sizes->ncells_per_col_ = ncells_per_col_;
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->liquid_saturation));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->gas_saturation));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->ice_saturation));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->ice_saturation));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->relative_permeability));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->thermal_conductivity));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->volume));
