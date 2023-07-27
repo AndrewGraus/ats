@@ -763,8 +763,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     FieldToColumn_(col,plant_wilting_factor,col_wp.ptr());
     FieldToColumn_(col,rooting_depth_fraction,col_rf.ptr());
 
-    //Have to make like a tensor version here
-    FieldToColumn_(col, tcc, col_tcc.ptr());
+    MatrixFieldToColumn_(col, tcc, col_tcc.ptr());
 
     if (has_gas) {
       const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
