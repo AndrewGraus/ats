@@ -184,8 +184,8 @@ void BGCEngine::InitState(BGCProperties& props,
   //AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);
 
   // Make sure the auxiliary ints/doubles are zeroed out.
-  std::fill(aux_data.aux_ints.data, aux_data.aux_ints.data + aux_data.aux_ints.size, 0);
-  std::fill(aux_data.aux_doubles.data, aux_data.aux_doubles.data + aux_data.aux_doubles.size, 0.0);
+  //std::fill(aux_data.aux_ints.data, aux_data.aux_ints.data + aux_data.aux_ints.size, 0);
+  //std::fill(aux_data.aux_doubles.data, aux_data.aux_doubles.data + aux_data.aux_doubles.size, 0.0);
 }
 
 void BGCEngine::FreeState(BGCProperties& props,
