@@ -32,7 +32,7 @@ namespace EcoSIM {
 namespace {
 
 //Here are the major function that the engine will need
-void CopyBGCState(BGCState* dest, BGCState* src)
+/*void CopyBGCState(BGCState* dest, BGCState* src)
 {
   memcpy(dest->liquid_density.data, src->liquid_density.data, sizeof(double) * src->liquid_density.size);
   memcpy(dest->gas_density.data, src->gas_density.data, sizeof(double) * src->gas_density.size);
@@ -65,7 +65,7 @@ void CopyBGCAuxiliaryData(BGCAuxiliaryData* dest, BGCAuxiliaryData* src)
   memcpy(dest->aux_doubles.data, src->aux_doubles.data, sizeof(double) * src->aux_doubles.size);
 }
 
-} // namespace
+} // */
 
 
 BGCEngine::BGCEngine(const std::string& engineName,
