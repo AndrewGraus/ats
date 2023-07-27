@@ -75,22 +75,6 @@ module bgc_fortran_memory_mod
     end subroutine
   end interface
 
-  interface
-    subroutine AllocateBGCAuxiliaryData(sizes, aux_data) bind(C, name='AllocateBGCAuxiliaryData')
-      use BGCContainers_module, only : BGCSizes, BGCAuxiliaryData
-      implicit none
-      type(BGCSizes) :: sizes
-      type(BGCAuxiliaryData) :: aux_data
-    end subroutine
-  end interface
-  interface
-    subroutine FreeBGCAuxiliaryData(aux_data) bind(C, name='FreeBGCAuxiliaryData')
-      use BGCContainers_module, only : BGCAuxiliaryData
-      implicit none
-      type(BGCAuxiliaryData) :: aux_data
-    end subroutine
-  end interface
-
   ! The following subroutines are methods of the engine itself
 
   interface

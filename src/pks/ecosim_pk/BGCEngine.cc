@@ -178,8 +178,8 @@ void BGCEngine::InitState(BGCProperties& props,
                                 int num_components,
                                 int cols_on_proc)
 {
-  AllocateBGCProperties(&sizes_, &props, ncells_per_col_,cols_on_proc);
-  AllocateBGCState(&sizes_, &state, ncells_per_col_, num_components,cols_on_proc);
+  AllocateBGCProperties(&sizes_, &props, ncells_per_col_, cols_on_proc);
+  AllocateBGCState(&sizes_, &state, ncells_per_col_, num_components, cols_on_proc);
   //AllocateBGCAuxiliaryData(&sizes_, &aux_data, ncells_per_col_);
   //AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);
 
@@ -194,7 +194,7 @@ void BGCEngine::FreeState(BGCProperties& props,
 {
   FreeBGCProperties(&props);
   FreeBGCState(&state);
-  FreeBGCAuxiliaryData(&aux_data);
+  //FreeBGCAuxiliaryData(&aux_data);
   //FreeAlquimiaAuxiliaryOutputData(&aux_output);
 }
 

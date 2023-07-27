@@ -57,7 +57,7 @@ class BGCEngine {
                  BGCState& state,
                  BGCAuxiliaryData& aux_data,
                  int ncells_per_col_,
-                 int num_components
+                 int num_components,
                  int cols_on_proc);
 
   // Frees the data structures that hold the chemical state information.

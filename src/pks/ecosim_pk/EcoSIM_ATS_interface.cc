@@ -824,20 +824,20 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     }
 
     //fill surface variables
-    props.shortwave_radiation[col] = shortwave_radiation[col];
-    props.longwave_radiation[col] = longwave_radiation[col];
-    props.air_temperature[col] = air_temperature[col];
-    props.vapor_pressure_air[col] = vapor_pressure_air[col];
-    props.wind_speed[col] = wind_speed[col];
-    props.precipitation[col] = precipitation[col];
-    props.elevation[col] = elevation[col];
-    props.aspect[col] = aspect[col];
-    props.slope[col] = slope[col];
-  }
+    props.shortwave_radiation.data[col] = shortwave_radiation[col];
+    props.longwave_radiation.data[col] = longwave_radiation[col];
+    props.air_temperature.data[col] = air_temperature[col];
+    props.vapor_pressure_air.data[col] = vapor_pressure_air[col];
+    props.wind_speed.data[col] = wind_speed[col];
+    props.precipitation.data[col] = precipitation[col];
+    props.elevation.data[col] = elevation[col];
+    props.aspect.data[col] = aspect[col];
+    props.slope.data[col] = slope[col];
 
-  for (int component=0; component < tcc_num; ++component) {
-    for (int i=0; i < ncells_per_col_; ++i) {
-      state.total_component_concentration.data[col][component][i] = (*col_tcc)(i,component);
+    for (int component=0; component < tcc_num; ++component) {
+      for (int i=0; i < ncells_per_col_; ++i) {
+        state.total_component_concentration.data[col][component][i] = (*col_tcc)(i,component);
+      }
     }
   }
 
@@ -925,8 +925,11 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
     }
 
     if (has_ice) {
-      const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
-      const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
+      auto& ice_saturation = *(*S_->GetW<CompositeVector>(saturation_ice_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
+      auto& ice_density = *(*S_->GetW<CompositeVector>(ice_den_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
+
+      //const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
+      //const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_i_dens)[i] = state.ice_density.data[col][i];
@@ -938,8 +941,11 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
     }
 
     if (has_energy) {
-      const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
-      const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(therm_cond_key_, water_tag).ViewComponent("cell", false))(0);
+      auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
+      auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(therm_cond_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
+
+      //const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
+      //const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(therm_cond_key_, water_tag).ViewComponent("cell", false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_temp)[i] = state.temperature.data[col][i];
@@ -979,15 +985,11 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
     ColumnToField_(col,cell_volume,col_vol.ptr());
     ColumnToField_(col,hydraulic_conductivity,col_h_cond.ptr());
     ColumnToField_(col,bulk_density,col_b_dens.ptr());
-    ColumnToField_(col,plant_wilting_factor,col_wp.ptr());
-    ColumnToField_(col,rooting_depth_fraction,col_rf.ptr());
+    //ColumnToField_(col,plant_wilting_factor,col_wp.ptr());
+    //ColumnToField_(col,rooting_depth_fraction,col_rf.ptr());
   }
-
 }
-
-/* *******************************************************************
-* This helper performs initialization on a single column within Amanzi's state.
-******************************************************************* */
+/*
 int EcoSIM::InitializeSingleColumn(int col)
 {
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
@@ -1002,9 +1004,6 @@ int EcoSIM::InitializeSingleColumn(int col)
 
 }
 
-/* *******************************************************************
-* This helper advances the solution on a single cell within Amanzi's state.
-******************************************************************* */
 int EcoSIM::AdvanceSingleColumn(double dt, int col)
 {
   // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
@@ -1012,9 +1011,6 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
   CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   int num_iterations = 1;
-/*****************************************************************
-   ADVANCE CALL GOES HERE
-  *******************************************************************/
 
  bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
                                          bgc_sizes_, num_iterations, col);
@@ -1024,8 +1020,8 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
                             bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   return num_iterations;
-}
-
+ }
+*/
 int EcoSIM::InitializeSingleProcess(int proc)
 {
   CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
@@ -1034,8 +1030,9 @@ int EcoSIM::InitializeSingleProcess(int proc)
   bgc_engine_->DataTest();
 
   int num_iterations = 1;
+  int ncols = 1;
 
-  bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, col);
+  bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, ncols);
   CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
 }
@@ -1047,9 +1044,10 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
   CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   int num_iterations = 1;
-
+  int ncols = 1;
+  
   bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
-                                         bgc_sizes_, num_iterations, col);
+                                         bgc_sizes_, num_iterations, ncols);
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
   CopyFromEcoSIM_process(proc,

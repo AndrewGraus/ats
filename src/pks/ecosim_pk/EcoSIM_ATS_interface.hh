@@ -128,20 +128,9 @@ class EcoSIM : public PK_Physical {
                  const BGCAuxiliaryData& aux_data,
                const Tag& water_tag = Tags::DEFAULT);
 
-   int InitializeSingleColumn(int col);
-
-   int AdvanceSingleColumn(double dt, int col);
-
    int InitializeSingleProcess(int proc);
 
    int AdvanceSingleProcess(double dt, int proc);
-
-   void CopyEcoSIMStateToAmanzi(
-       const int cell,
-       const BGCProperties& props,
-       const BGCState& state,
-       const BGCAuxiliaryData& aux_data,
-     const Tag& water_tag = Tags::DEFAULT);
 
    void ComputeNextTimeStep();
 
