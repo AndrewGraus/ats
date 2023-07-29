@@ -46,6 +46,7 @@ module bgc_fortran_memory_mod
   interface
     subroutine AllocateBGCState(sizes, state, ncells_per_col_, num_components, num_procs) bind(C, name='AllocateBGCState')
       use BGCContainers_module, only : BGCSizes, BGCState
+      use, intrinsic :: iso_c_binding, only: c_int
       implicit none
       type(BGCSizes) :: sizes
       type(BGCState) :: state
@@ -65,6 +66,7 @@ module bgc_fortran_memory_mod
   interface
     subroutine AllocateBGCProperties(sizes, props, ncells_per_col_, num_procs) bind(C, name='AllocateBGCProperties')
       use BGCContainers_module, only : BGCSizes, BGCProperties
+      use, intrinsic :: iso_c_binding, only: c_int
       implicit none
       type(BGCSizes) :: sizes
       type(BGCProperties) :: props

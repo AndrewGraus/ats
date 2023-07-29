@@ -225,7 +225,6 @@ void EcoSIM::Initialize() {
 
   int ierr = 0;
 
-  Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "printing bool:" << std::endl;
   *vo_->os() << (S_->HasRecord(suc_key_, Tags::DEFAULT)) << std::endl;
   if (S_->HasRecord(suc_key_, Tags::DEFAULT)) {
@@ -828,7 +827,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     }
 
     *vo_->os() << "filling surface props" << std::endl;
-    *vo_->os() << "size of shortwave in struct is: " << props.shortwave_radiation.data->size << std::endl; 
+    *vo_->os() << "size of shortwave in struct is: " << props.shortwave_radiation.size << std::endl; 
     *vo_->os() << "size of shortwave in state is: " << shortwave_radiation.MyLength() << std::endl;
 
     //fill surface variables
