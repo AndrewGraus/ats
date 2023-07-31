@@ -370,6 +370,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
    std::cout << "prop size: " << num_procs << std::endl;
 
    sizes->ncells_per_col_ = ncells_per_col_;
+   sizes->num_procs = num_procs;
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->liquid_saturation));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->gas_saturation));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->ice_saturation));

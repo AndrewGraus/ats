@@ -919,9 +919,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
   //Loop over columns on this process
   for (int col=0; col!=ncols_local; ++col) {
     if (has_gas) {
-      const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
-      const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false))(0);
-
+      auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell",false))(0);
+      auto& gas_density = *(*S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell",false))(0);
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_g_dens)[i] = state.gas_density.data[col][i];
         (*col_g_sat)[i] = props.gas_saturation.data[col][i];
@@ -932,11 +931,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
     }
 
     if (has_ice) {
-      auto& ice_saturation = *(*S_->GetW<CompositeVector>(saturation_ice_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
-      auto& ice_density = *(*S_->GetW<CompositeVector>(ice_den_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
-
-      //const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
-      //const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
+      auto& ice_saturation = *(*S_->GetW<CompositeVector>(saturation_ice_key_, Amanzi::Tags::NEXT, saturation_ice_key_).ViewComponent("cell",false))(0);
+      auto& ice_density = *(*S_->GetW<CompositeVector>(ice_den_key_, Amanzi::Tags::NEXT, ice_den_key_).ViewComponent("cell",false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_i_dens)[i] = state.ice_density.data[col][i];
@@ -948,11 +944,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
     }
 
     if (has_energy) {
-      auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
-      auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(therm_cond_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
-
-      //const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
-      //const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(therm_cond_key_, water_tag).ViewComponent("cell", false))(0);
+      auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "subsurface energy").ViewComponent("cell",false))(0);
+      auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(therm_cond_key_, Amanzi::Tags::NEXT, therm_cond_key_).ViewComponent("cell",false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_temp)[i] = state.temperature.data[col][i];
