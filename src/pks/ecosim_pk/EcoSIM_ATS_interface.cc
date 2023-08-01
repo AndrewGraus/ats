@@ -216,7 +216,7 @@ void EcoSIM::Initialize() {
   const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, Tags::DEFAULT)->ViewComponent("cell"));
   int tcc_num = tcc.NumVectors();
   Teuchos::OSTab tab = vo_->getOSTab();
-  *vo_->os() << "number of components: " << tcc_num << std::endl;  
+  *vo_->os() << "number of components: " << tcc_num << std::endl;
 
   num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
   *vo_->os() << "columns on processor: " << num_cols_ << std::endl;
@@ -839,14 +839,18 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.slope.data[col] = slope[col];
 
     *vo_->os() << "Checking TCC variables: " << std::endl;
-    *vo_->os() << "size of processes: " << state.total_component_concentration.procs << "number of processes: " << ncols_local << std::endl;
-    *vo_->os() << "size of components: " << state.total_component_concentration.cols << "number of components: " << tcc_num << std::endl;
-    *vo_->os() << "size of processes: " << state.total_component_concentration.rows << "number of cells: " << ncells_per_col_ << std::endl;
+    *vo_->os() << "size of processes: " << state.total_component_concentration.procs << " number of processes: " << ncols_local << std::endl;
+    *vo_->os() << "size of components: " << state.total_component_concentration.cols << " number of components: " << tcc_num << std::endl;
+    *vo_->os() << "size of processes: " << state.total_component_concentration.rows << " number of cells: " << ncells_per_col_ << std::endl;
 
 
+    *vo_->os() << "entering loop: " << std::endl;
     for (int proc_col=0; proc_col < ncols_local; ++proc_col) {
+      *vo_->os() << "on column : " << proc_col << std::endl;
       for (int component=0; component < tcc_num; ++component) {
+        *vo_->os() << "on component: " << proc_col << std::endl;
         for (int i=0; i < ncells_per_col_; ++i) {
+          *vo_->os() << "on cell: " << proc_col << std::endl;
           state.total_component_concentration.data[i][component][proc_col] = (*col_tcc)(i,component);
         }
       }
