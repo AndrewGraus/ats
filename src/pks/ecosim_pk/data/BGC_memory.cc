@@ -226,7 +226,7 @@ void AllocateBGCTensorDouble(const int rows, const int cols, const int procs, BG
     tensor->data = (double***) calloc((size_t)tensor->cap_rows, sizeof(double**));
     for (int i = 0; i < tensor->rows; ++i) {
       tensor->data[i] = (double**) calloc((size_t)tensor->cap_cols, sizeof(double*));
-      for (int j = 0; j < tensor->procs; j++) {
+      for (int j = 0; j < tensor->cols; ++j) {
         tensor->data[i][j] = (double*) calloc((size_t)tensor->cap_procs, sizeof(double));
       }
     }
@@ -265,7 +265,7 @@ void AllocateBGCTensorInt(const int rows, const int cols, const int procs, BGCTe
     tensor->data = (int***) calloc((size_t)tensor->cap_rows, sizeof(int**));
     for (int i = 0; i < tensor->rows; ++i) {
       tensor->data[i] = (int**) calloc((size_t)tensor->cap_cols, sizeof(int*));
-      for (int j = 0; j < tensor->procs; j++) {
+      for (int j = 0; j < tensor->cols; ++j) {
         tensor->data[i][j] = (int*) calloc((size_t)tensor->cap_procs, sizeof(int));
       }
     }

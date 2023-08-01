@@ -841,9 +841,11 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.aspect.data[col] = aspect[col];
     props.slope.data[col] = slope[col];
 
-    for (int component=0; component < tcc_num; ++component) {
-      for (int i=0; i < ncells_per_col_; ++i) {
-        state.total_component_concentration.data[col][component][i] = (*col_tcc)(i,component);
+    for (int proc_col=0; proc_col < ncols_local; ++proc_col) {  
+      for (int component=0; component < tcc_num; ++component) {
+        for (int i=0; i < ncells_per_col_; ++i) {
+          state.total_component_concentration.data[i][component][proc_col] = (*col_tcc)(i,component);
+        }
       }
     }
   }
