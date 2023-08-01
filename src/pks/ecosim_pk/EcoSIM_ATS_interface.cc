@@ -826,10 +826,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       }
     }
 
-    *vo_->os() << "filling surface props" << std::endl;
-    *vo_->os() << "size of shortwave in struct is: " << props.shortwave_radiation.size << std::endl; 
-    *vo_->os() << "size of shortwave in state is: " << shortwave_radiation.MyLength() << std::endl;
-
     //fill surface variables
     props.shortwave_radiation.data[col] = shortwave_radiation[col];
     props.longwave_radiation.data[col] = longwave_radiation[col];
@@ -841,7 +837,13 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.aspect.data[col] = aspect[col];
     props.slope.data[col] = slope[col];
 
-    for (int proc_col=0; proc_col < ncols_local; ++proc_col) {  
+    *vo_->os() << "Checking TCC variables: " << std::endl;
+    *vo_->os() << "size of processes: " << state.total_component_concentration.procs << "number of processes: " << ncols_local << std::endl;
+    *vo_->os() << "size of components: " << state.total_component_concentration.cols << "number of components: " << tcc_num << std::endl;
+    *vo_->os() << "size of processes: " << state.total_component_concentration.rows << "number of cells: " << ncells_per_col_ << std::endl;
+
+
+    for (int proc_col=0; proc_col < ncols_local; ++proc_col) {
       for (int component=0; component < tcc_num; ++component) {
         for (int i=0; i < ncells_per_col_; ++i) {
           state.total_component_concentration.data[i][component][proc_col] = (*col_tcc)(i,component);
