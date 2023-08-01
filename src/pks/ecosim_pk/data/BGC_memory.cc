@@ -223,6 +223,10 @@ void AllocateBGCTensorDouble(const int rows, const int cols, const int procs, BG
     tensor->cap_cols = nearest_power_of_2(cols);
     tensor->cap_procs = nearest_power_of_2(procs);
 
+    std:::cout << "In Allocate Tensor Double: " << std::endl;
+    std::cout << "cols: " << cols << std::endl;
+    std::cout << "size cols: " << tensor->cap_cols << std::endl;
+
     tensor->data = (double***) calloc((size_t)tensor->cap_rows, sizeof(double**));
     for (int i = 0; i < tensor->rows; ++i) {
       tensor->data[i] = (double**) calloc((size_t)tensor->cap_cols, sizeof(double*));
@@ -305,6 +309,10 @@ void AllocateBGCState(const BGCSizes* const sizes,
  void AllocateBGCState(BGCSizes* sizes, BGCState* state,
                        int ncells_per_col_, int num_components, int num_procs) {
    sizes->ncells_per_col_ = ncells_per_col_;
+   sizes->num_components = num_components;
+
+   std::cout << "In Allocate State: " << std::endl;
+   std::cout << "num_components: " << num_components << std::endl;
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->liquid_density));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->gas_density));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->ice_density));
