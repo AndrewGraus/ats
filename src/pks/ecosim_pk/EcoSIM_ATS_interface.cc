@@ -851,7 +851,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     for (int proc_col=0; proc_col < ncols_local; ++proc_col) {
       *vo_->os() << "on column : " << proc_col << std::endl;
       for (int component=0; component < tcc_num; ++component) {
-        *vo_->os() << "on component: " << proc_col << std::endl;
+        *vo_->os() << "on component: " << component << std::endl;
         for (int i=0; i < ncells_per_col_; ++i) {
           *vo_->os() << "on cell: " << i << std::endl;
               *vo_->os() << "Printing state element: " << state.total_component_concentration.data[proc_col][component][i] << std::endl;
