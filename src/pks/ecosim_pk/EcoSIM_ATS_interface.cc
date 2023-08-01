@@ -215,9 +215,10 @@ void EcoSIM::Initialize() {
   //Need to know the number of components to initialize data structures
   const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, Tags::DEFAULT)->ViewComponent("cell"));
   int tcc_num = tcc.NumVectors();
+  Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "number of components: " << tcc_num << std::endl;  
 
   num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "columns on processor: " << num_cols_ << std::endl;
 
   //Now we call the engine's init state function which allocates the data
