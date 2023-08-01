@@ -223,7 +223,7 @@ void AllocateBGCTensorDouble(const int rows, const int cols, const int procs, BG
     tensor->cap_cols = nearest_power_of_2(cols);
     tensor->cap_procs = nearest_power_of_2(procs);
 
-    std:::cout << "In Allocate Tensor Double: " << std::endl;
+    std::cout << "In Allocate Tensor Double: " << std::endl;
     std::cout << "cols: " << cols << std::endl;
     std::cout << "size cols: " << tensor->cap_cols << std::endl;
 
