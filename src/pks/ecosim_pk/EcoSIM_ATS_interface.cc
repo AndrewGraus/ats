@@ -843,6 +843,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     *vo_->os() << "size of components: " << state.total_component_concentration.cols << " number of components: " << tcc_num << std::endl;
     *vo_->os() << "size of processes: " << state.total_component_concentration.rows << " number of cells: " << ncells_per_col_ << std::endl;
 
+    *vo_->os() << "Shape of data: " << state.total_component_concentration.rows << " x "
+               << state.total_component_concentration.cols << " x "
+               << state.total_component_concentration.procs << std::endl;
 
     *vo_->os() << "entering loop: " << std::endl;
     for (int proc_col=0; proc_col < ncols_local; ++proc_col) {
@@ -850,8 +853,10 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       for (int component=0; component < tcc_num; ++component) {
         *vo_->os() << "on component: " << proc_col << std::endl;
         for (int i=0; i < ncells_per_col_; ++i) {
-          *vo_->os() << "on cell: " << proc_col << std::endl;
-          state.total_component_concentration.data[i][component][proc_col] = (*col_tcc)(i,component);
+          *vo_->os() << "on cell: " << i << std::endl;
+              *vo_->os() << "Printing state element: " << state.total_component_concentration.data[proc_col][component][i] << std::endl;
+              *vo_->os() << "Printing internal element: " << (*col_tcc)(component,i) << std::endl;
+          state.total_component_concentration.data[proc_col][component][i] = (*col_tcc)(component,i);
         }
       }
     }
