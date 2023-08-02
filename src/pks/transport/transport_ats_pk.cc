@@ -1200,12 +1200,19 @@ Transport_ATS::CommitStep(double t_old, double t_new, const Tag& tag_next)
   if (vo_->os_OK(Teuchos::VERB_EXTREME))
     *vo_->os() << "Commiting state @ " << tag_next << std::endl;
 
+  *vo_->os() << "tag assertion " << std::endl;
   AMANZI_ASSERT(tag_next == tag_next_ || tag_next == Tags::NEXT);
+  *vo_->os() << "tag current setting " << std::endl;
   Tag tag_current = tag_next == tag_next_ ? tag_current_ : Tags::CURRENT;
 
+    *vo_->os() << "assign tcc key to tag current and tag next " << std::endl;
   assign(tcc_key_, tag_current, tag_next, *S_);
+
+  *vo_->os() << "tag next if statement " << std::endl;
   if (tag_next == Tags::NEXT) {
+    *vo_->os() << "assigning saturation key " << std::endl;
     assign(saturation_key_, tag_current, tag_next, *S_);
+    *vo_->os() << "assigining density key " << std::endl;
     assign(molar_density_key_, tag_current, tag_next, *S_);
   }
 }
