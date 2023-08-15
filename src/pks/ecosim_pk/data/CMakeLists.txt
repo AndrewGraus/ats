@@ -12,8 +12,9 @@ set(ats_ecosim_data_src_files
   bgc_fortran_memory_mod.F90
   /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/BGC_containers.F90
   /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/ATSCPLMod.F90
-  /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/c_f_interface_module.F90	 
+  /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/c_f_interface_module.F90
   /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/data_kind_mod.F90
+  /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/SharedDataMod.F90
 )
 set(ats_ecosim_data_inc_files
   BGC_constants.hh
