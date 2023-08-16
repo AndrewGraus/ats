@@ -1041,7 +1041,10 @@ int EcoSIM::InitializeSingleProcess(int proc)
   CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   //ecosim_datatest_wrapper(col, &bgc_props_, &bgc_sizes_);
-  bgc_engine_->DataTest();
+  //bgc_engine_->DataTest();
+
+  /*need some sort of assertions here to double check that the data is actually
+  What I want it to be*/
 
   int num_iterations = 1;
   int ncols = 1;
