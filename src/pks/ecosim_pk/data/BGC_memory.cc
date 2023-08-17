@@ -307,22 +307,25 @@ void AllocateBGCState(const BGCSizes* const sizes,
                            BGCState* state)*/
 
  void AllocateBGCState(BGCSizes* sizes, BGCState* state,
-                       int ncells_per_col_, int num_components, int num_procs) {
+                       int ncells_per_col_, int num_components, int num_columns) {
    sizes->ncells_per_col_ = ncells_per_col_;
    sizes->num_components = num_components;
+   sizes->num_columns = num_columns;
 
    std::cout << "In Allocate State: " << std::endl;
    std::cout << "num_components: " << num_components << std::endl;
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->liquid_density));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->gas_density));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->ice_density));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->porosity));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->water_content));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->suction_head));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->temperature));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->hydraulic_conductivity));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(state->bulk_density));
-   AllocateBGCTensorDouble(sizes->ncells_per_col_, sizes->num_components, sizes->num_procs, &(state->total_component_concentration));
+   std::cout << "ncells_per_col: " << ncells_per_col_ << std::endl;
+   std::cout << "num_columns: " << num_columns << std::endl;
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->liquid_density));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->gas_density));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->ice_density));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->porosity));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->water_content));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->suction_head));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->temperature));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->hydraulic_conductivity));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->bulk_density));
+   AllocateBGCTensorDouble(sizes->ncells_per_col_, sizes->num_components, sizes->num_columns, &(state->total_component_concentration));
    //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
 
  }  /* end AllocateBGCState() */
@@ -373,32 +376,33 @@ void AllocateBGCState(const BGCSizes* const sizes,
   *******************************************************************************/
 
  void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* props,
-                           int ncells_per_col_, int num_procs) {
+                           int ncells_per_col_, int num_columns) {
    std::cout << "In allocate properties: " << std::endl;
-   std::cout << "prop size: " << num_procs << std::endl;
+   std::cout << "prop size: " << num_columns << std::endl;
 
    sizes->ncells_per_col_ = ncells_per_col_;
-   sizes->num_procs = num_procs;
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->liquid_saturation));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->gas_saturation));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->ice_saturation));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->relative_permeability));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->thermal_conductivity));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->volume));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->depth));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->dz));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->plant_wilting_factor));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_procs, &(props->rooting_depth_fraction));
+   sizes->num_columns = num_columns;
+   //sizes->num_components = num_components;
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(props->liquid_saturation));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(props->gas_saturation));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(props->ice_saturation));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(props->relative_permeability));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(props->thermal_conductivity));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(props->volume));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(props->depth));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(props->dz));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(props->plant_wilting_factor));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(props->rooting_depth_fraction));
 
-   AllocateBGCVectorDouble(sizes->num_procs, &(props->shortwave_radiation));
-   AllocateBGCVectorDouble(sizes->num_procs, &(props->longwave_radiation));
-   AllocateBGCVectorDouble(sizes->num_procs, &(props->air_temperature));
-   AllocateBGCVectorDouble(sizes->num_procs, &(props->vapor_pressure_air));
-   AllocateBGCVectorDouble(sizes->num_procs, &(props->wind_speed));
-   AllocateBGCVectorDouble(sizes->num_procs, &(props->precipitation));
-   AllocateBGCVectorDouble(sizes->num_procs, &(props->elevation));
-   AllocateBGCVectorDouble(sizes->num_procs, &(props->aspect));
-   AllocateBGCVectorDouble(sizes->num_procs, &(props->slope));
+   AllocateBGCVectorDouble(sizes->num_columns, &(props->shortwave_radiation));
+   AllocateBGCVectorDouble(sizes->num_columns, &(props->longwave_radiation));
+   AllocateBGCVectorDouble(sizes->num_columns, &(props->air_temperature));
+   AllocateBGCVectorDouble(sizes->num_columns, &(props->vapor_pressure_air));
+   AllocateBGCVectorDouble(sizes->num_columns, &(props->wind_speed));
+   AllocateBGCVectorDouble(sizes->num_columns, &(props->precipitation));
+   AllocateBGCVectorDouble(sizes->num_columns, &(props->elevation));
+   AllocateBGCVectorDouble(sizes->num_columns, &(props->aspect));
+   AllocateBGCVectorDouble(sizes->num_columns, &(props->slope));
  }  /* end AllocateAlquimiaProperties() */
 
  void FreeBGCProperties(BGCProperties* props) {

@@ -224,6 +224,12 @@ void EcoSIM::Initialize() {
   //Now we call the engine's init state function which allocates the data
   bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num, num_cols_);
 
+  *vo_->os() << "Trying to print Sizes from engine: " << tcc_num << std::endl;
+  bgc_engine_->Sizes().ncells_per_col_;
+  bgc_engine_->Sizes().num_components;
+  bgc_engine_->Sizes().num_columns;
+
+
   int ierr = 0;
 
   *vo_->os() << "printing bool:" << std::endl;
