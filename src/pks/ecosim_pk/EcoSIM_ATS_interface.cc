@@ -229,9 +229,9 @@ void EcoSIM::Initialize() {
   bgc_engine_->Sizes().num_components;
   bgc_engine_->Sizes().num_columns;
 
-  *vo_->os() << "number of cells: " << bgc_engine_->Sizes().ncells_per_col_; << std::endl;
-  *vo_->os() << "number of components: " << bgc_engine_->Sizes().num_components; << std::endl;
-  *vo_->os() << "number of columns: " << bgc_engine_->Sizes().num_columns; << std::endl;
+  *vo_->os() << "number of cells: " << bgc_engine_->Sizes().ncells_per_col_ << std::endl;
+  *vo_->os() << "number of components: " << bgc_engine_->Sizes().num_components << std::endl;
+  *vo_->os() << "number of columns: " << bgc_engine_->Sizes().num_columns << std::endl;
 
   int ierr = 0;
 
@@ -856,6 +856,14 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
                << state.total_component_concentration.cols << " x "
                << state.total_component_concentration.procs << std::endl;
 
+    for (int i = 0; i < state.total_component_concentration.rows; i++) {
+      for (int j = 0; j < state.total_component_concentration.cols; j++) {
+        for (int k = 0; k < state.total_component_concentration.procs; k++) {
+          printf("data[%d][%d][%d]: %d\n", i, j, k, state.total_component_concentration.data[i][j][k]);
+        }
+      }
+    }
+    /*
     *vo_->os() << "entering loop: " << std::endl;
     for (int proc_col=0; proc_col < ncols_local; ++proc_col) {
       *vo_->os() << "on column : " << proc_col << std::endl;
@@ -865,12 +873,12 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
           *vo_->os() << "on cell: " << i << std::endl;
               //original config (doesn't work) *vo_->os() << "Printing state element: "
               //<< state.total_component_concentration.data[proc_col][component][i] << std::endl;
-              *vo_->os() << "Printing state element: " << state.total_component_concentration.data[proc_col][i][component] << std::endl;
+              *vo_->os() << "Printing state element: " << state.total_component_concentration.data[i][component][proc_col] << std::endl;
               *vo_->os() << "Printing internal element: " << (*col_tcc)(component,i) << std::endl;
           state.total_component_concentration.data[proc_col][component][i] = (*col_tcc)(component,i);
         }
       }
-    }
+    }*/
   }
 
   //Fill the atmospheric abundances
