@@ -229,6 +229,9 @@ void EcoSIM::Initialize() {
   bgc_engine_->Sizes().num_components;
   bgc_engine_->Sizes().num_columns;
 
+  *vo_->os() << "number of cells: " << bgc_engine_->Sizes().ncells_per_col_; << std::endl;
+  *vo_->os() << "number of components: " << bgc_engine_->Sizes().num_components; << std::endl;
+  *vo_->os() << "number of columns: " << bgc_engine_->Sizes().num_columns; << std::endl;
 
   int ierr = 0;
 
@@ -860,7 +863,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
         *vo_->os() << "on component: " << component << std::endl;
         for (int i=0; i < ncells_per_col_; ++i) {
           *vo_->os() << "on cell: " << i << std::endl;
-              *vo_->os() << "Printing state element: " << state.total_component_concentration.data[proc_col][component][i] << std::endl;
+              //original config (doesn't work) *vo_->os() << "Printing state element: "
+              //<< state.total_component_concentration.data[proc_col][component][i] << std::endl;
+              *vo_->os() << "Printing state element: " << state.total_component_concentration.data[proc_col][i][component] << std::endl;
               *vo_->os() << "Printing internal element: " << (*col_tcc)(component,i) << std::endl;
           state.total_component_concentration.data[proc_col][component][i] = (*col_tcc)(component,i);
         }
