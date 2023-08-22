@@ -95,7 +95,7 @@ class EcoSIM : public PK_Physical {
   //The Chemistry_PK even though it isn't used there, and then included
   Teuchos::RCP<BGCEngine> bgc_engine() { return bgc_engine_; }
 
-  /*void CopyToEcoSIM(int col,
+  /*void CopyToEcoSIM(int column,
           BGCProperties& props,
           BGCState& state,
           BGCAuxiliaryData& aux_data);*/
@@ -103,7 +103,7 @@ class EcoSIM : public PK_Physical {
  private:
 
    //Helper functions from Alquimia
-   void CopyToEcoSIM(int col,
+   void CopyToEcoSIM(int column,
            BGCProperties& props,
            BGCState& state,
            BGCAuxiliaryData& aux_data,
@@ -143,28 +143,28 @@ class EcoSIM : public PK_Physical {
 
   //The helper functions from BGC are protected not private (unclear why)
   //I don't think I need this here, probably in the engine
-  void FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
+  void FieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_Vector& vec,
           Teuchos::Ptr<Epetra_SerialDenseVector> col_vec);
 
-  void FieldToColumn_(AmanziMesh::Entity_ID col, Teuchos::Ptr<Epetra_SerialDenseVector> vec,
+  void FieldToColumn_(AmanziMesh::Entity_ID column, Teuchos::Ptr<Epetra_SerialDenseVector> vec,
           Teuchos::Ptr<Epetra_SerialDenseVector> col_vec);
 
-  void MatrixFieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& m_arr,
+  void MatrixFieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_MultiVector& m_arr,
       Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr);
 
-  //void FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
+  //void FieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_Vector& vec,
   //                                       double* col_vec);
-  void ColDepthDz_(AmanziMesh::Entity_ID col,
+  void ColDepthDz_(AmanziMesh::Entity_ID column,
                               Teuchos::Ptr<Epetra_SerialDenseVector> depth,
                               Teuchos::Ptr<Epetra_SerialDenseVector> dz);
 
-  void ColumnToField_(AmanziMesh::Entity_ID col, Epetra_Vector& vec,
+  void ColumnToField_(AmanziMesh::Entity_ID column, Epetra_Vector& vec,
                                  Teuchos::Ptr<Epetra_SerialDenseVector> col_vec);
 
-  void ColumnToField_(AmanziMesh::Entity_ID col, Teuchos::Ptr<Epetra_SerialDenseVector> vec,
+  void ColumnToField_(AmanziMesh::Entity_ID column, Teuchos::Ptr<Epetra_SerialDenseVector> vec,
                                  Teuchos::Ptr<Epetra_SerialDenseVector> col_vec);
 
-  void MatrixColumnToField_(AmanziMesh::Entity_ID col, Epetra_MultiVector& m_arr,
+  void MatrixColumnToField_(AmanziMesh::Entity_ID column, Epetra_MultiVector& m_arr,
                                  Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr);
   //evaluator for transpiration;
   //I don't think I need this anymore
@@ -172,10 +172,10 @@ class EcoSIM : public PK_Physical {
 
   int number_aqueous_components_;
   int ncells_per_col_;
-  int num_cols_;
-  int ncols_local;
-  int ncols_global;
-  int ncols_global_ptype;
+  int num_columns_;
+  int num_columns_local;
+  int num_columns_global;
+  int num_columns_global_ptype;
   double saved_time_;
   double current_time_;
 
@@ -221,8 +221,8 @@ class EcoSIM : public PK_Physical {
   BGCAuxiliaryData bgc_aux_data_;
   BGCSizes bgc_sizes_;
 
-  Teuchos::RCP<Epetra_SerialDenseVector> col_vol_save;
-  Teuchos::RCP<Epetra_SerialDenseVector> col_wc_save;
+  Teuchos::RCP<Epetra_SerialDenseVector> column_vol_save;
+  Teuchos::RCP<Epetra_SerialDenseVector> column_wc_save;
 
   bool bgc_initialized_;
   bool has_energy, has_gas, has_ice;

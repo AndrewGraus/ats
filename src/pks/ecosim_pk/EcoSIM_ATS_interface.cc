@@ -141,18 +141,14 @@ EcoSIM::~EcoSIM()
 void EcoSIM::Setup() {
   //Need to do some basic setup of the columns:
   mesh_surf_ = S_->GetMesh(domain_surface_);
-  num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
-  for (unsigned int col = 0; col != num_cols_; ++col) {
-    int f = mesh_surf_->entity_get_parent(AmanziMesh::CELL, col);
-    auto& col_iter = mesh_->cells_of_column(col);
+  for (unsigned int column = 0; column != num_columns_; ++column) {
+    int f = mesh_surf_->entity_get_parent(AmanziMesh::CELL, column);
+    auto& col_iter = mesh_->cells_of_column(column);
     std::size_t ncol_cells = col_iter.size();
 
-    // unclear which this should be:
-    // -- col area is the true face area
-    double col_area = mesh_->face_area(f);
-    // -- col area is the projected face area
-    // double col_area = mesh_surf_->cell_volume(col);
+    double column_area = mesh_->face_area(f);
 
     if (ncells_per_col_ < 0) {
       ncells_per_col_ = ncol_cells;
@@ -217,11 +213,11 @@ void EcoSIM::Initialize() {
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "number of components: " << tcc_num << std::endl;
 
-  num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  *vo_->os() << "columns on processor: " << num_cols_ << std::endl;
+  num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  *vo_->os() << "columns on processor: " << num_columns_ << std::endl;
 
   //Now we call the engine's init state function which allocates the data
-  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num, num_cols_);
+  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num, num_columns_);
 
   *vo_->os() << "Trying to print Sizes from engine: " << tcc_num << std::endl;
   bgc_engine_->Sizes().ncells_per_col_;
@@ -325,20 +321,20 @@ void EcoSIM::Initialize() {
   S_->GetW<CompositeVector>(bulk_density_key_, Tags::DEFAULT, "bulk_density").PutScalar(1.0);
   S_->GetRecordW(bulk_density_key_, Tags::DEFAULT, "bulk_density").set_initialized();
 
-  int num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  int num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
   //Looping over the columns and initializing
-  /*for (int col=0; col!=num_cols_; ++col) {
+  /*for (int col=0; col!=num_columns_; ++col) {
     ierr = InitializeSingleColumn(col);
   }*/
 
   //loop over processes instead:
-  ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
-  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  ncols_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+  num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
+  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
 
-  *vo_->os() << "total columns cell_map: " << ncols_global << std::endl;
-  *vo_->os() << "total columns from num_entities: " << ncols_global << std::endl;
+  *vo_->os() << "total columns cell_map: " << num_columns_global << std::endl;
+  *vo_->os() << "total columns from num_entities: " << num_columns_global << std::endl;
   //Trying to loop over processors now:
   int numProcesses, p_rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
@@ -347,8 +343,8 @@ void EcoSIM::Initialize() {
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank==k) {
       std::cout << "on processor " << p_rank << std::endl;
-      ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-      std::cout << ncols_local << std::endl;
+      num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+      std::cout << num_columns_local << std::endl;
 
       InitializeSingleProcess(p_rank);
     }
@@ -438,7 +434,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   Teuchos::RCP<const CompositeVector> bulk_dens = S_->GetPtr<CompositeVector>(bulk_density_key_, Tags::DEFAULT);
   S_->GetEvaluator(bulk_density_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  AmanziMesh::Entity_ID num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  AmanziMesh::Entity_ID num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
   // grab the required fields
   S_->GetEvaluator("porosity", tag_next_).Update(*S_, name_);
@@ -549,12 +545,12 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   }
 
   //loop over processes instead:
-  ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
-  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  ncols_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+  num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
+  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
 
-  *vo_->os() << "total columns cell_map: " << ncols_global << std::endl;
-  *vo_->os() << "total columns from num_entities: " << ncols_global << std::endl;
+  *vo_->os() << "total columns cell_map: " << num_columns_global << std::endl;
+  *vo_->os() << "total columns from num_entities: " << num_columns_global << std::endl;
   //Trying to loop over processors now:
   int numProcesses, p_rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
@@ -563,8 +559,8 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank==k) {
       std::cout << "on processor " << p_rank << std::endl;
-      ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-      std::cout << ncols_local << std::endl;
+      num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+      std::cout << num_columns_local << std::endl;
 
       AdvanceSingleProcess(dt, p_rank);
     }
@@ -573,7 +569,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 }
 
 // helper function for pushing field to column
-void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
+void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_Vector& vec,
        Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
   auto& col_iter = mesh_->cells_of_column(col);
@@ -585,10 +581,10 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_Vector& vec,
   }
 }
 
-void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Teuchos::Ptr<Epetra_SerialDenseVector> vec,
+void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID column, const Teuchos::Ptr<Epetra_SerialDenseVector> vec,
        Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
-  auto& col_iter = mesh_->cells_of_column(col);
+  auto& col_iter = mesh_->cells_of_column(column);
 
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     std::size_t vec_index = col_iter[i];
@@ -597,11 +593,11 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID col, const Teuchos::Ptr<Epetra
   }
 }
 
-void EcoSIM::MatrixFieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiVector& m_arr,
+void EcoSIM::MatrixFieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_MultiVector& m_arr,
   Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr)
   {
     int n_comp = m_arr.NumVectors();
-    auto& col_iter = mesh_->cells_of_column(col);
+    auto& col_iter = mesh_->cells_of_column(column);
 
     for (int j=0; j!=n_comp; ++j){
       for (std::size_t i=0; i!=col_iter.size(); ++i) {
@@ -611,29 +607,29 @@ void EcoSIM::MatrixFieldToColumn_(AmanziMesh::Entity_ID col, const Epetra_MultiV
   }
 
 // helper function for pushing column back to field
-void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Epetra_Vector& vec,
+void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID column, Epetra_Vector& vec,
                                Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
-  auto& col_iter = mesh_->cells_of_column(col);
+  auto& col_iter = mesh_->cells_of_column(column);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     vec[col_iter[i]] = (*col_vec)[i];
   }
 }
 
-void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID col, Teuchos::Ptr<Epetra_SerialDenseVector> vec,
+void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID column, Teuchos::Ptr<Epetra_SerialDenseVector> vec,
                                Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
-  auto& col_iter = mesh_->cells_of_column(col);
+  auto& col_iter = mesh_->cells_of_column(column);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     (*vec)[col_iter[i]] = (*col_vec)[i];
   }
 }
 
-void EcoSIM::MatrixColumnToField_(AmanziMesh::Entity_ID col, Epetra_MultiVector& m_arr,
+void EcoSIM::MatrixColumnToField_(AmanziMesh::Entity_ID column, Epetra_MultiVector& m_arr,
   Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr) {
 
     int n_comp = m_arr.NumVectors();
-    auto& col_iter = mesh_->cells_of_column(col);
+    auto& col_iter = mesh_->cells_of_column(column);
 
     for (int j=0; j!=n_comp; ++j){
       for (std::size_t i=0; i!=col_iter.size(); ++i) {
@@ -644,11 +640,11 @@ void EcoSIM::MatrixColumnToField_(AmanziMesh::Entity_ID col, Epetra_MultiVector&
   }
 
 // helper function for collecting column dz and depth
-void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID col,
+void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID column,
                             Teuchos::Ptr<Epetra_SerialDenseVector> depth,
                             Teuchos::Ptr<Epetra_SerialDenseVector> dz) {
-  AmanziMesh::Entity_ID f_above = mesh_surf_->entity_get_parent(AmanziMesh::CELL, col);
-  auto& col_iter = mesh_->cells_of_column(col);
+  AmanziMesh::Entity_ID f_above = mesh_surf_->entity_get_parent(AmanziMesh::CELL, column);
+  auto& col_iter = mesh_->cells_of_column(column);
   ncells_per_col_ = col_iter.size();
 
   AmanziGeometry::Point surf_centroid = mesh_->face_centroid(f_above);
@@ -746,125 +742,125 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
   //Gather columns on this process:
-  ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
-  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  ncols_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+  num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
+  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
 
-  *vo_->os() << "total columns cell_map: " << ncols_global << std::endl;
-  *vo_->os() << "total columns from num_entities: " << ncols_global_ptype << std::endl;
+  *vo_->os() << "total columns cell_map: " << num_columns_global << std::endl;
+  *vo_->os() << "total columns from num_entities: " << num_columns_global_ptype << std::endl;
   //Trying to loop over processors now:
   int p_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
   MPI_Barrier(MPI_COMM_WORLD);
 
   std::cout << "on processor " << p_rank << std::endl;
-  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  std::cout << ncols_local << std::endl;
+  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  std::cout << num_columns_local << std::endl;
 
   //Loop over columns on this process
-  for (int col=0; col!=ncols_local; ++col) {
-    FieldToColumn_(col,porosity,col_porosity.ptr());
-    FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
-    FieldToColumn_(col,water_content,col_wc.ptr());
-    FieldToColumn_(col,relative_permeability,col_relative_permeability.ptr());
-    FieldToColumn_(col,liquid_density,col_l_dens.ptr());
-    FieldToColumn_(col,rock_density,col_r_dens.ptr());
-    FieldToColumn_(col,cell_volume,col_vol.ptr());
-    FieldToColumn_(col,hydraulic_conductivity,col_h_cond.ptr());
-    FieldToColumn_(col,bulk_density,col_b_dens.ptr());
-    FieldToColumn_(col,plant_wilting_factor,col_wp.ptr());
-    FieldToColumn_(col,rooting_depth_fraction,col_rf.ptr());
+  for (int column=0; column!=num_columns_local; ++column) {
+    FieldToColumn_(column,porosity,col_porosity.ptr());
+    FieldToColumn_(column,liquid_saturation,col_l_sat.ptr());
+    FieldToColumn_(column,water_content,col_wc.ptr());
+    FieldToColumn_(column,relative_permeability,col_relative_permeability.ptr());
+    FieldToColumn_(column,liquid_density,col_l_dens.ptr());
+    FieldToColumn_(column,rock_density,col_r_dens.ptr());
+    FieldToColumn_(column,cell_volume,col_vol.ptr());
+    FieldToColumn_(column,hydraulic_conductivity,col_h_cond.ptr());
+    FieldToColumn_(column,bulk_density,col_b_dens.ptr());
+    FieldToColumn_(column,plant_wilting_factor,col_wp.ptr());
+    FieldToColumn_(column,rooting_depth_fraction,col_rf.ptr());
 
-    MatrixFieldToColumn_(col, tcc, col_tcc.ptr());
+    MatrixFieldToColumn_(column, tcc, col_tcc.ptr());
 
     if (has_gas) {
       const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
       const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_density_key_, water_tag).ViewComponent("cell", false))(0);
 
-      FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
-      FieldToColumn_(col,gas_density,col_g_dens.ptr());
+      FieldToColumn_(column,gas_saturation,col_g_sat.ptr());
+      FieldToColumn_(column,gas_density,col_g_dens.ptr());
     }
 
     if (has_ice) {
       const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
       const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_density_key_, water_tag).ViewComponent("cell", false))(0);
 
-      FieldToColumn_(col,ice_saturation,col_i_sat.ptr());
-      FieldToColumn_(col,ice_density,col_i_dens.ptr());
+      FieldToColumn_(column,ice_saturation,col_i_sat.ptr());
+      FieldToColumn_(column,ice_density,col_i_dens.ptr());
     }
 
     if (has_energy) {
       const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
       const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(thermal_conductivity_key_, water_tag).ViewComponent("cell", false))(0);
 
-      FieldToColumn_(col,temp, col_temp.ptr());
-      FieldToColumn_(col,thermal_conductivity,col_cond.ptr());
+      FieldToColumn_(column,temp, col_temp.ptr());
+      FieldToColumn_(column,thermal_conductivity,col_cond.ptr());
     }
 
     // This is for computing depth
-    ColDepthDz_(col, col_depth.ptr(), col_dz.ptr());
+    ColDepthDz_(column, col_depth.ptr(), col_dz.ptr());
 
     for (int i=0; i < ncells_per_col_; ++i) {
-      state.liquid_density.data[col][i] = (*col_l_dens)[i];
-      state.porosity.data[col][i] = (*col_porosity)[i];
-      state.water_content.data[col][i] = (*col_wc)[i];
-      state.hydraulic_conductivity.data[col][i] = (*col_h_cond)[i];
-      state.bulk_density.data[col][i] = (*col_b_dens)[i];
+      state.liquid_density.data[column][i] = (*col_l_dens)[i];
+      state.porosity.data[column][i] = (*col_porosity)[i];
+      state.water_content.data[column][i] = (*col_wc)[i];
+      state.hydraulic_conductivity.data[column][i] = (*col_h_cond)[i];
+      state.bulk_density.data[column][i] = (*col_b_dens)[i];
       //state.suction_head.data[i] = (*col_suc)[i];
-      props.plant_wilting_factor.data[col][i] = (*col_wp)[i];
-      props.rooting_depth_fraction.data[col][i] = (*col_rf)[i];
-      props.liquid_saturation.data[col][i] = (*col_l_sat)[i];
-      props.relative_permeability.data[col][i] = (*col_relative_permeability)[i];
-      props.volume.data[col][i] = (*col_vol)[i];
-      props.depth.data[col][i] = (*col_depth)[i];
-      props.dz.data[col][i] = (*col_dz)[i];
+      props.plant_wilting_factor.data[column][i] = (*col_wp)[i];
+      props.rooting_depth_fraction.data[column][i] = (*col_rf)[i];
+      props.liquid_saturation.data[column][i] = (*col_l_sat)[i];
+      props.relative_permeability.data[column][i] = (*col_relative_permeability)[i];
+      props.volume.data[column][i] = (*col_vol)[i];
+      props.depth.data[column][i] = (*col_depth)[i];
+      props.dz.data[column][i] = (*col_dz)[i];
 
       if (has_gas) {
-        props.gas_saturation.data[col][i] = (*col_g_sat)[i];
-        state.gas_density.data[col][i] = (*col_g_dens)[i];
+        props.gas_saturation.data[column][i] = (*col_g_sat)[i];
+        state.gas_density.data[column][i] = (*col_g_dens)[i];
       }
 
       if (has_ice) {
-        state.ice_density.data[col][i] = (*col_i_dens)[i];
-        props.ice_saturation.data[col][i] = (*col_i_sat)[i];
+        state.ice_density.data[column][i] = (*col_i_dens)[i];
+        props.ice_saturation.data[column][i] = (*col_i_sat)[i];
       }
 
       if (has_energy) {
-        state.temperature.data[col][i] = (*col_temp)[i];
-        props.thermal_conductivity.data[col][i] = (*col_cond)[i];
+        state.temperature.data[column][i] = (*col_temp)[i];
+        props.thermal_conductivity.data[column][i] = (*col_cond)[i];
       }
     }
 
     //fill surface variables
-    props.shortwave_radiation.data[col] = shortwave_radiation[col];
-    props.longwave_radiation.data[col] = longwave_radiation[col];
-    props.air_temperature.data[col] = air_temperature[col];
-    props.vapor_pressure_air.data[col] = vapor_pressure_air[col];
-    props.wind_speed.data[col] = wind_speed[col];
-    props.precipitation.data[col] = precipitation[col];
-    props.elevation.data[col] = elevation[col];
-    props.aspect.data[col] = aspect[col];
-    props.slope.data[col] = slope[col];
+    props.shortwave_radiation.data[column] = shortwave_radiation[column];
+    props.longwave_radiation.data[column] = longwave_radiation[column];
+    props.air_temperature.data[column] = air_temperature[column];
+    props.vapor_pressure_air.data[column] = vapor_pressure_air[column];
+    props.wind_speed.data[column] = wind_speed[column];
+    props.precipitation.data[column] = precipitation[column];
+    props.elevation.data[column] = elevation[column];
+    props.aspect.data[column] = aspect[column];
+    props.slope.data[column] = slope[column];
 
     *vo_->os() << "Checking TCC variables: " << std::endl;
-    *vo_->os() << "size of processes: " << state.total_component_concentration.procs << " number of processes: " << ncols_local << std::endl;
-    *vo_->os() << "size of components: " << state.total_component_concentration.cols << " number of components: " << tcc_num << std::endl;
-    *vo_->os() << "size of processes: " << state.total_component_concentration.rows << " number of cells: " << ncells_per_col_ << std::endl;
+    *vo_->os() << "size of processes: " << state.total_component_concentration.components << " number of processes: " << num_columns_local << std::endl;
+    *vo_->os() << "size of components: " << state.total_component_concentration.columns << " number of components: " << tcc_num << std::endl;
+    *vo_->os() << "size of processes: " << state.total_component_concentration.cells << " number of cells: " << ncells_per_col_ << std::endl;
 
-    *vo_->os() << "Shape of data: " << state.total_component_concentration.rows << " x "
-               << state.total_component_concentration.cols << " x "
-               << state.total_component_concentration.procs << std::endl;
+    *vo_->os() << "Shape of data: " << state.total_component_concentration.cells << " x "
+               << state.total_component_concentration.columns << " x "
+               << state.total_component_concentration.components << std::endl;
 
-    for (int i = 0; i < state.total_component_concentration.rows; i++) {
-      for (int j = 0; j < state.total_component_concentration.cols; j++) {
-        for (int k = 0; k < state.total_component_concentration.procs; k++) {
+    for (int i = 0; i < state.total_component_concentration.cells; i++) {
+      for (int j = 0; j < state.total_component_concentration.columns; j++) {
+        for (int k = 0; k < state.total_component_concentration.components; k++) {
           printf("data[%d][%d][%d]: %d\n", i, j, k, state.total_component_concentration.data[i][j][k]);
         }
       }
     }
     /*
     *vo_->os() << "entering loop: " << std::endl;
-    for (int proc_col=0; proc_col < ncols_local; ++proc_col) {
+    for (int proc_col=0; proc_col < num_columns_local; ++proc_col) {
       *vo_->os() << "on column : " << proc_col << std::endl;
       for (int component=0; component < tcc_num; ++component) {
         *vo_->os() << "on component: " << component << std::endl;
@@ -892,7 +888,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
 }
 
-void EcoSIM::CopyFromEcoSIM_process(const int col,
+void EcoSIM::CopyFromEcoSIM_process(const int column,
                                    const BGCProperties& props,
                                    const BGCState& state,
                                    const BGCAuxiliaryData& aux_data,
@@ -933,33 +929,33 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
   //Gather columns on this process:
-  ncols_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
-  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  ncols_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+  num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
+  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
 
-  *vo_->os() << "total columns cell_map: " << ncols_global << std::endl;
-  *vo_->os() << "total columns from num_entities: " << ncols_global_ptype << std::endl;
+  *vo_->os() << "total columns cell_map: " << num_columns_global << std::endl;
+  *vo_->os() << "total columns from num_entities: " << num_columns_global_ptype << std::endl;
   //Trying to loop over processors now:
   int p_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
   MPI_Barrier(MPI_COMM_WORLD);
 
   std::cout << "on processor " << p_rank << std::endl;
-  ncols_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  std::cout << ncols_local << std::endl;
+  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  std::cout << num_columns_local << std::endl;
 
   //Loop over columns on this process
-  for (int col=0; col!=ncols_local; ++col) {
+  for (int col=0; col!=num_columns_local; ++col) {
     if (has_gas) {
       auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell",false))(0);
       auto& gas_density = *(*S_->GetW<CompositeVector>(gas_density_key_, Amanzi::Tags::NEXT, gas_density_key_).ViewComponent("cell",false))(0);
       for (int i=0; i < ncells_per_col_; ++i) {
-        (*col_g_dens)[i] = state.gas_density.data[col][i];
-        (*col_g_sat)[i] = props.gas_saturation.data[col][i];
+        (*col_g_dens)[i] = state.gas_density.data[column][i];
+        (*col_g_sat)[i] = props.gas_saturation.data[column][i];
       }
 
-      FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
-      FieldToColumn_(col,gas_density,col_g_dens.ptr());
+      FieldToColumn_(column,gas_saturation,col_g_sat.ptr());
+      FieldToColumn_(column,gas_density,col_g_dens.ptr());
     }
 
     if (has_ice) {
@@ -967,12 +963,12 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
       auto& ice_density = *(*S_->GetW<CompositeVector>(ice_density_key_, Amanzi::Tags::NEXT, ice_density_key_).ViewComponent("cell",false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
-        (*col_i_dens)[i] = state.ice_density.data[col][i];
-        (*col_i_sat)[i] = props.ice_saturation.data[col][i];
+        (*col_i_dens)[i] = state.ice_density.data[column][i];
+        (*col_i_sat)[i] = props.ice_saturation.data[column][i];
       }
 
-      ColumnToField_(col,ice_saturation,col_i_sat.ptr());
-      ColumnToField_(col,ice_density,col_i_dens.ptr());
+      ColumnToField_(column,ice_saturation,col_i_sat.ptr());
+      ColumnToField_(column,ice_density,col_i_dens.ptr());
     }
 
     if (has_energy) {
@@ -980,59 +976,59 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
       auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Amanzi::Tags::NEXT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
-        (*col_temp)[i] = state.temperature.data[col][i];
-        (*col_cond)[i] = props.thermal_conductivity.data[col][i];
+        (*col_temp)[i] = state.temperature.data[column][i];
+        (*col_cond)[i] = props.thermal_conductivity.data[column][i];
       }
 
-      ColumnToField_(col,temp, col_temp.ptr());
-      ColumnToField_(col,thermal_conductivity,col_cond.ptr());
+      ColumnToField_(column,temp, col_temp.ptr());
+      ColumnToField_(column,thermal_conductivity,col_cond.ptr());
     }
 
     for (int i=0; i < ncells_per_col_; ++i) {
-      (*col_l_dens)[i] = state.liquid_density.data[col][i];
-      (*col_porosity)[i] = state.porosity.data[col][i];
-      (*col_wc)[i] = state.water_content.data[col][i];
-      (*col_h_cond)[i] = state.hydraulic_conductivity.data[col][i];
-      (*col_b_dens)[i] = state.bulk_density.data[col][i];
+      (*col_l_dens)[i] = state.liquid_density.data[column][i];
+      (*col_porosity)[i] = state.porosity.data[column][i];
+      (*col_wc)[i] = state.water_content.data[column][i];
+      (*col_h_cond)[i] = state.hydraulic_conductivity.data[column][i];
+      (*col_b_dens)[i] = state.bulk_density.data[column][i];
 
       if (has_gas) {
-        (*col_g_dens)[i] = state.gas_density.data[col][i];
+        (*col_g_dens)[i] = state.gas_density.data[column][i];
       }
 
       if (has_ice) {
-        (*col_i_dens)[i] = state.ice_density.data[col][i];
+        (*col_i_dens)[i] = state.ice_density.data[column][i];
       }
 
       if (has_energy) {
-        (*col_temp)[i] = state.temperature.data[col][i];
+        (*col_temp)[i] = state.temperature.data[column][i];
       }
     }
 
-    ColumnToField_(col,porosity,col_porosity.ptr());
-    ColumnToField_(col,liquid_saturation,col_l_sat.ptr());
-    ColumnToField_(col,water_content,col_wc.ptr());
-    ColumnToField_(col,relative_permeability,col_relative_permeability.ptr());
-    ColumnToField_(col,liquid_density,col_l_dens.ptr());
-    ColumnToField_(col,rock_density,col_r_dens.ptr());
-    ColumnToField_(col,cell_volume,col_vol.ptr());
-    ColumnToField_(col,hydraulic_conductivity,col_h_cond.ptr());
-    ColumnToField_(col,bulk_density,col_b_dens.ptr());
-    //ColumnToField_(col,plant_wilting_factor,col_wp.ptr());
-    //ColumnToField_(col,rooting_depth_fraction,col_rf.ptr());
+    ColumnToField_(column,porosity,col_porosity.ptr());
+    ColumnToField_(column,liquid_saturation,col_l_sat.ptr());
+    ColumnToField_(column,water_content,col_wc.ptr());
+    ColumnToField_(column,relative_permeability,col_relative_permeability.ptr());
+    ColumnToField_(column,liquid_density,col_l_dens.ptr());
+    ColumnToField_(column,rock_density,col_r_dens.ptr());
+    ColumnToField_(column,cell_volume,col_vol.ptr());
+    ColumnToField_(column,hydraulic_conductivity,col_h_cond.ptr());
+    ColumnToField_(column,bulk_density,col_b_dens.ptr());
+    //ColumnToField_(column,plant_wilting_factor,col_wp.ptr());
+    //ColumnToField_(column,rooting_depth_fraction,col_rf.ptr());
   }
 }
 /*
 int EcoSIM::InitializeSingleColumn(int col)
 {
-  CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+  CopyToEcoSIM(column, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-  //ecosim_datatest_wrapper(col, &bgc_props_, &bgc_sizes_);
+  //ecosim_datatest_wrapper(column, &bgc_props_, &bgc_sizes_);
   bgc_engine_->DataTest();
 
   int num_iterations = 1;
 
   bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, col);
-  CopyEcoSIMStateToAmanzi(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+  CopyEcoSIMStateToAmanzi(column, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
 }
 
@@ -1040,7 +1036,7 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
 {
   // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
   // should use the same tag as transport.  See #673
-  CopyToEcoSIM(col, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+  CopyToEcoSIM(column, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   int num_iterations = 1;
 
@@ -1048,7 +1044,7 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
                                          bgc_sizes_, num_iterations, col);
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
-  CopyEcoSIMStateToAmanzi(col,
+  CopyEcoSIMStateToAmanzi(column,
                             bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   return num_iterations;
@@ -1058,16 +1054,16 @@ int EcoSIM::InitializeSingleProcess(int proc)
 {
   CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-  //ecosim_datatest_wrapper(col, &bgc_props_, &bgc_sizes_);
+  //ecosim_datatest_wrapper(column, &bgc_props_, &bgc_sizes_);
   //bgc_engine_->DataTest();
 
   /*need some sort of assertions here to double check that the data is actually
   What I want it to be*/
 
   int num_iterations = 1;
-  int ncols = 1;
+  int num_columns = 1;
 
-  bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, ncols);
+  bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, num_columns);
   CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
 }
@@ -1079,10 +1075,10 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
   CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   int num_iterations = 1;
-  int ncols = 1;
+  int num_columns = 1;
 
   bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
-                                         bgc_sizes_, num_iterations, ncols);
+                                         bgc_sizes_, num_iterations, num_columns);
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
   CopyFromEcoSIM_process(proc,

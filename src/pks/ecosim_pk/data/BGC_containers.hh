@@ -80,12 +80,12 @@ extern "C" {
   } BGCMatrixString;
 
   typedef struct {
-    int cells, columns, components, capacity_cells, capacity_columns, cap_components;
+    int cells, columns, components, capacity_cells, capacity_columns, capacity_components;
     double*** data;
   } BGCTensorDouble;
 
   typedef struct {
-    int cells, columns, components, capacity_cells, capacity_columns, cap_components;
+    int cells, columns, components, capacity_cells, capacity_columns, capacity_components;
     int*** data;
   } BGCTensorInt;
 
