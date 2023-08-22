@@ -224,8 +224,14 @@ void AllocateBGCTensorDouble(const int rows, const int cols, const int procs, BG
     tensor->cap_procs = nearest_power_of_2(procs);
 
     std::cout << "In Allocate Tensor Double: " << std::endl;
-    std::cout << "cols: " << cols << std::endl;
-    std::cout << "size cols: " << tensor->cap_cols << std::endl;
+    std::cout << "components " << cols << std::endl;
+    std::cout << "size components: " << tensor->cap_cols << std::endl;
+
+    std::cout << "cells per column: " << rows << std::endl;
+    std::cout << "size cells per column: " << tensor->cap_rows << std::endl;
+
+    std::cout << "columns on processor: " << procs << std::endl;
+    std::cout << "size columns on processor: " << tensor->cap_procs << std::endl;
 
     tensor->data = (double***) calloc((size_t)tensor->cap_rows, sizeof(double**));
     for (int i = 0; i < tensor->rows; ++i) {
