@@ -148,7 +148,7 @@ void FreeBGCVectorString(BGCVectorString* vector) {
 void AllocateBGCMatrixDouble(const int cells, const int columns, BGCMatrixDouble* matrix) {
   if ((cells > 0 ) || (columns > 0)){
     matrix->cells = cells;
-    matrix->column = columns;
+    matrix->columns = columns;
     matrix->capacity_cells = nearest_power_of_2(cells);
     matrix->capacity_columns = nearest_power_of_2(columns);
     matrix->data = (double**) calloc((size_t)matrix->capacity_columns, sizeof(double*));
