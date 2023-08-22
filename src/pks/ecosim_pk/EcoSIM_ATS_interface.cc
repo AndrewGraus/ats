@@ -52,54 +52,53 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
   saved_time_(0.0)
   {
     //grab the surface and subsurface domains
-    domain_ = plist_->get<std::string>("domain name", "domain");
-    domain_surf_ = Keys::readDomainHint(*plist_, domain_, "subsurface", "surface");
+    domain_subsurface_ = plist_->get<std::string>("domain name", "domain");
+    domain_surface_ = Keys::readDomainHint(*plist_, domain_subsurface_, "subsurface", "surface");
 
     // transport
-    tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
+    tcc_key_ = Keys::readKey(*plist_, domain_subsurface_, "total component concentration", "total_component_concentration");
     //Remember tcc components are accessed by tcc[i][c] where i is the component and c is the cell
 
     //Flow
-    poro_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
-    saturation_liquid_key_ = Keys::readKey(*plist_, domain_, "saturation liquid", "saturation_liquid");
-    saturation_gas_key_ = Keys::readKey(*plist_,domain_,"saturation gas", "saturation_gas");
-    saturation_ice_key_ = Keys::readKey(*plist_,domain_,"saturation ice", "saturation_ice");
-    water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
-    rel_perm_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
-    suc_key_ = Keys::readKey(*plist_,domain_,"suction","suction_head");
-    liquid_den_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
-    ice_den_key_ = Keys::readKey(*plist_, domain_, "mass density ice", "mass_density_ice");
-    gas_den_key_ = Keys::readKey(*plist_, domain_,"mass density gas", "mass_density_gas");
-    gas_den_key_test_ = Keys::readKey(*plist_, domain_, "mass density gas", "mass_density_gas");
-    rock_den_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
+    porosity_key_ = Keys::readKey(*plist_, domain_subsurface_, "porosity", "porosity");
+    saturation_liquid_key_ = Keys::readKey(*plist_, domain_subsurface_, "saturation liquid", "saturation_liquid");
+    saturation_gas_key_ = Keys::readKey(*plist_,domain_subsurface_,"saturation gas", "saturation_gas");
+    saturation_ice_key_ = Keys::readKey(*plist_,domain_subsurface_,"saturation ice", "saturation_ice");
+    water_content_key_ = Keys::readKey(*plist_,domain_subsurface_,"water content","water_content");
+    relative_permeability_key_ = Keys::readKey(*plist_,domain_subsurface_,"relative permeability","relative_permeability");
+    //suction_key_ = Keys::readKey(*plist_,domain_subsurface_,"suction","suction_head");
+    liquid_density_key_ = Keys::readKey(*plist_, domain_subsurface_, "mass density liquid", "mass_density_liquid");
+    ice_density_key_ = Keys::readKey(*plist_, domain_subsurface_, "mass density ice", "mass_density_ice");
+    gas_density_key_ = Keys::readKey(*plist_, domain_subsurface_,"mass density gas", "mass_density_gas");
+    gas_density_key_test_ = Keys::readKey(*plist_, domain_subsurface_, "mass density gas", "mass_density_gas");
+    rock_density_key_ = Keys::readKey(*plist_, domain_subsurface_, "density rock", "density_rock");
 
     //energy
-    T_key_ = Keys::readKey(*plist_, domain_, "temperature", "temperature");
-    therm_cond_key_ = Keys::readKey(*plist_, domain_, "thermal conductivity", "thermal_conductivity");
+    T_key_ = Keys::readKey(*plist_, domain_subsurface_, "temperature", "temperature");
+    thermal_conductivity_key_ = Keys::readKey(*plist_, domain_subsurface_, "thermal conductivity", "thermal_conductivity");
 
     //Other
-    cv_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
-    min_vol_frac_key_ = Keys::readKey(*plist_, domain_, "mineral volume fractions", "mineral_volume_fractions");
-    ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
-    f_wp_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
-    f_root_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
+    cell_volume_key_ = Keys::readKey(*plist_, domain_subsurface_, "cell volume", "cell_volume");
+    //ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_subsurface_, "ecosim aux data", "ecosim_aux_data");
+    f_wp_key_ = Keys::readKey(*plist_, domain_subsurface_, "porosity", "porosity");
+    f_root_key_ = Keys::readKey(*plist_, domain_subsurface_, "porosity", "porosity");
 
     //Custom Evaluator keys
-    hydra_cond_key_ = Keys::readKey(*plist_, domain_, "hydraulic conductivity", "hydraulic_conductivity");
-    bulk_dens_key_ = Keys::readKey(*plist_, domain_, "bulk density", "bulk_density");
+    hydraulic_conductivity_key_ = Keys::readKey(*plist_, domain_subsurface_, "hydraulic conductivity", "hydraulic_conductivity");
+    bulk_density_key_ = Keys::readKey(*plist_, domain_subsurface_, "bulk density", "bulk_density");
 
     //Surface balance items
     sw_key_ =
-      Keys::readKey(*plist_, domain_surf_, "incoming shortwave radiation", "incoming_shortwave_radiation");
+      Keys::readKey(*plist_, domain_surface_, "incoming shortwave radiation", "incoming_shortwave_radiation");
     lw_key_ =
-      Keys::readKey(*plist_,domain_surf_, "incoming longwave radiation", "incoming_longwave_radiation");
-    air_temp_key_ = Keys::readKey(*plist_, domain_surf_, "air temperature", "air_temperature");
-    vp_air_key_ = Keys::readKey(*plist_, domain_surf_, "vapor pressure air", "vapor_pressure_air");
-    wind_speed_key_ = Keys::readKey(*plist_, domain_surf_, "wind speed", "wind_speed");
-    prain_key_ = Keys::readKey(*plist_, domain_surf_, "precipitation rain", "precipitation_rain");
-    elev_key_ = Keys::readKey(*plist_, domain_surf_, "elevation", "elevation");
-    aspect_key_ = Keys::readKey(*plist_, domain_surf_, "aspect", "aspect");
-    slope_key_ = Keys::readKey(*plist_, domain_surf_, "slope", "slope_magnitude");
+      Keys::readKey(*plist_,domain_surface_, "incoming longwave radiation", "incoming_longwave_radiation");
+    air_temp_key_ = Keys::readKey(*plist_, domain_surface_, "air temperature", "air_temperature");
+    vp_air_key_ = Keys::readKey(*plist_, domain_surface_, "vapor pressure air", "vapor_pressure_air");
+    wind_speed_key_ = Keys::readKey(*plist_, domain_surface_, "wind speed", "wind_speed");
+    prain_key_ = Keys::readKey(*plist_, domain_surface_, "precipitation rain", "precipitation_rain");
+    elev_key_ = Keys::readKey(*plist_, domain_surface_, "elevation", "elevation");
+    aspect_key_ = Keys::readKey(*plist_, domain_surface_, "aspect", "aspect");
+    slope_key_ = Keys::readKey(*plist_, domain_surface_, "slope", "slope_magnitude");
 
     //Atmospheric abundance keys
     atm_n2_ = plist_->get<double>("atmospheric N2");
@@ -141,7 +140,7 @@ EcoSIM::~EcoSIM()
 // -- Setup step
 void EcoSIM::Setup() {
   //Need to do some basic setup of the columns:
-  mesh_surf_ = S_->GetMesh(domain_surf_);
+  mesh_surf_ = S_->GetMesh(domain_surface_);
   num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
   for (unsigned int col = 0; col != num_cols_; ++col) {
@@ -188,18 +187,18 @@ void EcoSIM::Setup() {
   */
 
   //Setup Evaluators
-  requireAtNext(hydra_cond_key_, tag_next_, *S_)
+  requireAtNext(hydraulic_conductivity_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::CELL, 1);
 
-  requireAtCurrent(hydra_cond_key_, tag_current_, *S_, name_);
+  requireAtCurrent(hydraulic_conductivity_key_, tag_current_, *S_, name_);
 
-  requireAtNext(bulk_dens_key_, tag_next_, *S_)
+  requireAtNext(bulk_density_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::CELL, 1);
-  requireAtCurrent(bulk_dens_key_, tag_current_, *S_, name_);
+  requireAtCurrent(bulk_density_key_, tag_current_, *S_, name_);
 
 
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
@@ -261,12 +260,12 @@ void EcoSIM::Initialize() {
 
   // Ensure dependencies are filled
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(poro_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(porosity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(relative_permeability_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(liquid_density_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(rock_density_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -282,11 +281,11 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  if (S_->HasRecord(gas_den_key_test_, Tags::DEFAULT)) {
+  if (S_->HasRecord(gas_density_key_test_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found mass density gas key" << std::endl;
     S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(gas_den_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(gas_density_key_, Tags::DEFAULT).Update(*S_, name_);
     has_gas = true;
   } else {
     Teuchos::OSTab tab = vo_->getOSTab();
@@ -298,8 +297,8 @@ void EcoSIM::Initialize() {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found temp key" << std::endl;
     S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(therm_cond_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(thermal_conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(cell_volume_key_, Tags::DEFAULT).Update(*S_, name_);
     has_energy = true;
   } else {
     Teuchos::OSTab tab = vo_->getOSTab();
@@ -307,11 +306,11 @@ void EcoSIM::Initialize() {
     has_energy = false;
   }
 
-  if (S_->HasRecord(ice_den_key_, Tags::DEFAULT)) {
+  if (S_->HasRecord(ice_density_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found ice key" << std::endl;
     S_->GetEvaluator(saturation_ice_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(ice_den_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(ice_density_key_, Tags::DEFAULT).Update(*S_, name_);
     has_ice = true;
   } else {
     Teuchos::OSTab tab = vo_->getOSTab();
@@ -320,11 +319,11 @@ void EcoSIM::Initialize() {
   }
 
   //Initialize owned evaluators
-  S_->GetW<CompositeVector>(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
-  S_->GetRecordW(hydra_cond_key_, Tags::DEFAULT, "hydraulic_conductivity").set_initialized();
+  S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
+  S_->GetRecordW(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").set_initialized();
 
-  S_->GetW<CompositeVector>(bulk_dens_key_, Tags::DEFAULT, "bulk_density").PutScalar(1.0);
-  S_->GetRecordW(bulk_dens_key_, Tags::DEFAULT, "bulk_density").set_initialized();
+  S_->GetW<CompositeVector>(bulk_density_key_, Tags::DEFAULT, "bulk_density").PutScalar(1.0);
+  S_->GetRecordW(bulk_density_key_, Tags::DEFAULT, "bulk_density").set_initialized();
 
   int num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
@@ -394,14 +393,14 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
   // Ensure dependencies are filled
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(poro_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(porosity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(rel_perm_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(liquid_den_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(rock_den_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(relative_permeability_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(liquid_density_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(rock_density_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(cv_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(cell_volume_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -419,25 +418,25 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
   if (has_gas) {
     S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(gas_den_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(gas_density_key_, Tags::DEFAULT).Update(*S_, name_);
   }
 
   if (has_ice) {
     S_->GetEvaluator(saturation_ice_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(ice_den_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(ice_density_key_, Tags::DEFAULT).Update(*S_, name_);
   }
 
   if (has_energy) {
     S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(therm_cond_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(thermal_conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
   }
 
   //Update owned evaluators
-  Teuchos::RCP<const CompositeVector> hydra_cond = S_->GetPtr<CompositeVector>(hydra_cond_key_, Tags::DEFAULT);
-  S_->GetEvaluator(hydra_cond_key_, Tags::DEFAULT).Update(*S_, name_);
+  Teuchos::RCP<const CompositeVector> hydra_cond = S_->GetPtr<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT);
+  S_->GetEvaluator(hydraulic_conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  Teuchos::RCP<const CompositeVector> bulk_dens = S_->GetPtr<CompositeVector>(bulk_dens_key_, Tags::DEFAULT);
-  S_->GetEvaluator(bulk_dens_key_, Tags::DEFAULT).Update(*S_, name_);
+  Teuchos::RCP<const CompositeVector> bulk_dens = S_->GetPtr<CompositeVector>(bulk_density_key_, Tags::DEFAULT);
+  S_->GetEvaluator(bulk_density_key_, Tags::DEFAULT).Update(*S_, name_);
 
   AmanziMesh::Entity_ID num_cols_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
@@ -697,19 +696,19 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 {
   //This is the copy function for a loop over a single process instead of a single column
   //Fill state with ATS variables that are going to be changed by EcoSIM
-  const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(poro_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(porosity_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, water_tag)->ViewComponent("cell"));
   int tcc_num = tcc.NumVectors();
 
   const Epetra_Vector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& water_content = *(*S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& relative_permeability = *(*S_->Get<CompositeVector>(rel_perm_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& liquid_density = *(*S_->Get<CompositeVector>(liquid_den_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& rock_density = *(*S_->Get<CompositeVector>(rock_den_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cv_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& hydraulic_conductivity = *(*S_->Get<CompositeVector>(hydra_cond_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& relative_permeability = *(*S_->Get<CompositeVector>(relative_permeability_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& liquid_density = *(*S_->Get<CompositeVector>(liquid_density_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& rock_density = *(*S_->Get<CompositeVector>(rock_density_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cell_volume_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& hydraulic_conductivity = *(*S_->Get<CompositeVector>(hydraulic_conductivity_key_, water_tag).ViewComponent("cell", false))(0);
   //const Epetra_Vector& suction_head = *(*S_->Get<CompositeVector>(suc_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_dens_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_density_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& rooting_depth_fraction = *(*S_->Get<CompositeVector>(f_root_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
 
@@ -723,11 +722,11 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& aspect = *(*S_->Get<CompositeVector>(aspect_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key_, water_tag).ViewComponent("cell", false))(0);
 
-  auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_relative_permeability = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_suc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -764,10 +763,10 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
   //Loop over columns on this process
   for (int col=0; col!=ncols_local; ++col) {
-    FieldToColumn_(col,porosity,col_poro.ptr());
+    FieldToColumn_(col,porosity,col_porosity.ptr());
     FieldToColumn_(col,liquid_saturation,col_l_sat.ptr());
     FieldToColumn_(col,water_content,col_wc.ptr());
-    FieldToColumn_(col,relative_permeability,col_rel_perm.ptr());
+    FieldToColumn_(col,relative_permeability,col_relative_permeability.ptr());
     FieldToColumn_(col,liquid_density,col_l_dens.ptr());
     FieldToColumn_(col,rock_density,col_r_dens.ptr());
     FieldToColumn_(col,cell_volume,col_vol.ptr());
@@ -780,7 +779,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     if (has_gas) {
       const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
-      const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_den_key_, water_tag).ViewComponent("cell", false))(0);
+      const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_density_key_, water_tag).ViewComponent("cell", false))(0);
 
       FieldToColumn_(col,gas_saturation,col_g_sat.ptr());
       FieldToColumn_(col,gas_density,col_g_dens.ptr());
@@ -788,7 +787,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     if (has_ice) {
       const Epetra_Vector& ice_saturation = *(*S_->Get<CompositeVector>(saturation_ice_key_, water_tag).ViewComponent("cell", false))(0);
-      const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_den_key_, water_tag).ViewComponent("cell", false))(0);
+      const Epetra_Vector& ice_density = *(*S_->Get<CompositeVector>(ice_density_key_, water_tag).ViewComponent("cell", false))(0);
 
       FieldToColumn_(col,ice_saturation,col_i_sat.ptr());
       FieldToColumn_(col,ice_density,col_i_dens.ptr());
@@ -796,7 +795,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     if (has_energy) {
       const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
-      const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(therm_cond_key_, water_tag).ViewComponent("cell", false))(0);
+      const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(thermal_conductivity_key_, water_tag).ViewComponent("cell", false))(0);
 
       FieldToColumn_(col,temp, col_temp.ptr());
       FieldToColumn_(col,thermal_conductivity,col_cond.ptr());
@@ -807,7 +806,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     for (int i=0; i < ncells_per_col_; ++i) {
       state.liquid_density.data[col][i] = (*col_l_dens)[i];
-      state.porosity.data[col][i] = (*col_poro)[i];
+      state.porosity.data[col][i] = (*col_porosity)[i];
       state.water_content.data[col][i] = (*col_wc)[i];
       state.hydraulic_conductivity.data[col][i] = (*col_h_cond)[i];
       state.bulk_density.data[col][i] = (*col_b_dens)[i];
@@ -815,7 +814,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       props.plant_wilting_factor.data[col][i] = (*col_wp)[i];
       props.rooting_depth_fraction.data[col][i] = (*col_rf)[i];
       props.liquid_saturation.data[col][i] = (*col_l_sat)[i];
-      props.relative_permeability.data[col][i] = (*col_rel_perm)[i];
+      props.relative_permeability.data[col][i] = (*col_relative_permeability)[i];
       props.volume.data[col][i] = (*col_vol)[i];
       props.depth.data[col][i] = (*col_depth)[i];
       props.dz.data[col][i] = (*col_dz)[i];
@@ -903,22 +902,22 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
   Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, Amanzi::Tags::NEXT, "state")->ViewComponent("cell",false));
   int tcc_num = tcc.NumVectors();
 
-  auto& porosity = *(*S_->GetW<CompositeVector>(poro_key_, Amanzi::Tags::NEXT, poro_key_).ViewComponent("cell",false))(0);
+  auto& porosity = *(*S_->GetW<CompositeVector>(porosity_key_, Amanzi::Tags::NEXT, porosity_key_).ViewComponent("cell",false))(0);
   auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Amanzi::Tags::NEXT, saturation_liquid_key_).ViewComponent("cell",false))(0);
   auto& water_content = *(*S_->GetW<CompositeVector>(water_content_key_, Amanzi::Tags::NEXT, water_content_key_).ViewComponent("cell",false))(0);
   //auto& suction_head = *(*S_->GetW<CompositeVector>(suc_key_, Amanzi::Tags::NEXT, suc_key_).ViewComponent("cell",false))(0);
-  auto& relative_permeability = *(*S_->GetW<CompositeVector>(rel_perm_key_, Amanzi::Tags::NEXT, rel_perm_key_).ViewComponent("cell",false))(0);
-  auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_den_key_, Amanzi::Tags::NEXT, liquid_den_key_).ViewComponent("cell",false))(0);
-  auto& rock_density = *(*S_->GetW<CompositeVector>(rock_den_key_, Amanzi::Tags::NEXT, rock_den_key_).ViewComponent("cell",false))(0);
-  auto& cell_volume = *(*S_->GetW<CompositeVector>(cv_key_, Amanzi::Tags::NEXT, cv_key_).ViewComponent("cell",false))(0);
-  auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydra_cond_key_, Amanzi::Tags::NEXT, hydra_cond_key_).ViewComponent("cell",false))(0);
-  auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_dens_key_, Amanzi::Tags::NEXT, bulk_dens_key_).ViewComponent("cell",false))(0);
+  auto& relative_permeability = *(*S_->GetW<CompositeVector>(relative_permeability_key_, Amanzi::Tags::NEXT, relative_permeability_key_).ViewComponent("cell",false))(0);
+  auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_density_key_, Amanzi::Tags::NEXT, liquid_density_key_).ViewComponent("cell",false))(0);
+  auto& rock_density = *(*S_->GetW<CompositeVector>(rock_density_key_, Amanzi::Tags::NEXT, rock_density_key_).ViewComponent("cell",false))(0);
+  auto& cell_volume = *(*S_->GetW<CompositeVector>(cell_volume_key_, Amanzi::Tags::NEXT, cell_volume_key_).ViewComponent("cell",false))(0);
+  auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Amanzi::Tags::NEXT, hydraulic_conductivity_key_).ViewComponent("cell",false))(0);
+  auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_density_key_, Amanzi::Tags::NEXT, bulk_density_key_).ViewComponent("cell",false))(0);
 
-  auto col_poro = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_suc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_rel_perm = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_relative_permeability = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -953,7 +952,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
   for (int col=0; col!=ncols_local; ++col) {
     if (has_gas) {
       auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell",false))(0);
-      auto& gas_density = *(*S_->GetW<CompositeVector>(gas_den_key_, Amanzi::Tags::NEXT, gas_den_key_).ViewComponent("cell",false))(0);
+      auto& gas_density = *(*S_->GetW<CompositeVector>(gas_density_key_, Amanzi::Tags::NEXT, gas_density_key_).ViewComponent("cell",false))(0);
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_g_dens)[i] = state.gas_density.data[col][i];
         (*col_g_sat)[i] = props.gas_saturation.data[col][i];
@@ -965,7 +964,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
 
     if (has_ice) {
       auto& ice_saturation = *(*S_->GetW<CompositeVector>(saturation_ice_key_, Amanzi::Tags::NEXT, saturation_ice_key_).ViewComponent("cell",false))(0);
-      auto& ice_density = *(*S_->GetW<CompositeVector>(ice_den_key_, Amanzi::Tags::NEXT, ice_den_key_).ViewComponent("cell",false))(0);
+      auto& ice_density = *(*S_->GetW<CompositeVector>(ice_density_key_, Amanzi::Tags::NEXT, ice_density_key_).ViewComponent("cell",false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_i_dens)[i] = state.ice_density.data[col][i];
@@ -978,7 +977,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
 
     if (has_energy) {
       auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "subsurface energy").ViewComponent("cell",false))(0);
-      auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(therm_cond_key_, Amanzi::Tags::NEXT, therm_cond_key_).ViewComponent("cell",false))(0);
+      auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Amanzi::Tags::NEXT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_temp)[i] = state.temperature.data[col][i];
@@ -991,7 +990,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
 
     for (int i=0; i < ncells_per_col_; ++i) {
       (*col_l_dens)[i] = state.liquid_density.data[col][i];
-      (*col_poro)[i] = state.porosity.data[col][i];
+      (*col_porosity)[i] = state.porosity.data[col][i];
       (*col_wc)[i] = state.water_content.data[col][i];
       (*col_h_cond)[i] = state.hydraulic_conductivity.data[col][i];
       (*col_b_dens)[i] = state.bulk_density.data[col][i];
@@ -1009,10 +1008,10 @@ void EcoSIM::CopyFromEcoSIM_process(const int col,
       }
     }
 
-    ColumnToField_(col,porosity,col_poro.ptr());
+    ColumnToField_(col,porosity,col_porosity.ptr());
     ColumnToField_(col,liquid_saturation,col_l_sat.ptr());
     ColumnToField_(col,water_content,col_wc.ptr());
-    ColumnToField_(col,relative_permeability,col_rel_perm.ptr());
+    ColumnToField_(col,relative_permeability,col_relative_permeability.ptr());
     ColumnToField_(col,liquid_density,col_l_dens.ptr());
     ColumnToField_(col,rock_density,col_r_dens.ptr());
     ColumnToField_(col,cell_volume,col_vol.ptr());

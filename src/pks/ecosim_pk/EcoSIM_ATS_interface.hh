@@ -138,7 +138,7 @@ class EcoSIM : public PK_Physical {
   double dt_;
   double c_m_;
   Teuchos::RCP<const AmanziMesh::Mesh> mesh_surf_; //might need this?
-  Key domain_surf_;
+  Key domain_surface_;
   std::string passwd_ = "state";
 
   //The helper functions from BGC are protected not private (unclear why)
@@ -181,25 +181,24 @@ class EcoSIM : public PK_Physical {
 
   // keys
   Key tcc_key_;
-  Key poro_key_;
+  Key porosity_key_;
   Key saturation_liquid_key_;
   Key saturation_gas_key_;
   Key saturation_ice_key_;
   Key elev_key_;
   Key water_content_key_;
-  Key rel_perm_key_;
-  Key liquid_den_key_;
-  Key ice_den_key_;
-  Key gas_den_key_;
-  Key gas_den_key_test_;
-  Key rock_den_key_;
+  Key relative_permeability_key_;
+  Key liquid_density_key_;
+  Key ice_density_key_;
+  Key gas_density_key_;
+  Key gas_density_key_test_;
+  Key rock_density_key_;
   Key T_key_;
-  Key therm_cond_key_;
-  Key cv_key_;
-  Key min_vol_frac_key_;
+  Key thermal_conductivity_key_;
+  Key cell_volume_key_;
   Key ecosim_aux_data_key_;
-  Key bulk_dens_key_;
-  Key hydra_cond_key_;
+  Key bulk_density_key_;
+  Key hydraulic_conductivity_key_;
   Key sw_key_;
   Key lw_key_;
   Key air_temp_key_;
