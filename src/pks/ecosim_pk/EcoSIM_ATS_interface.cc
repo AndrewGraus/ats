@@ -52,40 +52,40 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
   saved_time_(0.0)
   {
     //grab the surface and subsurface domains
-    domain_subsurface_ = plist_->get<std::string>("domain name", "domain");
-    domain_surface_ = Keys::readDomainHint(*plist_, domain_subsurface_, "subsurface", "surface");
+    domain_ = plist_->get<std::string>("domain name", "domain");
+    domain_surface_ = Keys::readDomainHint(*plist_, domain_, "subsurface", "surface");
 
     // transport
-    tcc_key_ = Keys::readKey(*plist_, domain_subsurface_, "total component concentration", "total_component_concentration");
+    tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
     //Remember tcc components are accessed by tcc[i][c] where i is the component and c is the cell
 
     //Flow
-    porosity_key_ = Keys::readKey(*plist_, domain_subsurface_, "porosity", "porosity");
-    saturation_liquid_key_ = Keys::readKey(*plist_, domain_subsurface_, "saturation liquid", "saturation_liquid");
-    saturation_gas_key_ = Keys::readKey(*plist_,domain_subsurface_,"saturation gas", "saturation_gas");
-    saturation_ice_key_ = Keys::readKey(*plist_,domain_subsurface_,"saturation ice", "saturation_ice");
-    water_content_key_ = Keys::readKey(*plist_,domain_subsurface_,"water content","water_content");
-    relative_permeability_key_ = Keys::readKey(*plist_,domain_subsurface_,"relative permeability","relative_permeability");
-    //suction_key_ = Keys::readKey(*plist_,domain_subsurface_,"suction","suction_head");
-    liquid_density_key_ = Keys::readKey(*plist_, domain_subsurface_, "mass density liquid", "mass_density_liquid");
-    ice_density_key_ = Keys::readKey(*plist_, domain_subsurface_, "mass density ice", "mass_density_ice");
-    gas_density_key_ = Keys::readKey(*plist_, domain_subsurface_,"mass density gas", "mass_density_gas");
-    gas_density_key_test_ = Keys::readKey(*plist_, domain_subsurface_, "mass density gas", "mass_density_gas");
-    rock_density_key_ = Keys::readKey(*plist_, domain_subsurface_, "density rock", "density_rock");
+    porosity_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
+    saturation_liquid_key_ = Keys::readKey(*plist_, domain_, "saturation liquid", "saturation_liquid");
+    saturation_gas_key_ = Keys::readKey(*plist_,domain_,"saturation gas", "saturation_gas");
+    saturation_ice_key_ = Keys::readKey(*plist_,domain_,"saturation ice", "saturation_ice");
+    water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
+    relative_permeability_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
+    //suction_key_ = Keys::readKey(*plist_,domain_,"suction","suction_head");
+    liquid_density_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
+    ice_density_key_ = Keys::readKey(*plist_, domain_, "mass density ice", "mass_density_ice");
+    gas_density_key_ = Keys::readKey(*plist_, domain_,"mass density gas", "mass_density_gas");
+    gas_density_key_test_ = Keys::readKey(*plist_, domain_, "mass density gas", "mass_density_gas");
+    rock_density_key_ = Keys::readKey(*plist_, domain_, "density rock", "density_rock");
 
     //energy
-    T_key_ = Keys::readKey(*plist_, domain_subsurface_, "temperature", "temperature");
-    thermal_conductivity_key_ = Keys::readKey(*plist_, domain_subsurface_, "thermal conductivity", "thermal_conductivity");
+    T_key_ = Keys::readKey(*plist_, domain_, "temperature", "temperature");
+    thermal_conductivity_key_ = Keys::readKey(*plist_, domain_, "thermal conductivity", "thermal_conductivity");
 
     //Other
-    cell_volume_key_ = Keys::readKey(*plist_, domain_subsurface_, "cell volume", "cell_volume");
-    //ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_subsurface_, "ecosim aux data", "ecosim_aux_data");
-    f_wp_key_ = Keys::readKey(*plist_, domain_subsurface_, "porosity", "porosity");
-    f_root_key_ = Keys::readKey(*plist_, domain_subsurface_, "porosity", "porosity");
+    cell_volume_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
+    //ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
+    f_wp_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
+    f_root_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
 
     //Custom Evaluator keys
-    hydraulic_conductivity_key_ = Keys::readKey(*plist_, domain_subsurface_, "hydraulic conductivity", "hydraulic_conductivity");
-    bulk_density_key_ = Keys::readKey(*plist_, domain_subsurface_, "bulk density", "bulk_density");
+    hydraulic_conductivity_key_ = Keys::readKey(*plist_, domain_, "hydraulic conductivity", "hydraulic_conductivity");
+    bulk_density_key_ = Keys::readKey(*plist_, domain_, "bulk density", "bulk_density");
 
     //Surface balance items
     sw_key_ =
