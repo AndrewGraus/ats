@@ -49,20 +49,20 @@ extern "C" {
   void FreeBGCVectorString(BGCVectorString* vector);
 
   /* Matrix */
-  void AllocateBGCMatrixDouble(const int rows, const int cols, BGCMatrixDouble* matrix);
+  void AllocateBGCMatrixDouble(const int cells, const int columns, BGCMatrixDouble* matrix);
   void FreeBGCMatrixDouble(BGCMatrixDouble* matrix);
 
-  void AllocateBGCMatrixInt(const int rows, const int cols, BGCMatrixInt* matrix);
+  void AllocateBGCMatrixInt(const int cells, const int columns, BGCMatrixInt* matrix);
   void FreeBGCMatrixInt(BGCMatrixInt* matrix);
 
 
-  void AllocateBGCMatrixString(const int rows, const int cols, BGCMatrixString* matrix);
+  void AllocateBGCMatrixString(const int cells, const int columns, BGCMatrixString* matrix);
   void FreeBGCMatrixString(BGCMatrixString* matrix);
 
-  void AllocateBGCTensorDouble(const int rows, const int cols, BGCTensorDouble* tensor);
+  void AllocateBGCTensorDouble(const int cells, const int columns, BGCTensorDouble* tensor);
   void FreeBGCMatrixDouble(BGCMatrixDouble* tensor);
 
-  void AllocateBGCTensorInt(const int rows, const int cols, BGCTensorInt* tensor);
+  void AllocateBGCTensorInt(const int cells, const int columns, BGCTensorInt* tensor);
   void FreeBGCTensorInt(BGCTensorInt* tensor);
 
   /* State */
@@ -70,7 +70,7 @@ extern "C" {
                         BGCState* state,
                         int ncells_per_col_,
                         int num_components,
-                        int cols_on_proc);
+                        int num_columns);
   void FreeBGCState(BGCState* state);
 
   /* Auxiliary Data
@@ -81,10 +81,10 @@ extern "C" {
   */
   /* Properties */
   void AllocateBGCProperties(BGCSizes* sizes,
-                             BGCProperties* props,
+                             BGCProperties* properties,
                              int ncells_per_col_,
-			     int cols_on_proc);
-  void FreeBGCProperties(BGCProperties* props);
+			                       int num_columns);
+  void FreeBGCProperties(BGCProperties* properties);
 
   // Problem Meta Data
   /*void AllocateAlquimiaProblemMetaData(const AlquimiaSizes* const sizes,

@@ -65,32 +65,32 @@ extern "C" {
   } BGCVectorString;
 
   typedef struct {
-    int rows, cols, cap_rows, cap_cols;
+    int cells, columns, cap_cells, cap_columns;
     double** data;
   } BGCMatrixDouble;
 
   typedef struct {
-    int rows, cols, cap_rows, cap_cols;
+    int cells, columns, cap_cells, cap_columns;
     int** data;
   } BGCMatrixInt;
 
   typedef struct {
-    int rows, cols, capacity;
+    int cells, columns, capacity;
     char** data;
   } BGCMatrixString;
 
   typedef struct {
-    int rows, cols, procs, cap_rows, cap_cols, cap_procs;
+    int cells, columns, components, cap_cells, cap_columns, cap_components;
     double*** data;
   } BGCTensorDouble;
 
   typedef struct {
-    int rows, cols, procs, cap_rows, cap_cols, cap_procs;
+    int cells, columns, components, cap_cells, cap_columns, cap_components;
     int*** data;
   } BGCTensorInt;
 
   typedef struct {
-    int rows, cols, procs, capacity;
+    int cells, columns, components, capacity;
     char*** data;
   } BGCTensorString;
 
@@ -201,7 +201,7 @@ extern "C" {
       BGCState* state,
       BGCSizes* sizes,
       int num_iterations,
-      int ncol);
+      int num_columns);
 
     /* gracefully shutdown the engine, cleanup memory */
     void (*Shutdown)();
@@ -223,7 +223,7 @@ extern "C" {
       BGCState* state,
       BGCSizes* sizes,
       int num_iterations,
-      int ncol);
+      int num_columns);
 
     /* Access to user selected geochemical data for output, i.e. pH,
        mineral SI, reaction rates */
