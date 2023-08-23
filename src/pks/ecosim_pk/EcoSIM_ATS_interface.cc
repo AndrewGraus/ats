@@ -572,7 +572,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_Vector& vec,
        Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
-  auto& col_iter = mesh_->cells_of_column(col);
+  auto& col_iter = mesh_->cells_of_column(column);
 
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     std::size_t vec_index = col_iter[i];
