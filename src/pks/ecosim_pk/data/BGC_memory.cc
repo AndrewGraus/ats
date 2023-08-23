@@ -233,11 +233,11 @@ void AllocateBGCTensorDouble(const int cells, const int columns, const int compo
     std::cout << "components: " << components << std::endl;
     std::cout << "size components: " << tensor->capacity_components << std::endl;
 
-    tensor->data = (double***) calloc((size_t)tensor->capacity_columns, sizeof(double**));
-    for (int i = 0; i < tensor->columns; ++i) {
+    tensor->data = (double***) calloc((size_t)tensor->capacity_components, sizeof(double**));
+    for (int i = 0; i < tensor->components; ++i) {
       tensor->data[i] = (double**) calloc((size_t)tensor->capacity_cells, sizeof(double*));
       for (int j = 0; j < tensor->cells; ++j) {
-        tensor->data[i][j] = (double*) calloc((size_t)tensor->capacity_components, sizeof(double));
+        tensor->data[i][j] = (double*) calloc((size_t)tensor->capacity_columns, sizeof(double));
       }
     }
     //ALQUIMIA_ASSERT(NULL != matrix->data);
@@ -274,11 +274,11 @@ void AllocateBGCTensorInt(const int cells, const int columns, const int componen
     tensor->capacity_columns= nearest_power_of_2(columns);
     tensor->capacity_components = nearest_power_of_2(components);
 
-    tensor->data = (int***) calloc((size_t)tensor->capacity_columns, sizeof(int**));
-    for (int i = 0; i < tensor->columns; ++i) {
+    tensor->data = (int***) calloc((size_t)tensor->capacity_components, sizeof(int**));
+    for (int i = 0; i < tensor->components; ++i) {
       tensor->data[i] = (int**) calloc((size_t)tensor->capacity_cells, sizeof(int*));
       for (int j = 0; j < tensor->cells; ++j) {
-        tensor->data[i][j] = (int*) calloc((size_t)tensor->capacity_components, sizeof(int));
+        tensor->data[i][j] = (int*) calloc((size_t)tensor->capacity_columns, sizeof(int));
       }
     }
     //ALQUIMIA_ASSERT(NULL != matrix->data);
