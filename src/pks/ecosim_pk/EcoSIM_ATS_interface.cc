@@ -851,8 +851,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
                << state.total_component_concentration.columns << " x "
                << state.total_component_concentration.components << std::endl;
 
-    for (int i = 0; i < state.total_component_concentration.cells; i++) {
-      for (int j = 0; j < state.total_component_concentration.columns; j++) {
+    // data[columns][cells][components]
+    for (int i = 0; i < state.total_component_concentration.columns; i++) {
+      for (int j = 0; j < state.total_component_concentration.cells; j++) {
         for (int k = 0; k < state.total_component_concentration.components; k++) {
           printf("data[%d][%d][%d]: %d\n", i, j, k, state.total_component_concentration.data[i][j][k]);
         }
@@ -860,17 +861,17 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     }
     /*
     *vo_->os() << "entering loop: " << std::endl;
-    for (int proc_col=0; proc_col < num_columns_local; ++proc_col) {
-      *vo_->os() << "on column : " << proc_col << std::endl;
-      for (int component=0; component < tcc_num; ++component) {
-        *vo_->os() << "on component: " << component << std::endl;
-        for (int i=0; i < ncells_per_col_; ++i) {
-          *vo_->os() << "on cell: " << i << std::endl;
+    for (int i=0; i < num_columns_local; ++i) {
+      *vo_->os() << "on column : " << i << std::endl;
+      for (int j=0; j < ncells_per_col_; ++j) {
+        *vo_->os() << "on cell: " << j << std::endl;
+        for (int k=0; k < tcc_num; ++k) {
+          *vo_->os() << "on component: " << k << std::endl;
               //original config (doesn't work) *vo_->os() << "Printing state element: "
               //<< state.total_component_concentration.data[proc_col][component][i] << std::endl;
-              *vo_->os() << "Printing state element: " << state.total_component_concentration.data[i][component][proc_col] << std::endl;
-              *vo_->os() << "Printing internal element: " << (*col_tcc)(component,i) << std::endl;
-          state.total_component_concentration.data[proc_col][component][i] = (*col_tcc)(component,i);
+              *vo_->os() << "Printing state element: " << state.total_component_concentration.data[i][j][k] << std::endl;
+              *vo_->os() << "Printing internal element: " << (*col_tcc)(j,k) << std::endl;
+          state.total_component_concentration.data[i][j][k] = (*col_tcc)(j,k);
         }
       }
     }*/
