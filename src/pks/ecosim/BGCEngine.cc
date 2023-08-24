@@ -171,15 +171,15 @@ BGCEngine::Sizes() const
   return sizes_;
 }
 
-void BGCEngine::InitState(BGCProperties& props,
+void BGCEngine::InitState(BGCProperties& properties,
                                 BGCState& state,
                                 BGCAuxiliaryData& aux_data,
                                 int ncells_per_col_,
                                 int num_components,
-                                int cols_on_proc)
+                                int num_columns)
 {
-  AllocateBGCProperties(&sizes_, &props, ncells_per_col_, cols_on_proc);
-  AllocateBGCState(&sizes_, &state, ncells_per_col_, num_components, cols_on_proc);
+  AllocateBGCProperties(&sizes_, &properties, ncells_per_col_, num_columns);
+  AllocateBGCState(&sizes_, &state, ncells_per_col_, num_components, num_columns);
   //AllocateBGCAuxiliaryData(&sizes_, &aux_data, ncells_per_col_);
   //AllocateAlquimiaAuxiliaryOutputData(&sizes_, &aux_output);
 
@@ -188,11 +188,11 @@ void BGCEngine::InitState(BGCProperties& props,
   //std::fill(aux_data.aux_doubles.data, aux_data.aux_doubles.data + aux_data.aux_doubles.size, 0.0);
 }
 
-void BGCEngine::FreeState(BGCProperties& props,
+void BGCEngine::FreeState(BGCProperties& properties,
                                 BGCState& state,
                                 BGCAuxiliaryData& aux_data)
 {
-  FreeBGCProperties(&props);
+  FreeBGCProperties(&properties);
   FreeBGCState(&state);
   //FreeBGCAuxiliaryData(&aux_data);
   //FreeAlquimiaAuxiliaryOutputData(&aux_output);
@@ -203,18 +203,18 @@ void BGCEngine::DataTest() {
   bgc_.DataTest();
 }
 
-bool BGCEngine::Setup(BGCProperties& props,
+bool BGCEngine::Setup(BGCProperties& properties,
                               BGCState& state,
                               BGCSizes& sizes_,
                               int num_iterations,
-                              int ncol)
+                              int num_columns)
 {
   // Advance the chemical reaction all operator-split-like.
-  bgc_.Setup(&props,
+  bgc_.Setup(&properties,
                 &state,
                 &sizes_,
                 num_iterations,
-                ncol);
+                num_columns);
 
   //This is alquimia's advance function which we won't need
   //calling EcoSIM advance driver
@@ -225,19 +225,19 @@ bool BGCEngine::Setup(BGCProperties& props,
 }
 
 bool BGCEngine::Advance(const double delta_time,
-                              BGCProperties& props,
+                              BGCProperties& properties,
                               BGCState& state,
                               BGCSizes& sizes_,
                               int num_iterations,
-                              int ncol)
+                              int num_columns)
 {
   // Advance the chemical reaction all operator-split-like.
   bgc_.Advance(delta_time,
-                &props,
+                &properties,
                 &state,
                 &sizes_,
                 num_iterations,
-                ncol);
+                num_columns);
 
   //This is alquimia's advance function which we won't need
   //calling EcoSIM advance driver

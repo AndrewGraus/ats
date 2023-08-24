@@ -53,42 +53,42 @@ class BGCEngine {
   const BGCSizes& Sizes() const;
 
   // Initializes the data structures that hold the chemical state information.
-  void InitState(BGCProperties& props,
+  void InitState(BGCProperties& properties,
                  BGCState& state,
                  BGCAuxiliaryData& aux_data,
                  int ncells_per_col_,
                  int num_components,
-                 int cols_on_proc);
+                 int num_columns);
 
   // Frees the data structures that hold the chemical state information.
-  void FreeState(BGCProperties& props,
+  void FreeState(BGCProperties& properties,
                  BGCState& state,
                  BGCAuxiliaryData& aux_data);
   /* Don't need for now
   void EnforceCondition(const std::string& condition_name,
                         const double time,
-                        const AlquimiaProperties& props,
+                        const AlquimiaProperties& properties,
                         AlquimiaState& state,
                         AlquimiaAuxiliaryData& aux_data);*/
 
   void DataTest();
 
-  bool Setup(BGCProperties& props,
+  bool Setup(BGCProperties& properties,
                BGCState& state,
                BGCSizes& sizes,
                int num_iterations,
-               int ncol);
+               int num_columns);
 
   // Advances the species represented by the given array of concentrations, replacing old values
   // with new values. The order of the concentrations in the array matches that of the species names
   // returned by GetSpeciesNames. Returns true if the advance is successful,
   // false if it fails.
   bool Advance(const double delta_time,
-               BGCProperties& props,
+               BGCProperties& properties,
                BGCState& state,
                BGCSizes& sizes,
                int num_iterations,
-               int ncol);
+               int num_columns);
 
   //Functions from the alquimia util section, I don't think I need the full code so I think
   //I can just copy these functions over
