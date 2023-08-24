@@ -18,11 +18,19 @@ message(eco_inc_file="${ECOSIM_INCLUDE_DIRS}")
 # For adding F90 files add the F90 file to the ecosim source files and
 # inc files. The inc file also needs a header
 
-set(ats_ecosim_src_files
+#set(ats_ecosim_src_files
+#    EcoSIM_ATS_interface.cc
+#    BGCEngine.cc
+#    ecosim_wrappers.F90
+#    data/bgc_fortran_memory_mod.F90
+#)
+
+file(GLOB ats_ecosim_src_files
     EcoSIM_ATS_interface.cc
     BGCEngine.cc
     ecosim_wrappers.F90
     data/bgc_fortran_memory_mod.F90
+    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/*
 )
 
 set(ats_ecosim_inc_files
