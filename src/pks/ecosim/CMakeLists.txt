@@ -3,12 +3,24 @@
 add_subdirectory(constitutive_relations)
 add_subdirectory(data)
 
+set(TPL_INSTALL_PREFIX "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim")
+
 include_directories(${ATS_SOURCE_DIR}/src/pks)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/data)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/bulk_density)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/hydraulic_conductivity)
-#include_directories(${TPL_INSTALL_PREFIX}/ecosim/f90src/ATSUtils/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/ATSUtils/)
+
+include_directories(${TPL_INSTALL_PREFIX}/f90src/utils/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/minimath/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/modelconfig/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/mesh/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/modelpars/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_datatype/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SoilPhys/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SurPhys/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_mods/)
 
 include_directories(${ECOSIM_INCLUDE_DIRS})
 

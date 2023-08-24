@@ -12,6 +12,19 @@
 #    bgc_fortran_memory_mod.F90
 #)
 
+set(TPL_INSTALL_PREFIX "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim")
+
+include_directories(${TPL_INSTALL_PREFIX}/f90src/ATSUtils/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/utils/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/minimath/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/modelconfig/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/mesh/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/modelpars/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_datatype/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SoilPhys/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SurPhys/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_mods/)
+
 file(GLOB ats_ecosim_data_src_files
     BGC_constants.cc
     BGC_memory.cc
