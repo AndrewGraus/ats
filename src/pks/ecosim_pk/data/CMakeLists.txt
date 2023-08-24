@@ -5,12 +5,11 @@
 #
 
 # collect all sources
-file(Glob_RECURSE ats_ecosim_data_src_files
+set(ats_ecosim_data_src_files
     BGC_constants.cc
     BGC_memory.cc
     BGC_containers.cc
     bgc_fortran_memory_mod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/*.F90
 )
 
 set(ats_ecosim_data_inc_files
