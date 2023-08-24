@@ -46,7 +46,7 @@ void ecosim_setup(
   BGCState* state,
   BGCSizes* sizes,
   int num_iterations,
-  int ncol
+  int num_columns
 );
 
 void ecosim_shutdown();
@@ -57,7 +57,7 @@ void ecosim_advance(
   BGCState* state,
   BGCSizes* sizes,
   int num_iterations,
-  int ncol
+  int num_columns
 );
 
 #ifdef __cplusplus

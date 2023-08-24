@@ -41,8 +41,8 @@ subroutine EcoSIM_DataTest() bind(c)
 
 ! **************************************************************************** !
 
-subroutine EcoSIM_Setup(props, state, sizes, &
-                          num_iterations, ncol) bind(C)
+subroutine EcoSIM_Setup(properties, state, sizes, &
+                          num_iterations, num_columns) bind(C)
 
   use, intrinsic :: iso_c_binding
 
@@ -56,23 +56,23 @@ subroutine EcoSIM_Setup(props, state, sizes, &
   type (BGCSizes), intent(out) :: sizes
   type (BGCState), intent(inout) :: state
   !type (BGCAuxiliaryData), intent(inout) :: aux_data
-  type (BGCProperties), intent(in) :: props
-  integer, intent(in) :: ncol
+  type (BGCProperties), intent(in) :: properties
+  integer, intent(in) :: num_columns
   integer, intent(in) :: num_iterations
   integer :: jz
   integer :: js
 
   write(*,*) "starting driver transfer ATS2EcoSIMData"
 
-  call ATS2EcoSIMData(ncol, state, props, sizes)
+  call ATS2EcoSIMData(num_columns, state, properties, sizes)
 
   write(*,*) "starting driver Init_EcoSIM"
 
-  !call Init_EcoSIM(jz,js,ncol)
+  !call Init_EcoSIM(jz,js,num_columns)
 
   write(*,*) "starting driver transfer EcoSIM2ATSData"
 
-  call EcoSIM2ATSData(ncol, state, sizes)
+  call EcoSIM2ATSData(num_columns, state, sizes)
 
 end subroutine EcoSIM_Setup
 
@@ -93,8 +93,8 @@ subroutine EcoSIM_Shutdown() bind(C)
   !type (BGCSizes), intent(out) :: sizes
   !type (BGCState), intent(in) :: state
   !type (BGCAuxiliaryData), intent(in) :: aux_data
-  !type (BGCProperties), intent(in) :: props
-  !integer :: ncol, jz, js
+  !type (BGCProperties), intent(in) :: properties
+  !integer :: num_columns, jz, js
   !integer, intent(in) :: num_iterations
 
 end subroutine EcoSIM_Shutdown
@@ -103,11 +103,11 @@ end subroutine EcoSIM_Shutdown
 
 subroutine EcoSIM_Advance( &
      delta_t, &
-     props, &
+     properties, &
      state, &
      sizes, &
      num_iterations, &
-     ncol) bind(C)
+     num_columns) bind(C)
 
   use, intrinsic :: iso_c_binding
   use BGCContainers_module
@@ -117,17 +117,17 @@ subroutine EcoSIM_Advance( &
 
   ! function parameters
   real (c_double), value, intent(in) :: delta_t
-  type (BGCProperties), intent(in) :: props
+  type (BGCProperties), intent(in) :: properties
   type (BGCState), intent(inout) :: state
   type (BGCSizes), intent(out) :: sizes
   !type (BGCEngineStatus), intent(out) :: status
-  integer, intent(in) :: ncol
+  integer, intent(in) :: num_columns
   integer, intent(in) :: num_iterations
 
-  call ATS2EcoSIMData(ncol, state, props, sizes)
+  call ATS2EcoSIMData(num_columns, state, properties, sizes)
 
   !call Run_EcoSIM_one_step()
 
-  call EcoSIM2ATSData(ncol, state, sizes)
+  call EcoSIM2ATSData(num_columns, state, sizes)
 
 end subroutine EcoSIM_Advance

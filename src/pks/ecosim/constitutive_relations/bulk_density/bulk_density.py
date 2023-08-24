@@ -22,6 +22,6 @@ import sympy
 phi, nr, sl, nl, si, ni, sg, ng = sympy.var("phi,nr,sl,nl,si,ni,sg,ng")
 expression =  nr*(1 - phi) + phi*(sl*nl + si*ni + sg*ng);
 
-generate_evaluator("bulk_density", "ecosim_pk",
+generate_evaluator("bulk_density", "ecosim",
                    "bulk density", "bulk_density",
                    deps, params, expression=expression, doc=__doc__)

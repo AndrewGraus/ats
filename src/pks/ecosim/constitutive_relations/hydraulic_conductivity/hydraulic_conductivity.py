@@ -15,6 +15,6 @@ k, rho, mu = sympy.var("k,rho,mu")
 g_ = sympy.var("g_")
 expression = (k * rho * mu) / mu;
 
-generate_evaluator("hydraulic_conductivity", "ecosim_pk",
+generate_evaluator("hydraulic_conductivity", "ecosim",
                    "hydraulic conductivity", "hydraulic_conductivity",
                    deps, params, expression=expression, doc=__doc__)
