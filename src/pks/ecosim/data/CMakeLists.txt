@@ -24,6 +24,7 @@ include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_datatype/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SoilPhys/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SurPhys/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_mods/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/PhysData/)
 
 file(GLOB ats_ecosim_data_src_files
     BGC_constants.cc
@@ -40,6 +41,7 @@ file(GLOB ats_ecosim_data_src_files
     /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ecosim_datatype/*.F90
     /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/HydroTherm/SoilPhys/*.F90
     /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/HydroTherm/SurPhys/*.F90
+    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/HydroTherm/PhysData/*.F90
     /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ecosim_mods/*.F90
 )
 
