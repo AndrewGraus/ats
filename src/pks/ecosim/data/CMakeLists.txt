@@ -31,40 +31,6 @@ set(ats_ecosim_data_src_files
     BGC_memory.cc
     BGC_containers.cc
     bgc_fortran_memory_mod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/ATSCPLMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/ATSEcoSIMInitMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/BGC_containers.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ATSUtils/SharedDataMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/data_kind_mod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/abortutils.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/fileUtil.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/ecosim_time_mod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/EcoSimConst.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/ncdio_pio.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/utils/ecosim_log_mod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ecosim_datatype/SoilWaterDataType.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ecosim_datatype/GridDataType.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ecosim_datatype/SOMDataType.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ecosim_datatype/SoilPhysDataType.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ecosim_datatype/LandSurfDataType.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ecosim_datatype/ClimForcDataType.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ecosim_datatype/SoilPropertyDataType.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/ecosim_mods/InitAllocMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/mesh/GridConsts.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/modelconfig/EcoSIMConfig.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/modelconfig/TracerIDMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/modelconfig/ElmIDMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/modelconfig/EcoSIMCtrlMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/minimath/MiniMathMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/plant_bgc/GrosubsMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/plant_bgc/PhotoSynsMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/plant_bgc/RootMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/plant_bgc/LitterFallMod.f90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/plant_bgc/PlantBranchMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/modelpars/EcoSiMParDataMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/modelpars/GrosubPars.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/plant_bgc/NoduleBGCMod.F90
-    /global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/f90src/APIs/PlantAPIData.F90
 )
 
 set(ats_ecosim_data_inc_files
@@ -90,6 +56,34 @@ set(ats_ecosim_data_link_libs
   ats_pks
   ats_eos
   ats_operators
+  libAPIData.a
+  libAPIs.a
+  libATSUtils_mods.a
+  libPhysData.a
+  libSnowPhys.a
+  libSoilPhys.a
+  libSurfPhys.a
+  libbalances.a
+  libbox_chem.a
+  libbox_model.a
+  libboxshared.a
+  libdisturb_mods.a
+  libecosim_datatype.a
+  libecosim_main.a
+  libecosim_mods.a
+  libioutils.a
+  liblayers_chem.a
+  liblayers_model.a
+  libmesh.a
+  libminimath.a
+  libmodelconfig.a
+  libmodelforc.a
+  libmodelpars.a
+  libnonsalt.a
+  libplant_bgc.a
+  libplant_driver.a
+  libsalt.a
+  libutil.a  
 )
 
 # make the library
