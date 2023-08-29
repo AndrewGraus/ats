@@ -14,6 +14,7 @@
 
 set(ECOSIM_INSTALL_PREFIX "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim")
 set(ECOSIM_LIB_LOCATION "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/local/lib")
+set(ECOSIM_CMAKE_BINARY_DIR "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release/f90src")
 
 include_directories(${TPL_INSTALL_PREFIX}/f90src/ATSUtils/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/utils/)
@@ -26,6 +27,16 @@ include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SoilPhys/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SurfPhys/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_mods/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/PhysData/)
+
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/utils/)
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/minimath/)
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/modelconfig/)
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/mesh/)
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/modelpars/)
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_datatype/)
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SoilPhys/)
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SurPhys/)
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_mods/)
 
 set(ats_ecosim_data_src_files
     BGC_constants.cc
