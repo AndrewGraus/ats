@@ -14,7 +14,8 @@
 
 set(ECOSIM_INSTALL_PREFIX "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim")
 set(ECOSIM_LIB_LOCATION "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/local/lib")
-set(ECOSIM_CMAKE_BINARY_DIR "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release/f90src")
+set(ECOSIM_CMAKE_BINARY_DIR "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release")
+set(NETCDF_LIB "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/lib")
 
 include_directories(${TPL_INSTALL_PREFIX}/f90src/ATSUtils/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/utils/)
@@ -37,6 +38,7 @@ include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_datatype/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SoilPhys/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SurPhys/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_mods/)
+include_directories(${})
 
 set(ats_ecosim_data_src_files
     BGC_constants.cc
@@ -60,6 +62,7 @@ set(ats_ecosim_data_inc_files
 set(ats_ecosim_data_link_libs
   ${Teuchos_LIBRARIES}
   ${Epetra_LIBRARIES}
+  ${NETCDF_LIBRARIES}
   error_handling
   atk
   mesh
@@ -102,6 +105,11 @@ set(ats_ecosim_data_link_libs
   ${ECOSIM_LIB_LOCATION}/libplant_driver.a
   ${ECOSIM_LIB_LOCATION}/libsalt.a
   ${ECOSIM_LIB_LOCATION}/libutil.a
+  ${NETCDF_LIB}/libnetcdf.so  
+  ${NETCDF_LIB}/libnetcdf.so.19	
+  ${NETCDF_LIB}/libnetcdff.so
+  ${NETCDF_LIB}/libnetcdff.so.7
+  ${NETCDF_LIB}/libnetcdff.so.7.1.0
 )
 
 # make the library

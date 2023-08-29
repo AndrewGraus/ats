@@ -5,7 +5,8 @@ add_subdirectory(data)
 
 set(ECOSIM_INSTALL_PREFIX "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim")
 set(ECOSIM_LIB_LOCATION "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/local/lib")
-set(ECOSIM_CMAKE_BINARY_DIR "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release/f90src")
+set(ECOSIM_CMAKE_BINARY_DIR "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release")
+set(NETCDF_LIB "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/lib")
 
 include_directories(${ATS_SOURCE_DIR}/src/pks)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim)
@@ -117,6 +118,11 @@ set(ats_ecosim_link_libs
   ${ECOSIM_LIB_LOCATION}/libplant_driver.a
   ${ECOSIM_LIB_LOCATION}/libsalt.a
   ${ECOSIM_LIB_LOCATION}/libutil.a
+  ${NETCDF_LIB}/libnetcdf.so  
+  ${NETCDF_LIB}/libnetcdf.so.19 
+  ${NETCDF_LIB}/libnetcdff.so
+  ${NETCDF_LIB}/libnetcdff.so.7
+  ${NETCDF_LIB}/libnetcdff.so.7.1.0
   )
 
 message(inc_files="${ats_ecosim_inc_files}")
