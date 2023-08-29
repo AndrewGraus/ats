@@ -12,7 +12,7 @@
 #    bgc_fortran_memory_mod.F90
 #)
 
-set(TPL_INSTALL_PREFIX "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim")
+set(ECOSIM_INSTALL_PREFIX "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim")
 set(ECOSIM_LIB_LOCATION "/global/home/users/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/local/lib")
 
 include_directories(${TPL_INSTALL_PREFIX}/f90src/ATSUtils/)
@@ -32,6 +32,12 @@ set(ats_ecosim_data_src_files
     BGC_memory.cc
     BGC_containers.cc
     bgc_fortran_memory_mod.F90
+    ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/BGC_containers.F90
+    ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/BGC_containers.F90
+    ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/ATSCPLMod.F90
+    ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/ATSEcoSIMInitMod.F90
+    ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/SharedDataMod.F90
+    ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/c_f_interface_module.F90
 )
 
 set(ats_ecosim_data_inc_files
