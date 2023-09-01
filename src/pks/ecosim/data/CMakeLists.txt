@@ -59,10 +59,14 @@ set(ats_ecosim_data_inc_files
   BGC_memory.hh
 )
 
+file(GLOB ECOSIM_LIBRARIES
+  ${ECOSIM_LIB_LOCATION}/*.a
+)
+
 set(ats_ecosim_data_link_libs
   ${Teuchos_LIBRARIES}
   ${Epetra_LIBRARIES}
-  ${NETCDF_LIBRARIES}
+  ${ECOSIM_LIBRARIES}
   error_handling
   atk
   mesh
@@ -77,34 +81,6 @@ set(ats_ecosim_data_link_libs
   ats_pks
   ats_eos
   ats_operators
-  ${ECOSIM_LIB_LOCATION}/libAPIData.a
-  ${ECOSIM_LIB_LOCATION}/libAPIs.a
-  ${ECOSIM_LIB_LOCATION}/libATSUtils_mods.a
-  ${ECOSIM_LIB_LOCATION}/libPhysData.a
-  ${ECOSIM_LIB_LOCATION}/libSnowPhys.a
-  ${ECOSIM_LIB_LOCATION}/libSoilPhys.a
-  ${ECOSIM_LIB_LOCATION}/libSurfPhys.a
-  ${ECOSIM_LIB_LOCATION}/libbalances.a
-  ${ECOSIM_LIB_LOCATION}/libbox_chem.a
-  ${ECOSIM_LIB_LOCATION}/libbox_model.a
-  ${ECOSIM_LIB_LOCATION}/libboxshared.a
-  ${ECOSIM_LIB_LOCATION}/libdisturb_mods.a
-  ${ECOSIM_LIB_LOCATION}/libecosim_datatype.a
-  ${ECOSIM_LIB_LOCATION}/libecosim_main.a
-  ${ECOSIM_LIB_LOCATION}/libecosim_mods.a
-  ${ECOSIM_LIB_LOCATION}/libioutils.a
-  ${ECOSIM_LIB_LOCATION}/liblayers_chem.a
-  ${ECOSIM_LIB_LOCATION}/liblayers_model.a
-  ${ECOSIM_LIB_LOCATION}/libmesh.a
-  ${ECOSIM_LIB_LOCATION}/libminimath.a
-  ${ECOSIM_LIB_LOCATION}/libmodelconfig.a
-  ${ECOSIM_LIB_LOCATION}/libmodelforc.a
-  ${ECOSIM_LIB_LOCATION}/libmodelpars.a
-  ${ECOSIM_LIB_LOCATION}/libnonsalt.a
-  ${ECOSIM_LIB_LOCATION}/libplant_bgc.a
-  ${ECOSIM_LIB_LOCATION}/libplant_driver.a
-  ${ECOSIM_LIB_LOCATION}/libsalt.a
-  ${ECOSIM_LIB_LOCATION}/libutil.a
   ${NETCDF_LIB}/libnetcdf.so  
   ${NETCDF_LIB}/libnetcdf.so.19	
   ${NETCDF_LIB}/libnetcdff.so
