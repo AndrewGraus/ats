@@ -42,7 +42,7 @@ subroutine EcoSIM_DataTest() bind(c)
 ! **************************************************************************** !
 
 subroutine EcoSIM_Setup(properties, state, sizes, &
-                          num_iterations, num_columns) bind(C)
+                          num_iterations, num_columns, ncells_per_col_) bind(C)
 
   use, intrinsic :: iso_c_binding
 
@@ -59,16 +59,18 @@ subroutine EcoSIM_Setup(properties, state, sizes, &
   type (BGCProperties), intent(in) :: properties
   integer, intent(in) :: num_columns
   integer, intent(in) :: num_iterations
-  integer :: jz
+  integer, intent(in) :: ncells_per_col_
   integer :: js
 
   write(*,*) "starting driver transfer ATS2EcoSIMData"
+
+  js=1
 
   call ATS2EcoSIMData(num_columns, state, properties, sizes)
 
   write(*,*) "starting driver Init_EcoSIM"
 
-  !call Init_EcoSIM(jz,js,num_columns)
+  call Init_EcoSIM(ncells_per_col,js,num_columns)
 
   write(*,*) "starting driver transfer EcoSIM2ATSData"
 

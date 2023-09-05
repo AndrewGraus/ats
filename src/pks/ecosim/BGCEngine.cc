@@ -207,14 +207,16 @@ bool BGCEngine::Setup(BGCProperties& properties,
                               BGCState& state,
                               BGCSizes& sizes_,
                               int num_iterations,
-                              int num_columns)
+                              int num_columns
+                              int ncells_per_col_)
 {
   // Advance the chemical reaction all operator-split-like.
   bgc_.Setup(&properties,
                 &state,
                 &sizes_,
                 num_iterations,
-                num_columns);
+                num_columns,
+                ncells_per_col_);
 
   //This is alquimia's advance function which we won't need
   //calling EcoSIM advance driver

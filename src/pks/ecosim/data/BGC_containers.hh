@@ -201,7 +201,8 @@ extern "C" {
       BGCState* state,
       BGCSizes* sizes,
       int num_iterations,
-      int num_columns);
+      int num_columns,
+      int ncells_per_col_);
 
     /* gracefully shutdown the engine, cleanup memory */
     void (*Shutdown)();

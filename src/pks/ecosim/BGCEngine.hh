@@ -77,7 +77,8 @@ class BGCEngine {
                BGCState& state,
                BGCSizes& sizes,
                int num_iterations,
-               int num_columns);
+               int num_columns,
+               int ncells_per_col_);
 
   // Advances the species represented by the given array of concentrations, replacing old values
   // with new values. The order of the concentrations in the array matches that of the species names
