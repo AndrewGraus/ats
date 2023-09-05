@@ -70,7 +70,7 @@ subroutine EcoSIM_Setup(properties, state, sizes, &
 
   write(*,*) "starting driver Init_EcoSIM"
 
-  call Init_EcoSIM(ncells_per_col,js,num_columns)
+  call Init_EcoSIM(ncells_per_col_,js,num_columns)
 
   write(*,*) "starting driver transfer EcoSIM2ATSData"
 

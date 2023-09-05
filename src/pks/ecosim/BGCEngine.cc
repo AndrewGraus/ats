@@ -207,7 +207,7 @@ bool BGCEngine::Setup(BGCProperties& properties,
                               BGCState& state,
                               BGCSizes& sizes_,
                               int num_iterations,
-                              int num_columns
+                              int num_columns,
                               int ncells_per_col_)
 {
   // Advance the chemical reaction all operator-split-like.

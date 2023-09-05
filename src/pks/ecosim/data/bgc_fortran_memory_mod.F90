@@ -155,7 +155,7 @@ module bgc_fortran_memory_mod
 
   end subroutine BGC_Fortran_DataTest
 
-  subroutine BGC_Fortran_Setup(this, properties, state, sizes, num_iterations, num_columns)
+  subroutine BGC_Fortran_Setup(this, properties, state, sizes, num_iterations, num_columns, ncells_per_col_)
     use, intrinsic :: iso_c_binding, only : c_ptr, c_int, c_double, c_f_procpointer
     use BGCContainers_module, only : BGCSizes, BGCProperties,&
              BGCState
@@ -166,6 +166,7 @@ module bgc_fortran_memory_mod
     real(c_double) :: delta_t
     integer(c_int) :: num_columns
     integer(c_int) :: num_iterations
+    integer(c_int) :: ncells_per_col_
     type(BGCProperties) :: properties
     type(BGCState) :: state
     type(BGCSizes) :: sizes
@@ -173,7 +174,7 @@ module bgc_fortran_memory_mod
     procedure(Setup), pointer :: engine_Setup
 
     call c_f_procpointer(this%c_interface%Setup,engine_Setup)
-    call engine_Setup(properties, state, sizes, num_iterations, num_columns)
+    call engine_Setup(properties, state, sizes, num_iterations, num_columns,ncells_per_col_)
 
   end subroutine BGC_Fortran_Setup
 
