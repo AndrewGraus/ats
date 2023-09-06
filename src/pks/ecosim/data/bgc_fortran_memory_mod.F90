@@ -94,7 +94,7 @@ module bgc_fortran_memory_mod
 
 
   interface
-    subroutine Setup(properties, state, sizes, num_iterations, num_columns,ncells_per_col_) bind(C)
+    subroutine Setup(properties, state, sizes, num_iterations, num_columns, ncells_per_col_) bind(C)
 
       use, intrinsic :: iso_c_binding, only: c_char, c_bool, c_ptr, c_int
       use BGCContainers_module, only : BGCSizes,BGCProperties,&

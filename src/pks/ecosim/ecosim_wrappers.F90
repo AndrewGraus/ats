@@ -65,7 +65,7 @@ subroutine EcoSIM_Setup(properties, state, sizes, num_iterations,&
 
   call ATS2EcoSIMData(num_columns, state, properties, sizes)
 
-  call Init_EcoSIM(ncells_per_col_,num_columns)
+  call Init_EcoSIM(sizes)
 
   write(*,*) "starting driver transfer EcoSIM2ATSData"
 
