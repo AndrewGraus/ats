@@ -210,6 +210,10 @@ class EcoSIM : public PK_Physical {
   Key suc_key_;
   Key aspect_key_;
   Key slope_key_;
+  Key surface_energy_source_key_;
+  Key subsurface_energy_source_key_;
+  Key surface_water_source_key_;
+  Key subsurface_water_source_key_;
 
   Teuchos::RCP<BGCEngine> bgc_engine_;
 

@@ -123,7 +123,7 @@ subroutine EcoSIM_Advance( &
 
   call ATS2EcoSIMData(num_columns, state, properties, sizes)
 
-  !call Run_EcoSIM_one_step()
+  call Run_EcoSIM_one_step()
 
   call EcoSIM2ATSData(num_columns, state, sizes)
 
