@@ -223,16 +223,6 @@ void AllocateBGCTensorDouble(const int cells, const int columns, const int compo
     tensor->capacity_columns= nearest_power_of_2(columns);
     tensor->capacity_components = nearest_power_of_2(components);
 
-    std::cout << "In Allocate Tensor Double: " << std::endl;
-    std::cout << "columns on processor " << columns << std::endl;
-    std::cout << "size columns on procesor: " << tensor->capacity_columns << std::endl;
-
-    std::cout << "cells per column: " << cells<< std::endl;
-    std::cout << "size cells per column: " << tensor->capacity_cells<< std::endl;
-
-    std::cout << "components: " << components << std::endl;
-    std::cout << "size components: " << tensor->capacity_components << std::endl;
-
     tensor->data = (double***) calloc((size_t)tensor->capacity_columns, sizeof(double**));
     for (int i = 0; i < tensor->columns; ++i) {
       tensor->data[i] = (double**) calloc((size_t)tensor->capacity_cells, sizeof(double*));
@@ -322,10 +312,6 @@ void AllocateBGCState(const BGCSizes* const sizes,
    sizes->num_components = num_components;
    sizes->num_columns = num_columns;
 
-   std::cout << "In Allocate State: " << std::endl;
-   std::cout << "num_components: " << num_components << std::endl;
-   std::cout << "ncells_per_col: " << ncells_per_col_ << std::endl;
-   std::cout << "num_columns: " << num_columns << std::endl;
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->liquid_density));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->gas_density));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->ice_density));
@@ -358,7 +344,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
      FreeBGCMatrixDouble(&(state->subsurface_energy_source));
      FreeBGCMatrixDouble(&(state->subsurface_water_source));
      FreeBGCVectorDouble(&(state->surface_energy_source));
-     FreeBGCVectorDouble(&(state->surface_water_source)); 
+     FreeBGCVectorDouble(&(state->surface_water_source));
      FreeBGCTensorDouble(&(state->total_component_concentration));
    }
  }  /* end FreeAlquimiaState() */
@@ -395,8 +381,6 @@ void AllocateBGCState(const BGCSizes* const sizes,
 
  void AllocateBGCProperties(BGCSizes* sizes, BGCProperties* properties,
                            int ncells_per_col_, int num_columns) {
-   std::cout << "In allocate properties: " << std::endl;
-   std::cout << "prop size: " << num_columns << std::endl;
 
    sizes->ncells_per_col_ = ncells_per_col_;
    sizes->num_columns = num_columns;

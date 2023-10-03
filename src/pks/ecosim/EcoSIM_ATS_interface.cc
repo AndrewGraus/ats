@@ -222,27 +222,14 @@ void EcoSIM::Initialize() {
   const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, Tags::DEFAULT)->ViewComponent("cell"));
   int tcc_num = tcc.NumVectors();
   Teuchos::OSTab tab = vo_->getOSTab();
-  *vo_->os() << "number of components: " << tcc_num << std::endl;
 
   num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  *vo_->os() << "columns on processor: " << num_columns_ << std::endl;
 
   //Now we call the engine's init state function which allocates the data
   bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num, num_columns_);
 
-  *vo_->os() << "Trying to print Sizes from engine: " << tcc_num << std::endl;
-  bgc_engine_->Sizes().ncells_per_col_;
-  bgc_engine_->Sizes().num_components;
-  bgc_engine_->Sizes().num_columns;
-
-  *vo_->os() << "number of cells: " << bgc_engine_->Sizes().ncells_per_col_ << std::endl;
-  *vo_->os() << "number of components: " << bgc_engine_->Sizes().num_components << std::endl;
-  *vo_->os() << "number of columns: " << bgc_engine_->Sizes().num_columns << std::endl;
-
   int ierr = 0;
 
-  *vo_->os() << "printing bool:" << std::endl;
-  *vo_->os() << (S_->HasRecord(suc_key_, Tags::DEFAULT)) << std::endl;
   if (S_->HasRecord(suc_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "has suction key." << std::endl;
@@ -349,8 +336,6 @@ void EcoSIM::Initialize() {
   num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
   num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
 
-  *vo_->os() << "total columns cell_map: " << num_columns_global << std::endl;
-  *vo_->os() << "total columns from num_entities: " << num_columns_global << std::endl;
   //Trying to loop over processors now:
   int numProcesses, p_rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
@@ -358,9 +343,7 @@ void EcoSIM::Initialize() {
   for (int k = 0; k < numProcesses; ++k) {
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank==k) {
-      std::cout << "on processor " << p_rank << std::endl;
       num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-      std::cout << num_columns_local << std::endl;
 
       InitializeSingleProcess(p_rank);
     }
@@ -569,8 +552,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
   num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
 
-  *vo_->os() << "total columns cell_map: " << num_columns_global << std::endl;
-  *vo_->os() << "total columns from num_entities: " << num_columns_global << std::endl;
   //Trying to loop over processors now:
   int numProcesses, p_rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
@@ -578,9 +559,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   for (int k = 0; k < numProcesses; ++k) {
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank==k) {
-      std::cout << "on processor " << p_rank << std::endl;
       num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-      std::cout << num_columns_local << std::endl;
 
       AdvanceSingleProcess(dt, p_rank);
     }
@@ -774,16 +753,12 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
   num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
 
-  *vo_->os() << "total columns cell_map: " << num_columns_global << std::endl;
-  *vo_->os() << "total columns from num_entities: " << num_columns_global_ptype << std::endl;
   //Trying to loop over processors now:
   int p_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
   MPI_Barrier(MPI_COMM_WORLD);
 
-  std::cout << "on processor " << p_rank << std::endl;
   num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  std::cout << num_columns_local << std::endl;
 
   //Loop over columns on this process
   for (int column=0; column!=num_columns_local; ++column) {
@@ -877,39 +852,18 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.aspect.data[column] = aspect[column];
     props.slope.data[column] = slope[column];
 
-    *vo_->os() << "Checking TCC variables: " << std::endl;
-    *vo_->os() << "size of processes: " << state.total_component_concentration.components << " number of processes: " << num_columns_local << std::endl;
-    *vo_->os() << "size of components: " << state.total_component_concentration.columns << " number of components: " << tcc_num << std::endl;
-    *vo_->os() << "size of processes: " << state.total_component_concentration.cells << " number of cells: " << ncells_per_col_ << std::endl;
-
-    *vo_->os() << "Shape of data: " << state.total_component_concentration.cells << " x "
-               << state.total_component_concentration.columns << " x "
-               << state.total_component_concentration.components << std::endl;
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "surface source vars before: " << std::endl;
+    *vo_->os() << "surface water source: " << props.surface_water_source.data[column] << std::endl;
+    *vo_->os() << "surface energy source: " << props.surface_energy_source.data[column] << std::endl;
 
     // data[columns][cells][components]
     for (int i = 0; i < state.total_component_concentration.columns; i++) {
       for (int j = 0; j < state.total_component_concentration.cells; j++) {
         for (int k = 0; k < state.total_component_concentration.components; k++) {
-          printf("data[%d][%d][%d]: %d\n", i, j, k, state.total_component_concentration.data[i][j][k]);
         }
       }
     }
-    /*
-    *vo_->os() << "entering loop: " << std::endl;
-    for (int i=0; i < num_columns_local; ++i) {
-      *vo_->os() << "on column : " << i << std::endl;
-      for (int j=0; j < ncells_per_col_; ++j) {
-        *vo_->os() << "on cell: " << j << std::endl;
-        for (int k=0; k < tcc_num; ++k) {
-          *vo_->os() << "on component: " << k << std::endl;
-              //original config (doesn't work) *vo_->os() << "Printing state element: "
-              //<< state.total_component_concentration.data[proc_col][component][i] << std::endl;
-              *vo_->os() << "Printing state element: " << state.total_component_concentration.data[i][j][k] << std::endl;
-              *vo_->os() << "Printing internal element: " << (*col_tcc)(j,k) << std::endl;
-          state.total_component_concentration.data[i][j][k] = (*col_tcc)(j,k);
-        }
-      }
-    }*/
   }
 
   //Fill the atmospheric abundances
@@ -978,16 +932,12 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
   num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
 
-  *vo_->os() << "total columns cell_map: " << num_columns_global << std::endl;
-  *vo_->os() << "total columns from num_entities: " << num_columns_global_ptype << std::endl;
   //Trying to loop over processors now:
   int p_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
   MPI_Barrier(MPI_COMM_WORLD);
 
-  std::cout << "on processor " << p_rank << std::endl;
   num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  std::cout << num_columns_local << std::endl;
 
   //Loop over columns on this process
   for (int col=0; col!=num_columns_local; ++col) {
@@ -1054,6 +1004,12 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
         (*col_temp)[i] = state.temperature.data[column][i];
       }
     }
+
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "surface source vars after: " << std::endl;
+    *vo_->os() << "surface water source: " << props.surface_water_source.data[column] << std::endl;
+    *vo_->os() << "surface energy source: " << props.surface_energy_source.data[column] << std::endl;
+
 
     ColumnToField_(column,porosity,col_porosity.ptr());
     ColumnToField_(column,liquid_saturation,col_l_sat.ptr());
