@@ -78,13 +78,13 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     thermal_conductivity_key_ = Keys::readKey(*plist_, domain_, "thermal conductivity", "thermal_conductivity");
 
     //Sources
-    surface_water_source_key_ = Keys::readKey(plist, domain_, "surface water source", "water_source");
+    surface_water_source_key_ = Keys::readKey(*plist_, domain_surface_, "surface water source", "water_source");
     surface_energy_source_key_ =
-      Keys::readKey(plist, domain_, "surface energy source", "total_energy_source");
+      Keys::readKey(*plist_, domain_surface_, "surface energy source", "total_energy_source");
     subsurface_water_source_key_ =
-      Keys::readKey(plist, domain_ss_, "subsurface water source", "water_source");
+      Keys::readKey(*plist_, domain_, "subsurface water source", "water_source");
     subsurface_energy_source_key_ =
-      Keys::readKey(plist, domain_ss_, "subsurface energy source", "total_energy_source");
+      Keys::readKey(*plist_, domain_, "subsurface energy source", "total_energy_source");
     //snow_source_key_ = Keys::readKey(plist, domain_snow_, "snow mass source - sink", "source_sink");
     //new_snow_key_ = Keys::readKey(plist, domain_snow_, "new snow source", "source");
 
@@ -836,8 +836,8 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       state.water_content.data[column][i] = (*col_wc)[i];
       state.hydraulic_conductivity.data[column][i] = (*col_h_cond)[i];
       state.bulk_density.data[column][i] = (*col_b_dens)[i];
-      state.subsurface_water_source[column][i] = (*col_ss_water_source)[i];
-      state.subsurface_energy_source[column][i] = (*col_ss_energy_source)[i];
+      state.subsurface_water_source.data[column][i] = (*col_ss_water_source)[i];
+      state.subsurface_energy_source.data[column][i] = (*col_ss_energy_source)[i];
       //state.suction_head.data[i] = (*col_suc)[i];
       props.plant_wilting_factor.data[column][i] = (*col_wp)[i];
       props.rooting_depth_fraction.data[column][i] = (*col_rf)[i];
@@ -945,11 +945,11 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Amanzi::Tags::NEXT, hydraulic_conductivity_key_).ViewComponent("cell",false))(0);
   auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_density_key_, Amanzi::Tags::NEXT, bulk_density_key_).ViewComponent("cell",false))(0);
 
-  auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, water_tag).ViewComponent("cell", false))(0);
-  auto& subsurface_energy_source = *(*S_->GetW<CompositeVector>(subsurface_energy_source_key_, water_tag).ViewComponent("cell", false))(0);
+  auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Amanzi::Tags::NEXT, surface_energy_source_key_).ViewComponent("cell", false))(0);
+  auto& subsurface_energy_source = *(*S_->GetW<CompositeVector>(subsurface_energy_source_key_, Amanzi::Tags::NEXT, subsurface_energy_source_key_).ViewComponent("cell", false))(0);
 
-  auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_key_, water_tag).ViewComponent("cell", false))(0);
-  auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_key_, water_tag).ViewComponent("cell", false))(0);
+  auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_key_, Amanzi::Tags::NEXT, surface_water_source_key_).ViewComponent("cell", false))(0);
+  auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_key_, Amanzi::Tags::NEXT, subsurface_water_source_key_).ViewComponent("cell", false))(0);
 
 
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -1036,8 +1036,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       (*col_h_cond)[i] = state.hydraulic_conductivity.data[column][i];
       (*col_b_dens)[i] = state.bulk_density.data[column][i];
 
-      (*col_ss_water_source)[i] = state.subsurface_water_source[column][i];
-      (*col_ss_energy_source)[i] = state.subsurface_energy_source[column][i];
+      (*col_ss_water_source)[i] = state.subsurface_water_source.data[column][i];
+      (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[column][i];
 
       surface_energy_source[column] = state.surface_energy_source.data[column];
       surface_water_source[column] = state.surface_water_source.data[column];
