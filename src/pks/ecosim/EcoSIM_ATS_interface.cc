@@ -854,8 +854,8 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "surface source vars before: " << std::endl;
-    *vo_->os() << "surface water source: " << props.surface_water_source.data[column] << std::endl;
-    *vo_->os() << "surface energy source: " << props.surface_energy_source.data[column] << std::endl;
+    *vo_->os() << "surface water source: " << state.surface_water_source.data[column] << std::endl;
+    *vo_->os() << "surface energy source: " << state.surface_energy_source.data[column] << std::endl;
 
     // data[columns][cells][components]
     for (int i = 0; i < state.total_component_concentration.columns; i++) {
@@ -1007,8 +1007,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "surface source vars after: " << std::endl;
-    *vo_->os() << "surface water source: " << props.surface_water_source.data[column] << std::endl;
-    *vo_->os() << "surface energy source: " << props.surface_energy_source.data[column] << std::endl;
+    *vo_->os() << "surface water source: " << state.surface_water_source.data[column] << std::endl;
+    *vo_->os() << "surface energy source: " << state.surface_energy_source.data[column] << std::endl;
 
 
     ColumnToField_(column,porosity,col_porosity.ptr());
