@@ -85,6 +85,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
       Keys::readKey(*plist_, domain_, "subsurface water source", "water_source");
     subsurface_energy_source_key_ =
       Keys::readKey(*plist_, domain_, "subsurface energy source", "total_energy_source");
+    surface_energy_source_ecosim_key_ =
+      Keys::readKey(*plist_, domain_surface_, "surface energy source ecosim", "ecosim_source");
     //snow_source_key_ = Keys::readKey(plist, domain_snow_, "snow mass source - sink", "source_sink");
     //new_snow_key_ = Keys::readKey(plist, domain_snow_, "new snow source", "source");
 
@@ -281,7 +283,7 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(surface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(surface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
-  
+
   if (S_->HasRecord(gas_density_key_test_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found mass density gas key" << std::endl;
@@ -719,7 +721,8 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& aspect = *(*S_->Get<CompositeVector>(aspect_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key_, water_tag).ViewComponent("cell", false))(0);
 
-  const Epetra_Vector& surface_energy_source = *(*S_->Get<CompositeVector>(surface_energy_source_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& surface_energy_source = *(*S_->Get<CompositeVector>(surface_energy_source_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& surface_energy_source = *(*S_->Get<CompositeVector>(surface_energy_source_ecosim_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& subsurface_energy_source = *(*S_->Get<CompositeVector>(subsurface_energy_source_key_, water_tag).ViewComponent("cell", false))(0);
 
   const Epetra_Vector& surface_water_source = *(*S_->Get<CompositeVector>(surface_water_source_key_, water_tag).ViewComponent("cell", false))(0);
@@ -841,7 +844,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     }
 
     Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "surface energy from state: " << std::endl;    
+    *vo_->os() << "surface energy from state: " << std::endl;
     *vo_->os() << "surface energy source: " << surface_energy_source[column] << std::endl;
 
     //fill surface variables
@@ -903,7 +906,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Amanzi::Tags::NEXT, hydraulic_conductivity_key_).ViewComponent("cell",false))(0);
   auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_density_key_, Amanzi::Tags::NEXT, bulk_density_key_).ViewComponent("cell",false))(0);
 
-  auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
+  //auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
+  auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
   auto& subsurface_energy_source = *(*S_->GetW<CompositeVector>(subsurface_energy_source_key_, Tags::DEFAULT, subsurface_energy_source_key_).ViewComponent("cell", false))(0);
 
   auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_key_, Tags::DEFAULT, surface_water_source_key_).ViewComponent("cell", false))(0);
@@ -949,7 +953,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "surface source after EcoSIM run: " << std::endl;
     *vo_->os() << "surface energy source (from state): " << surface_energy_source[column] << std::endl;
-    
+
 
      if (has_gas) {
       auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell",false))(0);
@@ -1026,8 +1030,6 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     *vo_->os() << "Just printing directly from state:" << std::endl;
     auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Amanzi::Tags::NEXT, surface_energy_source_key_).ViewComponent("cell", false))(0);
     *vo_->os() << new_e_source << std::endl;
-
-
 
     ColumnToField_(column,porosity,col_porosity.ptr());
     ColumnToField_(column,liquid_saturation,col_l_sat.ptr());

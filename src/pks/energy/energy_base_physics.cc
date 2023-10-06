@@ -134,7 +134,7 @@ EnergyBase::AddSources_(const Tag& tag, const Teuchos::Ptr<CompositeVector>& g)
   Teuchos::OSTab tab = vo_->getOSTab();
 
   Epetra_MultiVector& g_c = *g->ViewComponent("cell", false);
-
+  *vo_->os() << "In AddSources"
   S_->GetEvaluator(cell_vol_key_, tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& cv =
     *S_->Get<CompositeVector>(cell_vol_key_, tag_next_).ViewComponent("cell", false);
@@ -145,20 +145,14 @@ EnergyBase::AddSources_(const Tag& tag, const Teuchos::Ptr<CompositeVector>& g)
     S_->GetEvaluator(source_key_, tag).Update(*S_, name_);
     const Epetra_MultiVector& source1 =
       *S_->Get<CompositeVector>(source_key_, tag).ViewComponent("cell", false);
- 
-    *vo_->os() << "We are in AddSources" << std::endl;   
 
     // Add into residual
     unsigned int ncells = g_c.MyLength();
-    
-    for (unsigned int c = 0; c != ncells; ++c) { 
-        *vo_->os() << "On cell " << c << ":"  << std::endl;
-        *vo_->os() << "g: " << g_c[0][c] << std::endl;
-        *vo_->os() << "source: " << source1[0][c] << std::endl;
-        *vo_->os() << "cv: " << cv[0][c] << std::endl;
-        g_c[0][c] -= source1[0][c] * cv[0][c];
+    for (unsigned int c = 0; c != ncells; ++c) {
+      *vo_->os() << "source: " << source1[0][c];
+      g_c[0][c] -= source1[0][c] * cv[0][c];
 
- }
+    }
 
     if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "Adding external source term" << std::endl;
     db_->WriteVector("  Q_ext", S_->GetPtr<CompositeVector>(source_key_, tag).ptr(), false);
