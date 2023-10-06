@@ -253,7 +253,9 @@ void EcoSIM::Initialize() {
   }
 
   // Ensure dependencies are filled
-  S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
+  // May not need to update (also causes an assertion error if called before
+  // The PK that owns the variable
+  /*S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(porosity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -264,11 +266,11 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(subsurface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(subsurface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
-
+  */
   //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Surface properties from met data
-  S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
+  /*S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(prain_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -279,7 +281,7 @@ void EcoSIM::Initialize() {
   S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(surface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(surface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
-
+  
   if (S_->HasRecord(gas_density_key_test_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found mass density gas key" << std::endl;
@@ -316,7 +318,7 @@ void EcoSIM::Initialize() {
     *vo_->os() << "Did not find ice key" << std::endl;
     has_ice = false;
   }
-
+  */
   //Initialize owned evaluators
   S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
   S_->GetRecordW(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").set_initialized();
@@ -838,6 +840,10 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       }
     }
 
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "surface energy from state: " << std::endl;    
+    *vo_->os() << "surface energy source: " << surface_energy_source[column] << std::endl;
+
     //fill surface variables
     state.surface_energy_source.data[column] = surface_energy_source[column];
     state.surface_water_source.data[column] = surface_water_source[column];
@@ -852,12 +858,10 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.aspect.data[column] = aspect[column];
     props.slope.data[column] = slope[column];
 
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "surface source vars before: " << std::endl;
-    *vo_->os() << "surface water source: " << state.surface_water_source.data[column] << std::endl;
+    *vo_->os() << "surface source after copying for EcoSIM: " << std::endl;
     *vo_->os() << "surface energy source: " << state.surface_energy_source.data[column] << std::endl;
+    *vo_->os() << "surface energy source (from state): " << surface_energy_source[column] << std::endl;
 
-    // data[columns][cells][components]
     for (int i = 0; i < state.total_component_concentration.columns; i++) {
       for (int j = 0; j < state.total_component_concentration.cells; j++) {
         for (int k = 0; k < state.total_component_concentration.components; k++) {
@@ -899,11 +903,11 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Amanzi::Tags::NEXT, hydraulic_conductivity_key_).ViewComponent("cell",false))(0);
   auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_density_key_, Amanzi::Tags::NEXT, bulk_density_key_).ViewComponent("cell",false))(0);
 
-  auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Amanzi::Tags::NEXT, surface_energy_source_key_).ViewComponent("cell", false))(0);
-  auto& subsurface_energy_source = *(*S_->GetW<CompositeVector>(subsurface_energy_source_key_, Amanzi::Tags::NEXT, subsurface_energy_source_key_).ViewComponent("cell", false))(0);
+  auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
+  auto& subsurface_energy_source = *(*S_->GetW<CompositeVector>(subsurface_energy_source_key_, Tags::DEFAULT, subsurface_energy_source_key_).ViewComponent("cell", false))(0);
 
-  auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_key_, Amanzi::Tags::NEXT, surface_water_source_key_).ViewComponent("cell", false))(0);
-  auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_key_, Amanzi::Tags::NEXT, subsurface_water_source_key_).ViewComponent("cell", false))(0);
+  auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_key_, Tags::DEFAULT, surface_water_source_key_).ViewComponent("cell", false))(0);
+  auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_key_, Tags::DEFAULT, subsurface_water_source_key_).ViewComponent("cell", false))(0);
 
 
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -941,7 +945,13 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
   //Loop over columns on this process
   for (int col=0; col!=num_columns_local; ++col) {
-    if (has_gas) {
+
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "surface source after EcoSIM run: " << std::endl;
+    *vo_->os() << "surface energy source (from state): " << surface_energy_source[column] << std::endl;
+    
+
+     if (has_gas) {
       auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell",false))(0);
       auto& gas_density = *(*S_->GetW<CompositeVector>(gas_density_key_, Amanzi::Tags::NEXT, gas_density_key_).ViewComponent("cell",false))(0);
       for (int i=0; i < ncells_per_col_; ++i) {
@@ -989,9 +999,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       (*col_ss_water_source)[i] = state.subsurface_water_source.data[column][i];
       (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[column][i];
 
-      surface_energy_source[column] = state.surface_energy_source.data[column];
-      surface_water_source[column] = state.surface_water_source.data[column];
-
+      //??vec[col_iter[i]] = (*col_vec)[i];
       if (has_gas) {
         (*col_g_dens)[i] = state.gas_density.data[column][i];
       }
@@ -1005,10 +1013,20 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       }
     }
 
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "surface source vars after: " << std::endl;
-    *vo_->os() << "surface water source: " << state.surface_water_source.data[column] << std::endl;
+    *vo_->os() << "Attempting to set state value " << std::endl;
+
+    surface_energy_source[column] = state.surface_energy_source.data[column];
+
+    *vo_->os() << "Energy after equating to EcoSIM value: " << std::endl;
     *vo_->os() << "surface energy source: " << state.surface_energy_source.data[column] << std::endl;
+    *vo_->os() << "surface energy source (from State): " << surface_energy_source[column] << std::endl;
+    //*vo_->os() << "surface source vars after: " << std::endl;
+    //*vo_->os() << "surface water source: " << state.surface_water_source.data[column] << std::endl;
+    //*vo_->os() << "surface energy source: " << state.surface_energy_source.data[column] << std::endl;
+    *vo_->os() << "Just printing directly from state:" << std::endl;
+    auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Amanzi::Tags::NEXT, surface_energy_source_key_).ViewComponent("cell", false))(0);
+    *vo_->os() << new_e_source << std::endl;
+
 
 
     ColumnToField_(column,porosity,col_porosity.ptr());
