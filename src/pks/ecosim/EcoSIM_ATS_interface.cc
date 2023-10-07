@@ -907,7 +907,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_density_key_, Amanzi::Tags::NEXT, bulk_density_key_).ViewComponent("cell",false))(0);
 
   //auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
-  auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
+  auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, Tags::DEFAULT, surface_energy_source_ecosim_key_).ViewComponent("cell", false))(0);
   auto& subsurface_energy_source = *(*S_->GetW<CompositeVector>(subsurface_energy_source_key_, Tags::DEFAULT, subsurface_energy_source_key_).ViewComponent("cell", false))(0);
 
   auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_key_, Tags::DEFAULT, surface_water_source_key_).ViewComponent("cell", false))(0);
