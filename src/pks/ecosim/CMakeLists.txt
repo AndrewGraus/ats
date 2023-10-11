@@ -33,7 +33,7 @@ include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/mesh/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/modelpars/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_datatype/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SoilPhys/)
-include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SurPhys/)
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SurfPhys/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_mods/)
 
 include_directories(${ECOSIM_INCLUDE_DIRS})
@@ -59,6 +59,7 @@ set(ats_ecosim_src_files
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/BGC_containers.F90
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/ATSCPLMod.F90
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/ATSEcoSIMInitMod.F90
+    ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/ATSEcoSIMAdvanceMod.F90
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/SharedDataMod.F90
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/c_f_interface_module.F90
 )
