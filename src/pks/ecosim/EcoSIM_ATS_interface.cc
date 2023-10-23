@@ -66,7 +66,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     saturation_ice_key_ = Keys::readKey(*plist_,domain_,"saturation ice", "saturation_ice");
     water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
     relative_permeability_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
-    //suction_key_ = Keys::readKey(*plist_,domain_,"suction","suction_head");
+    //suc_key_ = Keys::readKey(*plist_,domain_,"suction head","suction_head");
     liquid_density_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
     ice_density_key_ = Keys::readKey(*plist_, domain_, "mass density ice", "mass_density_ice");
     gas_density_key_ = Keys::readKey(*plist_, domain_,"mass density gas", "mass_density_gas");
@@ -124,6 +124,9 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
 
     dt_ = plist_->get<double>("initial time step", 1.);
     c_m_ = plist_->get<double>("heat capacity [J mol^-1 K^-1]");
+
+    //Teuchos::OSTab tab = vo_->getOSTab();
+    //*vo_->os() << vo_->color("green") << "heat capacity: " <<  c_m_; 
 
     //This initialized the engine (found in BGCEngine.cc) This is the code that
     //actually points to the driver
@@ -308,7 +311,7 @@ void EcoSIM::Initialize() {
     *vo_->os() << "Did not find temp key" << std::endl;
     has_energy = false;
   }
-
+  */
   if (S_->HasRecord(ice_density_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found ice key" << std::endl;
@@ -320,7 +323,7 @@ void EcoSIM::Initialize() {
     *vo_->os() << "Did not find ice key" << std::endl;
     has_ice = false;
   }
-  */
+  
   //Initialize owned evaluators
   S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
   S_->GetRecordW(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").set_initialized();
