@@ -126,7 +126,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     c_m_ = plist_->get<double>("heat capacity [J mol^-1 K^-1]");
 
     //Teuchos::OSTab tab = vo_->getOSTab();
-    //*vo_->os() << vo_->color("green") << "heat capacity: " <<  c_m_; 
+    //*vo_->os() << vo_->color("green") << "heat capacity: " <<  c_m_;
 
     //This initialized the engine (found in BGCEngine.cc) This is the code that
     //actually points to the driver
@@ -143,6 +143,11 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     std::string engine_name = plist_->get<std::string>("engine");
     std::string engine_inputfile = plist_->get<std::string>("engine input file");
     bgc_engine_ = Teuchos::rcp(new BGCEngine(engine_name, engine_inputfile));
+
+    AMANZI_ASSERT(plist_.isSublist("WRM parameters"));
+    Teuchos::ParameterList sublist = plist_.sublist("WRM parameters");
+    wrms_ = createWRMPartition(sublist);
+    InitializeFromPlist_();
   }
 
 
@@ -323,7 +328,7 @@ void EcoSIM::Initialize() {
     *vo_->os() << "Did not find ice key" << std::endl;
     has_ice = false;
   }
-  
+
   //Initialize owned evaluators
   S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
   S_->GetRecordW(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").set_initialized();
@@ -392,6 +397,10 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
                << "Advancing: t0 = " << S_->get_time(tag_current_)
                << " t1 = " << S_->get_time(tag_next_) << " h = " << dt << std::endl
                << "----------------------------------------------------------------" << std::endl;
+
+  *vo_->os() << "Testing WRMs" << std::endl;
+  double s_test = 0.5;
+  double suction_head = wrm_->suction_head(s_test);
 
   // Ensure dependencies are filled
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);

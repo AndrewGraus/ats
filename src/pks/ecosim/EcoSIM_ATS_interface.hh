@@ -42,6 +42,8 @@
 #include "pk_physical_default.hh"
 #include "PK_Physical.hh"
 #include "ecosim_mod_test_wrapper.h"
+#include "wrm.hh"
+#include "wrm_partition.hh"
 
 
 namespace Amanzi {
@@ -56,10 +58,10 @@ class EcoSIM : public PK_Physical {
               const Teuchos::RCP<Teuchos::ParameterList>& plist,
               const Teuchos::RCP<State>& S,
               const Teuchos::RCP<TreeVector>& solution);
-
   // Virtual destructor
   ~EcoSIM();
 
+  Teuchos::RCP<WRMPartition> get_WRMs() { return wrms_; }
   // is a PK
   // -- Setup data
   //virtual void Setup(const Teuchos::Ptr<State>&S);
@@ -135,6 +137,7 @@ class EcoSIM : public PK_Physical {
    void ComputeNextTimeStep();
 
  protected:
+  Teuchos::RCP<WRMPartition> wrms_;
   double dt_;
   double c_m_;
   Teuchos::RCP<const AmanziMesh::Mesh> mesh_surf_; //might need this?
