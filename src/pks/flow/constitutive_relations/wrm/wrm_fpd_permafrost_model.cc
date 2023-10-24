@@ -83,6 +83,7 @@ WRMFPDPermafrostModel::dsaturations_dpc_ice(double pc_liq, double pc_ice, double
   }
 }
 
+void
 WRMFPDPermafrostModel::suction_head(double s)
 {
   suction_head = wrm_->suction_head(s);
