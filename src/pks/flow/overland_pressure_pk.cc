@@ -1260,13 +1260,19 @@ OverlandPressureFlow::ModifyCorrection(double h,
   // (where pressure derivatives are discontinuous)
   int my_limited = 0;
   int n_limited_spurt = 0;
+  *vo_->os() << "the patm limit is: " << patm_limit_ << std::endl;
   if (patm_limit_ > 0.) {
     double patm = S_->Get<double>("atmospheric_pressure", Tags::DEFAULT);
 
     Epetra_MultiVector& du_c = *du->Data()->ViewComponent("cell", false);
     const Epetra_MultiVector& u_c = *u->Data()->ViewComponent("cell", false);
 
+    *vo_->os() << "checking u limits for du_c of size: " << du_c.MyLength << std::endl;
     for (int c = 0; c != du_c.MyLength(); ++c) {
+      *vo_->os() << "printing values for cell " << c << std::endl;
+      *vo_->os() << "patm = " << patm << std::endl;
+      *vo_->os() << "u_c[0][c] = " << u_c[0][c] << std::endl;
+      *vo_->os() << "du_c[0][c] = " << du_c[0][c] << std::endl;
       if ((u_c[0][c] < patm) && (u_c[0][c] - du_c[0][c] > patm + patm_limit_)) {
         du_c[0][c] = u_c[0][c] - (patm + patm_limit_);
         my_limited++;
@@ -1279,6 +1285,7 @@ OverlandPressureFlow::ModifyCorrection(double h,
   }
 
   if (patm_hard_limit_) {
+    *vo_->os() << "In patm hard limit: " << std::endl;
     double patm = S_->Get<double>("atmospheric_pressure", Tags::DEFAULT);
 
     Epetra_MultiVector& du_c = *du->Data()->ViewComponent("cell", false);
@@ -1314,6 +1321,7 @@ OverlandPressureFlow::ModifyCorrection(double h,
   my_limited = 0;
   int n_limited_change = 0;
 
+  *vo_->os() << "p_limit_ = " << p_limit_ << std::endl;
   if (p_limit_ > 0.) {
     for (CompositeVector::name_iterator comp = du->Data()->begin(); comp != du->Data()->end();
          ++comp) {
