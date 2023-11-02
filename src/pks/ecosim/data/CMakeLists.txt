@@ -26,6 +26,7 @@ include_directories(${TPL_INSTALL_PREFIX}/f90src/modelpars/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_datatype/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SoilPhys/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SurfPhys/)
+include_directories(${TPL_INSTALL_PREFIX}/f90src/balances/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_mods/)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/PhysData/)
 
@@ -37,8 +38,9 @@ include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/modelpars/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_datatype/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SoilPhys/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SurfPhys/)
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/balances/)
 include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_mods/)
-include_directories(${})
+include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/PhysData/)
 
 set(ats_ecosim_data_src_files
     BGC_constants.cc

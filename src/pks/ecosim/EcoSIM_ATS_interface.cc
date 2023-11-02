@@ -144,10 +144,11 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     std::string engine_inputfile = plist_->get<std::string>("engine input file");
     bgc_engine_ = Teuchos::rcp(new BGCEngine(engine_name, engine_inputfile));
 
-    AMANZI_ASSERT(plist_.isSublist("WRM parameters"));
+    /*(AMANZI_ASSERT(plist_.isSublist("WRM parameters"));
     Teuchos::ParameterList sublist = plist_.sublist("WRM parameters");
     wrms_ = createWRMPartition(sublist);
     InitializeFromPlist_();
+    */
   }
 
 
@@ -398,9 +399,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
                << " t1 = " << S_->get_time(tag_next_) << " h = " << dt << std::endl
                << "----------------------------------------------------------------" << std::endl;
 
-  *vo_->os() << "Testing WRMs" << std::endl;
+  /**vo_->os() << "Testing WRMs" << std::endl;
   double s_test = 0.5;
-  double suction_head = wrm_->suction_head(s_test);
+  double suction_head = wrm_->suction_head(s_test);*/
 
   // Ensure dependencies are filled
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);

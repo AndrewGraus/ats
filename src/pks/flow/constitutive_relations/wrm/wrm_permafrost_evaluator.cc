@@ -167,10 +167,11 @@ WRMPermafrostEvaluator::Evaluate_(const State& S, const std::vector<CompositeVec
     satl_c[0][c] = sats[1];
     sati_c[0][c] = sats[2];
 
-    std::cout << "Testing head calculation" << std::endl;
+    /*std::cout << "Testing head calculation" << std::endl;
     double s_test = 0.5;
     permafrost_models_->second[i]->suction_head(s_test, shs);
     std::cout << "suction head: " << shs << std::endl;
+    */
   }
 
   // Potentially do face values as well, though only for saturation_liquid?
