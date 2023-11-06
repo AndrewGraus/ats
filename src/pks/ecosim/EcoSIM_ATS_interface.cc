@@ -905,19 +905,19 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
                                   const Tag& water_tag)
 {
 
-  Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, Amanzi::Tags::NEXT, "state")->ViewComponent("cell",false));
+  Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, Tags::DEFAULT, "state")->ViewComponent("cell",false));
   int tcc_num = tcc.NumVectors();
 
-  auto& porosity = *(*S_->GetW<CompositeVector>(porosity_key_, Amanzi::Tags::NEXT, porosity_key_).ViewComponent("cell",false))(0);
-  auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Amanzi::Tags::NEXT, saturation_liquid_key_).ViewComponent("cell",false))(0);
-  auto& water_content = *(*S_->GetW<CompositeVector>(water_content_key_, Amanzi::Tags::NEXT, water_content_key_).ViewComponent("cell",false))(0);
-  //auto& suction_head = *(*S_->GetW<CompositeVector>(suc_key_, Amanzi::Tags::NEXT, suc_key_).ViewComponent("cell",false))(0);
-  auto& relative_permeability = *(*S_->GetW<CompositeVector>(relative_permeability_key_, Amanzi::Tags::NEXT, relative_permeability_key_).ViewComponent("cell",false))(0);
-  auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_density_key_, Amanzi::Tags::NEXT, liquid_density_key_).ViewComponent("cell",false))(0);
-  auto& rock_density = *(*S_->GetW<CompositeVector>(rock_density_key_, Amanzi::Tags::NEXT, rock_density_key_).ViewComponent("cell",false))(0);
-  auto& cell_volume = *(*S_->GetW<CompositeVector>(cell_volume_key_, Amanzi::Tags::NEXT, cell_volume_key_).ViewComponent("cell",false))(0);
-  auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Amanzi::Tags::NEXT, hydraulic_conductivity_key_).ViewComponent("cell",false))(0);
-  auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_density_key_, Amanzi::Tags::NEXT, bulk_density_key_).ViewComponent("cell",false))(0);
+  auto& porosity = *(*S_->GetW<CompositeVector>(porosity_key_, Tags::DEFAULT, porosity_key_).ViewComponent("cell",false))(0);
+  auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Tags::DEFAULT, saturation_liquid_key_).ViewComponent("cell",false))(0);
+  auto& water_content = *(*S_->GetW<CompositeVector>(water_content_key_, Tags::DEFAULT, water_content_key_).ViewComponent("cell",false))(0);
+  //auto& suction_head = *(*S_->GetW<CompositeVector>(suc_key_, Tags::DEFAULT, suc_key_).ViewComponent("cell",false))(0);
+  auto& relative_permeability = *(*S_->GetW<CompositeVector>(relative_permeability_key_, Tags::DEFAULT, relative_permeability_key_).ViewComponent("cell",false))(0);
+  auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_density_key_, Tags::DEFAULT, liquid_density_key_).ViewComponent("cell",false))(0);
+  auto& rock_density = *(*S_->GetW<CompositeVector>(rock_density_key_, Tags::DEFAULT, rock_density_key_).ViewComponent("cell",false))(0);
+  auto& cell_volume = *(*S_->GetW<CompositeVector>(cell_volume_key_, Tags::DEFAULT, cell_volume_key_).ViewComponent("cell",false))(0);
+  auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, hydraulic_conductivity_key_).ViewComponent("cell",false))(0);
+  auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_density_key_, Tags::DEFAULT, bulk_density_key_).ViewComponent("cell",false))(0);
 
   //auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
   auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, Tags::DEFAULT, surface_energy_source_ecosim_key_).ViewComponent("cell", false))(0);
@@ -969,8 +969,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
 
      if (has_gas) {
-      auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Amanzi::Tags::NEXT, saturation_gas_key_).ViewComponent("cell",false))(0);
-      auto& gas_density = *(*S_->GetW<CompositeVector>(gas_density_key_, Amanzi::Tags::NEXT, gas_density_key_).ViewComponent("cell",false))(0);
+      auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Tags::DEFAULT, saturation_gas_key_).ViewComponent("cell",false))(0);
+      auto& gas_density = *(*S_->GetW<CompositeVector>(gas_density_key_, Tags::DEFAULT, gas_density_key_).ViewComponent("cell",false))(0);
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_g_dens)[i] = state.gas_density.data[column][i];
         (*col_g_sat)[i] = props.gas_saturation.data[column][i];
@@ -981,8 +981,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     }
 
     if (has_ice) {
-      auto& ice_saturation = *(*S_->GetW<CompositeVector>(saturation_ice_key_, Amanzi::Tags::NEXT, saturation_ice_key_).ViewComponent("cell",false))(0);
-      auto& ice_density = *(*S_->GetW<CompositeVector>(ice_density_key_, Amanzi::Tags::NEXT, ice_density_key_).ViewComponent("cell",false))(0);
+      auto& ice_saturation = *(*S_->GetW<CompositeVector>(saturation_ice_key_, Tags::DEFAULT, saturation_ice_key_).ViewComponent("cell",false))(0);
+      auto& ice_density = *(*S_->GetW<CompositeVector>(ice_density_key_, Tags::DEFAULT, ice_density_key_).ViewComponent("cell",false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_i_dens)[i] = state.ice_density.data[column][i];
@@ -994,8 +994,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     }
 
     if (has_energy) {
-      auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Amanzi::Tags::NEXT, "subsurface energy").ViewComponent("cell",false))(0);
-      auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Amanzi::Tags::NEXT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
+      auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
+      auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Tags::DEFAULT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
         (*col_temp)[i] = state.temperature.data[column][i];
@@ -1041,7 +1041,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     //*vo_->os() << "surface water source: " << state.surface_water_source.data[column] << std::endl;
     //*vo_->os() << "surface energy source: " << state.surface_energy_source.data[column] << std::endl;
     *vo_->os() << "Just printing directly from state:" << std::endl;
-    auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Amanzi::Tags::NEXT, surface_energy_source_key_).ViewComponent("cell", false))(0);
+    auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
     *vo_->os() << new_e_source << std::endl;
 
     ColumnToField_(column,porosity,col_porosity.ptr());
@@ -1106,7 +1106,7 @@ int EcoSIM::InitializeSingleProcess(int proc)
   int num_columns = 1;
 
   bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, num_columns,ncells_per_col_);
-  //CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+  CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
 }
 
@@ -1123,8 +1123,8 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
                                          bgc_sizes_, num_iterations, num_columns);
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
-  //CopyFromEcoSIM_process(proc,
-  //                          bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+  CopyFromEcoSIM_process(proc,
+                            bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   return num_iterations;
 }
