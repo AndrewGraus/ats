@@ -1106,7 +1106,7 @@ int EcoSIM::InitializeSingleProcess(int proc)
   int num_columns = 1;
 
   bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, num_columns,ncells_per_col_);
-  CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+  //CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
 }
 
@@ -1123,8 +1123,8 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
                                          bgc_sizes_, num_iterations, num_columns);
 
   // Move the information back into Amanzi's state, updating the given total concentration vector.
-  CopyFromEcoSIM_process(proc,
-                            bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+  //CopyFromEcoSIM_process(proc,
+  //                          bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   return num_iterations;
 }
