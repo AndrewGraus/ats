@@ -967,11 +967,14 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     *vo_->os() << "surface source after EcoSIM run: " << std::endl;
     *vo_->os() << "surface energy source (from state): " << surface_energy_source[column] << std::endl;
 
-
-     if (has_gas) {
+    if (has_gas) {
+      *vo_->os() << "Looping over gas data: " << std::endl;
       auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Tags::DEFAULT, saturation_gas_key_).ViewComponent("cell",false))(0);
       auto& gas_density = *(*S_->GetW<CompositeVector>(gas_density_key_, Tags::DEFAULT, gas_density_key_).ViewComponent("cell",false))(0);
       for (int i=0; i < ncells_per_col_; ++i) {
+        *vo_->os() << "For cell " << i << ": " << std::endl;
+        *vo_->os() << "   gas density:    " << state.gas_density.data[column][i] << std::endl;
+        *vo_->os() << "   gas saturation: " << props.gas_saturation.data[column][i] << std::endl;
         (*col_g_dens)[i] = state.gas_density.data[column][i];
         (*col_g_sat)[i] = props.gas_saturation.data[column][i];
       }
@@ -985,6 +988,10 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       auto& ice_density = *(*S_->GetW<CompositeVector>(ice_density_key_, Tags::DEFAULT, ice_density_key_).ViewComponent("cell",false))(0);
 
       for (int i=0; i < ncells_per_col_; ++i) {
+        *vo_->os() << "Looping over ice data: " << std::endl;
+        *vo_->os() << "For cell " << i << ": " << std::endl;
+        *vo_->os() << "   ice density:    " << state.ice_density.data[column][i] << std::endl;
+        *vo_->os() << "   ice saturation: " << props.ice_saturation.data[column][i] << std::endl;
         (*col_i_dens)[i] = state.ice_density.data[column][i];
         (*col_i_sat)[i] = props.ice_saturation.data[column][i];
       }
@@ -997,7 +1004,11 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
       auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Tags::DEFAULT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
 
+      *vo_->os() << "Looping over energy data: " << std::endl;
       for (int i=0; i < ncells_per_col_; ++i) {
+        *vo_->os() << "For cell " << i << ": " << std::endl;
+        *vo_->os() << "   temperature:    " << state.temperature.data[column][i] << std::endl;
+        *vo_->os() << "   thermal cond:   " << props.thermal_conductivity.data[column][i] << std::endl;
         (*col_temp)[i] = state.temperature.data[column][i];
         (*col_cond)[i] = props.thermal_conductivity.data[column][i];
       }
@@ -1006,7 +1017,16 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       ColumnToField_(column,thermal_conductivity,col_cond.ptr());
     }
 
+    *vo_->os() << "Looping over data: " << std::endl;
     for (int i=0; i < ncells_per_col_; ++i) {
+      *vo_->os() << "For cell " << i << ": " << std::endl;
+      *vo_->os() << "   liquid density:    " << state.liquid_density.data[column][i] << std::endl;
+      *vo_->os() << "   porosity:          " << state.porosity.data[column][i] << std::endl;
+      *vo_->os() << "   water content:     " << state.water_content.data[column][i] << std::endl;
+      *vo_->os() << "   hydraulic_cond:    " << state.hydraulic_conductivity.data[column][i] << std::endl;
+      *vo_->os() << "   bulk density:      " << state.bulk_density.data[column][i] << std::endl;
+      *vo_->os() << "   water source:      " << state.subsurface_water_source.data[column][i] << std::endl;
+      *vo_->os() << "   energy source:     " << state.subsurface_energy_source.data[column][i] << std::endl;    
       (*col_l_dens)[i] = state.liquid_density.data[column][i];
       (*col_porosity)[i] = state.porosity.data[column][i];
       (*col_wc)[i] = state.water_content.data[column][i];
@@ -1016,8 +1036,9 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       (*col_ss_water_source)[i] = state.subsurface_water_source.data[column][i];
       (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[column][i];
 
+
       //??vec[col_iter[i]] = (*col_vec)[i];
-      if (has_gas) {
+      /*if (has_gas) {
         (*col_g_dens)[i] = state.gas_density.data[column][i];
       }
 
@@ -1028,21 +1049,20 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       if (has_energy) {
         (*col_temp)[i] = state.temperature.data[column][i];
       }
-    }
+    }*/
 
-    *vo_->os() << "Attempting to set state value " << std::endl;
+    //*vo_->os() << "Attempting to set state value " << std::endl;
+    //surface_energy_source[column] = state.surface_energy_source.data[column];
 
-    surface_energy_source[column] = state.surface_energy_source.data[column];
-
-    *vo_->os() << "Energy after equating to EcoSIM value: " << std::endl;
-    *vo_->os() << "surface energy source: " << state.surface_energy_source.data[column] << std::endl;
-    *vo_->os() << "surface energy source (from State): " << surface_energy_source[column] << std::endl;
+    //*vo_->os() << "Energy after equating to EcoSIM value: " << std::endl;
+    //*vo_->os() << "surface energy source: " << state.surface_energy_source.data[column] << std::endl;
+    //*vo_->os() << "surface energy source (from State): " << surface_energy_source[column] << std::endl;
     //*vo_->os() << "surface source vars after: " << std::endl;
     //*vo_->os() << "surface water source: " << state.surface_water_source.data[column] << std::endl;
     //*vo_->os() << "surface energy source: " << state.surface_energy_source.data[column] << std::endl;
-    *vo_->os() << "Just printing directly from state:" << std::endl;
+    //*vo_->os() << "Just printing directly from state:" << std::endl;
     auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
-    *vo_->os() << new_e_source << std::endl;
+    //*vo_->os() << new_e_source << std::endl;
 
     ColumnToField_(column,porosity,col_porosity.ptr());
     ColumnToField_(column,liquid_saturation,col_l_sat.ptr());
