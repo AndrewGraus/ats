@@ -629,6 +629,7 @@ void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID column, Epetra_Vector& vec,
   auto& col_iter = mesh_->cells_of_column(column);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     vec[col_iter[i]] = (*col_vec)[i];
+    *vo_->os() << "vel[col_iter] = " << vec[col_iter[i]] << " (*col_vec)[i] = " << (*col_vec)[i] << std::endl;
   }
 }
 
@@ -638,6 +639,7 @@ void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID column, Teuchos::Ptr<Epetra_Se
   auto& col_iter = mesh_->cells_of_column(column);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     (*vec)[col_iter[i]] = (*col_vec)[i];
+    *vo_->os() << "vel[col_iter] = " << vec[col_iter[i]] << " (*col_vec)[i] = " << (*col_vec)[i] << std::endl;
   }
 }
 
@@ -857,9 +859,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     }
 
     Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "surface energy from state: " << std::endl;
-    *vo_->os() << "surface energy source: " << surface_energy_source[column] << std::endl;
-
     //fill surface variables
     state.surface_energy_source.data[column] = surface_energy_source[column];
     state.surface_water_source.data[column] = surface_water_source[column];
@@ -874,10 +873,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.aspect.data[column] = aspect[column];
     props.slope.data[column] = slope[column];
 
-    *vo_->os() << "surface source after copying for EcoSIM: " << std::endl;
-    *vo_->os() << "surface energy source: " << state.surface_energy_source.data[column] << std::endl;
-    *vo_->os() << "surface energy source (from state): " << surface_energy_source[column] << std::endl;
-
     for (int i = 0; i < state.total_component_concentration.columns; i++) {
       for (int j = 0; j < state.total_component_concentration.cells; j++) {
         for (int k = 0; k < state.total_component_concentration.components; k++) {
@@ -885,6 +880,59 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       }
     }
   }
+
+  Teuchos::OSTab tab = vo_->getOSTab();
+
+  *vo_->os() << "Printing all before data:" << std::endl;
+  for (int i=0; i < ncells_per_col_; ++i) {
+    if (i==0) {
+      *vo_->os() << "For cell " << i << ":" << std::endl;
+      *vo_->os() << "   liquid density:    " << state.liquid_density.data[column][i] << std::endl;
+      *vo_->os() << "   porosity:          " << state.porosity.data[column][i] << std::endl;
+      *vo_->os() << "   water content:     " << state.water_content.data[column][i] << std::endl;
+      *vo_->os() << "   hydraulic_cond:    " << state.hydraulic_conductivity.data[column][i] << std::endl;
+      *vo_->os() << "   bulk density:      " << state.bulk_density.data[column][i] << std::endl;
+      *vo_->os() << "   water source:      " << state.subsurface_water_source.data[column][i] << std::endl;
+      *vo_->os() << "   energy source:     " << state.subsurface_energy_source.data[column][i] << std::endl;
+      //state.suction_head.data[i] = (*col_suc)[i];
+      *vo_->os() << "   plant wilting factor: " << props.plant_wilting_factor.data[column][i] << std::endl;
+      *vo_->os() << "   rooting depth fraction: " << props.rooting_depth_fraction.data[column][i] << std::endl;
+      *vo_->os() << "   liquid saturation: " << props.liquid_saturation.data[column][i] << std::endl;
+      *vo_->os() << "   relative permeability: " << props.relative_permeability.data[column][i] << std::endl;
+      *vo_->os() << "   volume:            " << props.volume.data[column][i] << std::endl;
+      *vo_->os() << "   depth:             " << props.depth.data[column][i] << std::endl;
+
+      if (has_gas) {
+        *vo_->os() << "   gas saturation:    " << props.gas_saturation.data[column][i] << std::endl;
+        *vo_->os() << "   gas density:       " << state.gas_density.data[column][i] << std::endl;
+      }
+
+      if (has_ice) {
+        *vo_->os() << "   ice density:       " << state.ice_density.data[column][i] << std::endl;
+        *vo_->os() << "   ice saturation:    " << props.ice_saturation.data[column][i] << std::endl;
+      }
+
+      if (has_energy) {
+        *vo_->os() << "   temperature:       " << state.temperature.data[column][i] << std::endl;
+        *vo_->os() << "   thermal conductivity: " << props.thermal_conductivity.data[column][i] << std::endl;
+      }
+    }
+  }
+
+  //fill surface variables
+  *vo_->os() << "   surface energy source: " << state.surface_energy_source.data[column] << std::endl;
+  *vo_->os() << "   surface water source: " << state.surface_water_source.data[column] << std::endl;
+
+  *vo_->os() << "   shortwave radiation: " << props.shortwave_radiation.data[column] << std::endl;
+  *vo_->os() << "   longwave radiation: " << props.longwave_radiation.data[column] << std::endl;
+  *vo_->os() << "   air temperature:    " << props.air_temperature.data[column] << std::endl;
+  *vo_->os() << "   vapor pressure air: " << props.vapor_pressure_air.data[column] << std::endl;
+  *vo_->os() << "   wind speed:         " << props.wind_speed.data[column] << std::endl;
+  *vo_->os() << "   precipitation:      " << props.precipitation.data[column] << std::endl;
+  *vo_->os() << "   elevation:         " << props.elevation.data[column] << std::endl;
+  *vo_->os() << "   aspect:            " << props.aspect.data[column] << std::endl;
+  *vo_->os() << "   slope:             " << props.slope.data[column] << std::endl;
+
 
   //Fill the atmospheric abundances
   //NOTE: probably want to add an if statement here to only do this only once
@@ -1004,11 +1052,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
       auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Tags::DEFAULT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
 
-      *vo_->os() << "Looping over energy data: " << std::endl;
       for (int i=0; i < ncells_per_col_; ++i) {
-        *vo_->os() << "For cell " << i << ": " << std::endl;
-        *vo_->os() << "   temperature:    " << state.temperature.data[column][i] << std::endl;
-        *vo_->os() << "   thermal cond:   " << props.thermal_conductivity.data[column][i] << std::endl;
         (*col_temp)[i] = state.temperature.data[column][i];
         (*col_cond)[i] = props.thermal_conductivity.data[column][i];
       }
@@ -1017,16 +1061,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       ColumnToField_(column,thermal_conductivity,col_cond.ptr());
     }
 
-    *vo_->os() << "Looping over data: " << std::endl;
     for (int i=0; i < ncells_per_col_; ++i) {
-      *vo_->os() << "For cell " << i << ": " << std::endl;
-      *vo_->os() << "   liquid density:    " << state.liquid_density.data[column][i] << std::endl;
-      *vo_->os() << "   porosity:          " << state.porosity.data[column][i] << std::endl;
-      *vo_->os() << "   water content:     " << state.water_content.data[column][i] << std::endl;
-      *vo_->os() << "   hydraulic_cond:    " << state.hydraulic_conductivity.data[column][i] << std::endl;
-      *vo_->os() << "   bulk density:      " << state.bulk_density.data[column][i] << std::endl;
-      *vo_->os() << "   water source:      " << state.subsurface_water_source.data[column][i] << std::endl;
-      *vo_->os() << "   energy source:     " << state.subsurface_energy_source.data[column][i] << std::endl;
       (*col_l_dens)[i] = state.liquid_density.data[column][i];
       (*col_porosity)[i] = state.porosity.data[column][i];
       (*col_wc)[i] = state.water_content.data[column][i];
@@ -1035,21 +1070,57 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
       (*col_ss_water_source)[i] = state.subsurface_water_source.data[column][i];
       (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[column][i];
-
-
-      //??vec[col_iter[i]] = (*col_vec)[i];
-      /*if (has_gas) {
-        (*col_g_dens)[i] = state.gas_density.data[column][i];
-      }
-
-      if (has_ice) {
-        (*col_i_dens)[i] = state.ice_density.data[column][i];
-      }
-
-      if (has_energy) {
-        (*col_temp)[i] = state.temperature.data[column][i];
-      }*/
     }
+
+    *vo_->os() << "Printing all after data:" << std::endl;
+    for (int i=0; i < ncells_per_col_; ++i) {
+      if (i==0) {
+        *vo_->os() << "For cell " << i << ":" << std::endl;
+        *vo_->os() << "   liquid density:    " << state.liquid_density.data[column][i] << std::endl;
+        *vo_->os() << "   porosity:          " << state.porosity.data[column][i] << std::endl;
+        *vo_->os() << "   water content:     " << state.water_content.data[column][i] << std::endl;
+        *vo_->os() << "   hydraulic_cond:    " << state.hydraulic_conductivity.data[column][i] << std::endl;
+        *vo_->os() << "   bulk density:      " << state.bulk_density.data[column][i] << std::endl;
+        *vo_->os() << "   water source:      " << state.subsurface_water_source.data[column][i] << std::endl;
+        *vo_->os() << "   energy source:     " << state.subsurface_energy_source.data[column][i] << std::endl;
+        //state.suction_head.data[i] = (*col_suc)[i];
+        *vo_->os() << "   plant wilting factor: " << props.plant_wilting_factor.data[column][i] << std::endl;
+        *vo_->os() << "   rooting depth fraction: " << props.rooting_depth_fraction.data[column][i] << std::endl;
+        *vo_->os() << "   liquid saturation: " << props.liquid_saturation.data[column][i] << std::endl;
+        *vo_->os() << "   relative permeability: " << props.relative_permeability.data[column][i] << std::endl;
+        *vo_->os() << "   volume:            " << props.volume.data[column][i] << std::endl;
+        *vo_->os() << "   depth:             " << props.depth.data[column][i] << std::endl;
+
+        if (has_gas) {
+          *vo_->os() << "   gas saturation:    " << props.gas_saturation.data[column][i] << std::endl;
+          *vo_->os() << "   gas density:       " << state.gas_density.data[column][i] << std::endl;
+        }
+
+        if (has_ice) {
+          *vo_->os() << "   ice density:       " << state.ice_density.data[column][i] << std::endl;
+          *vo_->os() << "   ice saturation:    " << props.ice_saturation.data[column][i] << std::endl;
+        }
+
+        if (has_energy) {
+          *vo_->os() << "   temperature:       " << state.temperature.data[column][i] << std::endl;
+          *vo_->os() << "   thermal conductivity: " << props.thermal_conductivity.data[column][i] << std::endl;
+        }
+      }
+    }
+
+    //fill surface variables
+    *vo_->os() << "   surface energy source: " << state.surface_energy_source.data[column] << std::endl;
+    *vo_->os() << "   surface water source: " << state.surface_water_source.data[column] << std::endl;
+
+    *vo_->os() << "   shortwave radiation: " << props.shortwave_radiation.data[column] << std::endl;
+    *vo_->os() << "   longwave radiation: " << props.longwave_radiation.data[column] << std::endl;
+    *vo_->os() << "   air temperature:    " << props.air_temperature.data[column] << std::endl;
+    *vo_->os() << "   vapor pressure air: " << props.vapor_pressure_air.data[column] << std::endl;
+    *vo_->os() << "   wind speed:         " << props.wind_speed.data[column] << std::endl;
+    *vo_->os() << "   precipitation:      " << props.precipitation.data[column] << std::endl;
+    *vo_->os() << "   elevation:         " << props.elevation.data[column] << std::endl;
+    *vo_->os() << "   aspect:            " << props.aspect.data[column] << std::endl;
+    *vo_->os() << "   slope:             " << props.slope.data[column] << std::endl;
 
     //*vo_->os() << "Attempting to set state value " << std::endl;
     //surface_energy_source[column] = state.surface_energy_source.data[column];
@@ -1064,16 +1135,28 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
     //*vo_->os() << new_e_source << std::endl;
 
+    *vo_->os() << "Printing column to field:" << std::endl;
+    *vo_->os() << "Porosity" << std::endl;
     ColumnToField_(column,porosity,col_porosity.ptr());
+    *vo_->os() << "liquid sat" << std::endl;
     ColumnToField_(column,liquid_saturation,col_l_sat.ptr());
+    *vo_->os() << "water content" << std::endl;
     ColumnToField_(column,water_content,col_wc.ptr());
+    *vo_->os() << "rel perm" << std::endl;
     ColumnToField_(column,relative_permeability,col_relative_permeability.ptr());
+    *vo_->os() << "liquid density" << std::endl;
     ColumnToField_(column,liquid_density,col_l_dens.ptr());
+    *vo_->os() << "rock density" << std::endl;
     ColumnToField_(column,rock_density,col_r_dens.ptr());
+    *vo_->os() << "cell volume" << std::endl;
     ColumnToField_(column,cell_volume,col_vol.ptr());
+    *vo_->os() << "hydraulic cond" << std::endl;
     ColumnToField_(column,hydraulic_conductivity,col_h_cond.ptr());
+    *vo_->os() << "bulk dens" << std::endl;
     ColumnToField_(column,bulk_density,col_b_dens.ptr());
+    *vo_->os() << "water source" << std::endl;
     ColumnToField_(column,subsurface_water_source,col_ss_water_source.ptr());
+    *vo_->os() << "energy source" << std::endl;
     ColumnToField_(column,subsurface_energy_source,col_ss_energy_source.ptr());
     //ColumnToField_(column,plant_wilting_factor,col_wp.ptr());
     //ColumnToField_(column,rooting_depth_fraction,col_rf.ptr());
