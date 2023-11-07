@@ -1026,7 +1026,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       *vo_->os() << "   hydraulic_cond:    " << state.hydraulic_conductivity.data[column][i] << std::endl;
       *vo_->os() << "   bulk density:      " << state.bulk_density.data[column][i] << std::endl;
       *vo_->os() << "   water source:      " << state.subsurface_water_source.data[column][i] << std::endl;
-      *vo_->os() << "   energy source:     " << state.subsurface_energy_source.data[column][i] << std::endl;    
+      *vo_->os() << "   energy source:     " << state.subsurface_energy_source.data[column][i] << std::endl;
       (*col_l_dens)[i] = state.liquid_density.data[column][i];
       (*col_porosity)[i] = state.porosity.data[column][i];
       (*col_wc)[i] = state.water_content.data[column][i];
@@ -1048,8 +1048,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
       if (has_energy) {
         (*col_temp)[i] = state.temperature.data[column][i];
-      }
-    }*/
+      }*/
+    }
 
     //*vo_->os() << "Attempting to set state value " << std::endl;
     //surface_energy_source[column] = state.surface_energy_source.data[column];
