@@ -144,6 +144,7 @@ extern "C" {
     double atm_n2o;
     double atm_h2;
     double atm_nh3;
+    double heat_capacity;
   } BGCProperties;
 
   /*
