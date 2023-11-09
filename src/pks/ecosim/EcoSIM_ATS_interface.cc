@@ -93,8 +93,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     //Other
     cell_volume_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
     //ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
-    f_wp_key_ = Keys::readKey(*plist_, domain_, "plant wilting factor", "plant_wilting_factor");
-    f_root_key_ = Keys::readKey(*plist_, domain_, "rooting depth fraction", "rooting_depth_fraction");
+    f_wp_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
+    f_root_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
 
     //Custom Evaluator keys
     hydraulic_conductivity_key_ = Keys::readKey(*plist_, domain_, "hydraulic conductivity", "hydraulic_conductivity");
@@ -121,6 +121,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     atm_n2o_ = plist_->get<double>("atmospheric N2O");
     atm_h2_ = plist_->get<double>("atmospheric H2");
     atm_nh3_ = plist_->get<double>("atmospheric NH3");
+    pressure_at_field_capacity = plist_->get<double>("Field Capacity [Mpa < 0]");
+    pressure_at_wilting_point = plist_->get<double>("Wilting Point [Mpa < 0]");
 
     dt_ = plist_->get<double>("initial time step", 1.);
     c_m_ = plist_->get<double>("heat capacity [J mol^-1 K^-1]");
@@ -889,6 +891,8 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   props.atm_h2 = atm_h2_;
   props.atm_nh3 = atm_nh3_;
   props.heat_capacity = c_m_;
+  props.field_capacity = pressure_at_field_capacity;
+  props.wilting_point = pressure_at_wilting_point;
 }
 
 void EcoSIM::CopyFromEcoSIM_process(const int column,
