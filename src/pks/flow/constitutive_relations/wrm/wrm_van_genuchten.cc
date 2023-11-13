@@ -124,8 +124,8 @@ WRMVanGenuchten::capillaryPressure(double s)
   double se = (s - sr_) / (1.0 - sr_);
   se = std::min<double>(se, 1.0);
   se = std::max<double>(se, 1.e-40);
-  
-  std::cout << "Is Capillary pressure running?";
+
+  //std::cout << "Is Capillary pressure running?";
   if (se < 1.e-8) {
     return std::pow(se, -1.0 / (m_ * n_)) / alpha_;
   } else {

@@ -134,6 +134,11 @@ WRMPermafrostEvaluator::InitializeFromPlist_()
   pc_ice_key_ = Keys::readKey(
     plist_, domain_name, "liquid-ice capillary pressure", "capillary_pressure_liq_ice");
   dependencies_.insert(KeyTag{ pc_ice_key_, tag });
+
+  suction_head_key_ = Keys::readKey(
+    plist_, domain_name, "suction head", "suction_head");
+    dependencies_.insert(KeyTag{ suction_head_key_, tag});
+  )
 }
 
 
@@ -183,6 +188,9 @@ WRMPermafrostEvaluator::Evaluate_(const State& S, const std::vector<CompositeVec
       *S.GetPtr<CompositeVector>(pc_liq_key_, tag)->ViewComponent("boundary_face", false);
     const Epetra_MultiVector& pc_ice_bf =
       *S.GetPtr<CompositeVector>(pc_ice_key_, tag)->ViewComponent("boundary_face", false);
+
+    const Epetra_MultiVector& suction_head =
+      *S.GetPtr<CompositeVector>(suction_head_key_, tag)->ViewComponent("boundary_face", false);
 
     // Need to get boundary face's inner cell to specify the WRM.
     Teuchos::RCP<const AmanziMesh::Mesh> mesh = results[0]->Mesh();
