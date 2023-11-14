@@ -232,6 +232,7 @@ WRMVanGenuchten::InitializeFromPlist_()
 /* ******************************************************************
 * Suction formula: input is liquid saturation.
 ****************************************************************** */
+
 double
 WRMVanGenuchten::suction_head(double s)
 {

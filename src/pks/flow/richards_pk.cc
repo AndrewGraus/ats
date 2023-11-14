@@ -24,6 +24,7 @@
 #include "predictor_delegate_bc_flux.hh"
 #include "wrm_evaluator.hh"
 #include "rel_perm_evaluator.hh"
+#include "suction_head_evaluator.hh"
 #include "richards_water_content_evaluator.hh"
 #include "OperatorDefs.hh"
 #include "BoundaryFlux.hh"
@@ -83,6 +84,7 @@ Richards::Richards(Teuchos::ParameterList& pk_tree,
     Keys::readKey(*plist_, domain_, "capillary_pressure_gas_liq", "capillary_pressure_gas_liq");
   capillary_pressure_liq_ice_key_ =
     Keys::readKey(*plist_, domain_, "capillary_pressure_liq_ice", "capillary_pressure_liq_ice");
+  suction_head_key_ = Keys::readKey(*plist_, domain_, "suction_head", "suction head");
 
   if (S_->IsDeformableMesh(domain_))
     deform_key_ = Keys::readKey(*plist_, domain_, "deformation indicator", "base_porosity");
@@ -98,6 +100,11 @@ Richards::Richards(Teuchos::ParameterList& pk_tree,
     Teuchos::ParameterList& kr_plist = S_->GetEvaluatorList(coef_key_);
     kr_plist.setParameters(S_->GetEvaluatorList(sat_key_));
     kr_plist.set<std::string>("evaluator type", "WRM rel perm");
+  }
+  if (S_->GetEvaluatorList(suction_head_key_).numParams() == 0) {
+    Teuchos::ParameterList& sh_plist = S_->GetEvaluatorList(suction_head_key_);
+    sh_plist.setParameters(S_->GetEvaluatorList(sat_key_));
+    sh_plist.set<std::string>("evaluator type", "WRM suction head");
   }
 
   // scaling for permeability for better "nondimensionalization"
@@ -463,6 +470,13 @@ Richards::SetupPhysicalEvaluators_()
 
   // -- rel perm
   requireAtNext(coef_key_, tag_next_, *S_)
+    .SetMesh(mesh_)
+    ->SetGhosted()
+    ->AddComponent("cell", AmanziMesh::CELL, 1)
+    ->AddComponent("boundary_face", AmanziMesh::BOUNDARY_FACE, 1);
+
+  // -- rel perm
+  requireAtNext(suction_head_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::CELL, 1)
