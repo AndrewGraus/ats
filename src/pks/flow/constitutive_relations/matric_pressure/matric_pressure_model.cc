@@ -16,7 +16,7 @@ namespace Ecosim {
 namespace Relations {
 
 // Constructor from ParameterList
-HydraulicConductivityModel::HydraulicConductivityModel(Teuchos::ParameterList& plist)
+MatricPressureModel::MatricPressureModel(Teuchos::ParameterList& plist)
 {
   InitializeFromPlist_(plist);
 }
@@ -24,35 +24,28 @@ HydraulicConductivityModel::HydraulicConductivityModel(Teuchos::ParameterList& p
 
 // Initialize parameters
 void
-HydraulicConductivityModel::InitializeFromPlist_(Teuchos::ParameterList& plist)
+MatricPressureModel::InitializeFromPlist_(Teuchos::ParameterList& plist)
 {
-  //g_ = plist.get<double>("gravitational constant");
+  m_ = plist.get<double>("van genuchten m");
+  n_ = plist.get<double>("van genuchten n");
+  alpha_ = plist.get<double>("van genuchten alpha");
+  sr_ = plist.get<double>("residual saturation [-]");
 }
 
 
 // main method
 double
-HydraulicConductivityModel::HydraulicConductivity(double k, double rho, double mu) const
+MatricPressureModel::MatricPressure(double phi, double theta, double rho, double cv) const
 {
-  return k*rho;
+  theta_r = cv*rho*phi*sr_; //This is water content at residual saturation
+  theta_s = cv*rho*phi; //This is the water content at saturation
+  return -1.0 / std::pow(alpha_, n_) * std::pow(1.0 - std::pow((theta - theta_r) / (theta_s - theta_r), 1.0 / m_), -n_);
 }
 
 double
-HydraulicConductivityModel::DHydraulicConductivityDPermeability(double k, double rho, double mu) const
+MatricPressureModel::DMatricPressureDPorosity(double phi, double theta, double rho, double cv) const
 {
-  return rho;
-}
-
-double
-HydraulicConductivityModel::DHydraulicConductivityDMassDensityLiquid(double k, double rho, double mu) const
-{
-  return k;
-}
-
-double
-HydraulicConductivityModel::DHydraulicConductivityDViscosityLiquid(double k, double rho, double mu) const
-{
-  return 0;
+  return 1.0;
 }
 
 } //namespace

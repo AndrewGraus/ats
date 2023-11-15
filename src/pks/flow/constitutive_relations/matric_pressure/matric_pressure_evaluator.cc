@@ -1,31 +1,31 @@
 /*
-  The hydraulic conductivity evaluator is an algebraic evaluator of a given model.
+  The matric pressure evaluator is an algebraic evaluator of a given model.
 Richards water content evaluator: the standard form as a function of liquid saturation.
   Generated via evaluator_generator.
 */
 
-#include "hydraulic_conductivity_evaluator.hh"
-#include "hydraulic_conductivity_model.hh"
+#include "matric_pressure_evaluator.hh"
+#include "matric_pressure_model.hh"
 
 namespace Amanzi {
-namespace Ecosim {
+namespace Flow {
 namespace Relations {
 
 // Constructor from ParameterList
-HydraulicConductivityEvaluator::HydraulicConductivityEvaluator(Teuchos::ParameterList& plist) :
+MatricPressureEvaluator::MatricPressureEvaluator(Teuchos::ParameterList& plist) :
     EvaluatorSecondaryMonotypeCV(plist)
 {
-  Teuchos::ParameterList& sublist = plist_.sublist("hydraulic_conductivity parameters");
-  model_ = Teuchos::rcp(new HydraulicConductivityModel(sublist));
+  Teuchos::ParameterList& sublist = plist_.sublist("matric_pressure parameters");
+  model_ = Teuchos::rcp(new MatricPressureModel(sublist));
   InitializeFromPlist_();
 }
 
 
 // Copy constructor
 //Don't seem to need this
-/*HydraulicConductivityEvaluator::HydraulicConductivityEvaluator(const HydraulicConductivityEvaluator& other) :
+/*MatricPressureEvaluator::MatricPressureEvaluator(const MatricPressureEvaluator& other) :
     EvaluatorSecondaryMonotypeCV(other),
-    k_key_(other.k_key_),
+    k_key_(other.k_key_)
     rho_key_(other.rho_key_),
     mu_key_(other.mu_key_),
     model_(other.model_) {}*/
@@ -33,15 +33,15 @@ HydraulicConductivityEvaluator::HydraulicConductivityEvaluator(Teuchos::Paramete
 
 // Virtual copy constructor
 Teuchos::RCP<Evaluator>
-HydraulicConductivityEvaluator::Clone() const
+MatricPressureEvaluator::Clone() const
 {
-  return Teuchos::rcp(new HydraulicConductivityEvaluator(*this));
+  return Teuchos::rcp(new MatricPressureEvaluator(*this));
 }
 
 
 // Initialize by setting up dependencies
 void
-HydraulicConductivityEvaluator::InitializeFromPlist_()
+MatricPressureEvaluator::InitializeFromPlist_()
 {
   // Set up my dependencies
   // - defaults to prefixed via domain
@@ -51,95 +51,76 @@ HydraulicConductivityEvaluator::InitializeFromPlist_()
 
   // - pull Keys from plist
   // dependency: permeability
-  k_key_ = Keys::readKey(plist_, domain_name, "permeability", "permeability");
-  dependencies_.insert(KeyTag{ k_key_, tag });
+  porosity_key_ = Keys::readKey(plist_, domain_name, "porosity", "porosity");
+  dependencies_.insert(KeyTag{ porosity_key_, tag });
 
-  // dependency: mass_density_liquid
-  rho_key_ = Keys::readKey(plist_, domain_name, "mass density liquid", "mass_density_liquid");
-  dependencies_.insert(KeyTag{ rho_key_, tag});
+  // dependency: saturation_liquid
+  water_content_key_ = Keys::readKey(plist_, domain_name, "water content", "water_content");
+  dependencies_.insert(KeyTag{ water_content_key_, tag});
 
-  // dependency: viscosity_liquid
-  mu_key_ = Keys::readKey(plist_, domain_name, "viscosity liquid", "viscosity_liquid");
-  dependencies_.insert(KeyTag{ mu_key_, tag});
+  // dependency: molar density liquid
+  mdens_liquid_key_ = Keys::readKey(plist_, domain_name, "molar density liquid", "molar_density_liquid");
+  dependencies_.insert(KeyTag{ mdens_liquid_key_, tag});
+
+  // dependency: cell volume
+  cv_key_ = Keys::readKey(plist_, domain_name, "cell volume", "cell_volume");
+  dependencies_.insert(KeyTag{ cv_key_, tag});
 }
 
 
 void
-HydraulicConductivityEvaluator::Evaluate_(const State& S,
+MatricPressureEvaluator::Evaluate_(const State& S,
         const std::vector<CompositeVector*>& result)
 {
   Tag tag = my_keys_.front().second;
-  Teuchos::RCP<const CompositeVector> k = S.GetPtr<CompositeVector>(k_key_, tag);
-  Teuchos::RCP<const CompositeVector> rho = S.GetPtr<CompositeVector>(rho_key_, tag);
-  Teuchos::RCP<const CompositeVector> mu = S.GetPtr<CompositeVector>(mu_key_, tag);
+  Teuchos::RCP<const CompositeVector> phi = S.GetPtr<CompositeVector>(porosity_key_, tag);
+  Teuchos::RCP<const CompositeVector> theta = S.GetPtr<CompositeVector>(water_content_key_, tag);
+  Teuchos::RCP<const CompositeVector> rho = S.GetPtr<CompositeVector>(mdens_liquid_key_, tag);
+  Teuchos::RCP<const CompositeVector> cv = S.GetPtr<CompositeVector>(cv_key_, tag);
 
   for (CompositeVector::name_iterator comp=result[0]->begin();
        comp!=result[0]->end(); ++comp) {
-    const Epetra_MultiVector& k_v = *k->ViewComponent(*comp, false);
+    const Epetra_MultiVector& phi_v = *phi->ViewComponent(*comp, false);
+    const Epetra_MultiVector& theta_v = *theta->ViewComponent(*comp, false);
     const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
-    const Epetra_MultiVector& mu_v = *mu->ViewComponent(*comp, false);
+    const Epetra_MultiVector& cv_v = *cv->ViewComponent(*comp, false);
     Epetra_MultiVector& result_v = *result[0]->ViewComponent(*comp,false);
 
     int ncomp = result[0]->size(*comp, false);
     for (int i=0; i!=ncomp; ++i) {
-      result_v[0][i] = model_->HydraulicConductivity(k_v[0][i], rho_v[0][i], mu_v[0][i]);
+      result_v[0][i] = model_->MatricPressure(phi_v[0][i], theta_v[0][i], rho_v[0][i], cv_v[0][i]);
     }
   }
 }
 
 
 void
-HydraulicConductivityEvaluator::EvaluatePartialDerivative_(const State& S,
+MatricPressureEvaluator::EvaluatePartialDerivative_(const State& S,
         const Key& wrt_key, const Tag& wrt_tag, const std::vector<CompositeVector*>& result)
 {
   Tag tag = my_keys_.front().second;
-  Teuchos::RCP<const CompositeVector> k = S.GetPtr<CompositeVector>(k_key_, tag);
-  Teuchos::RCP<const CompositeVector> rho = S.GetPtr<CompositeVector>(rho_key_, tag);
-  Teuchos::RCP<const CompositeVector> mu = S.GetPtr<CompositeVector>(mu_key_, tag);
+  Teuchos::RCP<const CompositeVector> phi = S.GetPtr<CompositeVector>(porosity_key_, tag);
+  Teuchos::RCP<const CompositeVector> theta = S.GetPtr<CompositeVector>(water_content_key_, tag);
+  Teuchos::RCP<const CompositeVector> rho = S.GetPtr<CompositeVector>(mdens_liquid_key_, tag);
+  Teuchos::RCP<const CompositeVector> cv = S.GetPtr<CompositeVector>(cv_key_, tag);
 
   if (wrt_key == k_key_) {
     for (CompositeVector::name_iterator comp=result[0]->begin();
          comp!=result[0]->end(); ++comp) {
-      const Epetra_MultiVector& k_v = *k->ViewComponent(*comp, false);
-      const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
-      const Epetra_MultiVector& mu_v = *mu->ViewComponent(*comp, false);
+    const Epetra_MultiVector& phi_v = *phi->ViewComponent(*comp, false);
+    const Epetra_MultiVector& theta_v = *theta->ViewComponent(*comp, false);
+    const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
+    const Epetra_MultiVector& cv_v = *cv->ViewComponent(*comp, false);
       Epetra_MultiVector& result_v = *result[0]->ViewComponent(*comp,false);
 
       int ncomp = result[0]->size(*comp, false);
       for (int i=0; i!=ncomp; ++i) {
-        result_v[0][i] = model_->DHydraulicConductivityDPermeability(k_v[0][i], rho_v[0][i], mu_v[0][i]);
+        result_v[0][i] = model_->DMatricPressureDPorosity(phi_v[0][i], theta_v[0][i], rho_v[0][i], cv_v[0][i]);
       }
     }
 
-  } else if (wrt_key == rho_key_) {
-    for (CompositeVector::name_iterator comp=result[0]->begin();
-         comp!=result[0]->end(); ++comp) {
-      const Epetra_MultiVector& k_v = *k->ViewComponent(*comp, false);
-      const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
-      const Epetra_MultiVector& mu_v = *mu->ViewComponent(*comp, false);
-      Epetra_MultiVector& result_v = *result[0]->ViewComponent(*comp,false);
-
-      int ncomp = result[0]->size(*comp, false);
-      for (int i=0; i!=ncomp; ++i) {
-        result_v[0][i] = model_->DHydraulicConductivityDMassDensityLiquid(k_v[0][i], rho_v[0][i], mu_v[0][i]);
-      }
-    }
-
-  } else if (wrt_key == mu_key_) {
-    for (CompositeVector::name_iterator comp=result[0]->begin();
-         comp!=result[0]->end(); ++comp) {
-      const Epetra_MultiVector& k_v = *k->ViewComponent(*comp, false);
-      const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
-      const Epetra_MultiVector& mu_v = *mu->ViewComponent(*comp, false);
-      Epetra_MultiVector& result_v = *result[0]->ViewComponent(*comp,false);
-
-      int ncomp = result[0]->size(*comp, false);
-      for (int i=0; i!=ncomp; ++i) {
-        result_v[0][i] = model_->DHydraulicConductivityDViscosityLiquid(k_v[0][i], rho_v[0][i], mu_v[0][i]);
-      }
-    }
-
-  } else {
+  } 
+  else {
     AMANZI_ASSERT(0);
   }
 }

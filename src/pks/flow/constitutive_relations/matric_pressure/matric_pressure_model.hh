@@ -7,31 +7,29 @@ Richards water content evaluator: the standard form as a function of liquid satu
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
-#ifndef AMANZI_ECOSIM_HYDRAULIC_CONDUCTIVITY_MODEL_HH_
-#define AMANZI_ECOSIM_HYDRAULIC_CONDUCTIVITY_MODEL_HH_
+#ifndef AMANZI_FLOW_MATRIC_PRESSURE_MODEL_HH_
+#define AMANZI_FLOW_MATRIC_PRESSURE_MODEL_HH_
 
 namespace Amanzi {
-namespace Ecosim {
+namespace Flow {
 namespace Relations {
 
-class HydraulicConductivityModel {
+class MatricPressureModel {
 
  public:
   explicit
-  HydraulicConductivityModel(Teuchos::ParameterList& plist);
+  MatricPressureModel(Teuchos::ParameterList& plist);
 
-  double HydraulicConductivity(double k, double rho, double mu) const;
+  double MatricPressure(double phi, double theta, double rho, double cv) const;
 
-  double DHydraulicConductivityDPermeability(double k, double rho, double mu) const;
-  double DHydraulicConductivityDMassDensityLiquid(double k, double rho, double mu) const;
-  double DHydraulicConductivityDViscosityLiquid(double k, double rho, double mu) const;
+  double DMatricPressureDPorosity(double phi, double theta, double rho, double cv) const;
 
  protected:
   void InitializeFromPlist_(Teuchos::ParameterList& plist);
 
  protected:
 
-  double g_;
+  double m_, n_, alpha_, theta_r_;
 
 };
 

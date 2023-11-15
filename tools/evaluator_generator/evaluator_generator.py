@@ -18,11 +18,12 @@ def render(tname, d):
 
     assert type(d) is dict
     print("Contents of dictionary (d):", d)
-    return template.format(**d)
+    #return template.format(**d)
 
 class EvalGen(object):
     def __init__(self, name, namespace, descriptor, my_key=None, expression=None,
                  doc=None, **kwargs):
+        print("what is this")
         self.d = {}
         self.setName(name, **kwargs)
         self.setNamespace(namespace, **kwargs)
@@ -248,6 +249,7 @@ def generate_evaluator(name, namespace, descriptor, my_key, dependencies, parame
             eg.addArg(*dep)
 
     for par in parameters:
+        print(par)
         eg.addParam(*par)
 
     eg.genArgs()

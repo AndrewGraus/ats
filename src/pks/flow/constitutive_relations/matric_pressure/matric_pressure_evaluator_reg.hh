@@ -1,10 +1,10 @@
-#include "hydraulic_conductivity_evaluator.hh"
+#include "matric_pressure_evaluator.hh"
 
 namespace Amanzi {
-namespace Ecosim {
+namespace Flow {
 namespace Relations {
 
-Utils::RegisteredFactory<Evaluator,HydraulicConductivityEvaluator> HydraulicConductivityEvaluator::reg_("hydraulic conductivity");
+Utils::RegisteredFactory<Evaluator,MatricPressureEvaluator> MatricPressureEvaluator::reg_("matric pressure");
 
 } //namespace
 } //namespace

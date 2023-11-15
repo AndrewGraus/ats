@@ -7,25 +7,25 @@ Richards water content evaluator: the standard form as a function of liquid satu
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
-#ifndef AMANZI_ECOSIM_HYDRAULIC_CONDUCTIVITY_EVALUATOR_HH_
-#define AMANZI_ECOSIM_HYDRAULIC_CONDUCTIVITY_EVALUATOR_HH_
+#ifndef AMANZI_FLOW_MATRIC_PRESSURE_EVALUATOR_HH_
+#define AMANZI_FLOW_MATRIC_PRESSURE_EVALUATOR_HH_
 
 #include "Factory.hh"
 #include "EvaluatorSecondaryMonotype.hh"
 
 namespace Amanzi {
-namespace Ecosim {
+namespace Flow {
 namespace Relations {
 
-class HydraulicConductivityModel;
+class MatricPressureModel;
 
-class HydraulicConductivityEvaluator : public EvaluatorSecondaryMonotypeCV {
+class MatricPressureEvaluator : public EvaluatorSecondaryMonotypeCV {
  public:
-  explicit HydraulicConductivityEvaluator(Teuchos::ParameterList& plist);
-  HydraulicConductivityEvaluator(const HydraulicConductivityEvaluator& other) = default;
+  explicit MatricPressureEvaluator(Teuchos::ParameterList& plist);
+  MatricPressureEvaluator(const MatricPressureEvaluator& other) = default;
   virtual Teuchos::RCP<Evaluator> Clone() const override;
 
-  Teuchos::RCP<HydraulicConductivityModel> get_model() { return model_; }
+  Teuchos::RCP<MatricPressureModel> get_model() { return model_; }
 
  protected:
    // Required methods from EvaluatorSecondaryMonotypeCV
@@ -36,14 +36,15 @@ class HydraulicConductivityEvaluator : public EvaluatorSecondaryMonotypeCV {
 
   void InitializeFromPlist_();
 
-  Key k_key_;
-  Key rho_key_;
-  Key mu_key_;
+  Key porosity_key_;
+  Key water_content_key_;
+  Key mdens_liquid_key_;
+  Key cv_key_
 
-  Teuchos::RCP<HydraulicConductivityModel> model_;
+  Teuchos::RCP<MatricPressureModel> model_;
 
  private:
-  static Utils::RegisteredFactory<Evaluator,HydraulicConductivityEvaluator> reg_;
+  static Utils::RegisteredFactory<Evaluator,MatricPressureEvaluator> reg_;
 
 };
 
