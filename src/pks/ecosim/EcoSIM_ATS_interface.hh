@@ -208,7 +208,7 @@ class EcoSIM : public PK_Physical {
   Key prain_key_;
   Key f_wp_key_;
   Key f_root_key_;
-  Key suc_key_;
+  Key matric_pressure_key_;
   Key aspect_key_;
   Key slope_key_;
   Key surface_energy_source_key_;
@@ -220,6 +220,7 @@ class EcoSIM : public PK_Physical {
   Teuchos::RCP<BGCEngine> bgc_engine_;
 
   double atm_n2_, atm_o2_, atm_co2_, atm_ch4_, atm_n2o_, atm_h2_, atm_nh3_;
+  double pressure_at_field_capacity, pressure_at_wilting_point;:walking 
 
  private:
   BGCState bgc_state_;

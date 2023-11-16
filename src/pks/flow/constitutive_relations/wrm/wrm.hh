@@ -54,8 +54,8 @@ class WRM {
   virtual double capillaryPressure(double saturation) = 0;
   virtual double d_capillaryPressure(double saturation) = 0;
   virtual double residualSaturation() = 0;
-  virtual double suction_head(double saturation) = 0;
-  virtual double d_suction_head(double saturation) = 0.;
+  virtual double suction_head(double saturation) { return 0.; };
+  virtual double d_suction_head(double saturation) = { return 0.; };
 };
 
 typedef double (WRM::*KRelFn)(double pc);

@@ -66,7 +66,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     saturation_ice_key_ = Keys::readKey(*plist_,domain_,"saturation ice", "saturation_ice");
     water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
     relative_permeability_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
-    //suc_key_ = Keys::readKey(*plist_,domain_,"suction head","suction_head");
+    matric_pressure_key_ = Keys::readKey(*plist_,domain_,"matric pressure","matric_pressure");
     liquid_density_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
     ice_density_key_ = Keys::readKey(*plist_, domain_, "mass density ice", "mass_density_ice");
     gas_density_key_ = Keys::readKey(*plist_, domain_,"mass density gas", "mass_density_gas");
@@ -419,7 +419,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(subsurface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(subsurface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
-  //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(matric_pressure_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Surface data from met data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -475,9 +475,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>("relative_permeability", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  /*S_->GetEvaluator("suction_head", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& suction_head = *(*S_->Get<CompositeVector>("suction_head", tag_next_)
-          .ViewComponent("cell",false))(0);*/
+  S_->GetEvaluator("matric_pressure", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& suction_head = *(*S_->Get<CompositeVector>("matric_pressure", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("mass_density_liquid", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& liquid_density = *(*S_->Get<CompositeVector>("mass_density_liquid", tag_next_)
@@ -723,7 +723,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& rock_density = *(*S_->Get<CompositeVector>(rock_density_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cell_volume_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& hydraulic_conductivity = *(*S_->Get<CompositeVector>(hydraulic_conductivity_key_, water_tag).ViewComponent("cell", false))(0);
-  //const Epetra_Vector& suction_head = *(*S_->Get<CompositeVector>(suc_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& matric_pressure = *(*S_->Get<CompositeVector>(matric_pressure_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_density_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& rooting_depth_fraction = *(*S_->Get<CompositeVector>(f_root_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
@@ -750,7 +750,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_wc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_relative_permeability = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_suc = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_mat_p = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_r_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_vol = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_g_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -797,6 +797,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     FieldToColumn_(column,rooting_depth_fraction,col_rf.ptr());
     FieldToColumn_(column,subsurface_water_source,col_ss_water_source.ptr());
     FieldToColumn_(column,subsurface_energy_source,col_ss_energy_source.ptr());
+    FieldToColumn_(column,matric_pressure,col_mat_p.ptr());
 
     MatrixFieldToColumn_(column, tcc, col_tcc.ptr());
 
@@ -835,7 +836,8 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       state.bulk_density.data[column][i] = (*col_b_dens)[i];
       state.subsurface_water_source.data[column][i] = (*col_ss_water_source)[i];
       state.subsurface_energy_source.data[column][i] = (*col_ss_energy_source)[i];
-      //state.suction_head.data[i] = (*col_suc)[i];
+      state.matric_pressure.data[i] = (*col_mat_p)[i];
+      
       props.plant_wilting_factor.data[column][i] = (*col_wp)[i];
       props.rooting_depth_fraction.data[column][i] = (*col_rf)[i];
       props.liquid_saturation.data[column][i] = (*col_l_sat)[i];

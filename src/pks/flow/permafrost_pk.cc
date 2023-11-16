@@ -21,7 +21,6 @@
 #include "wrm_permafrost_evaluator.hh"
 #include "rel_perm_evaluator.hh"
 #include "rel_perm_sutraice_evaluator.hh"
-#include "suction_head_evaluator.hh"
 #include "pk_helpers.hh"
 
 #include "permafrost.hh"
@@ -69,13 +68,6 @@ Permafrost::SetupPhysicalEvaluators_()
     kr_plist.setParameters(S_->GetEvaluatorList(sat_key_));
     kr_plist.set<std::string>("evaluator type", "WRM rel perm");
   }
-  std::cout << "coef_key_ = " << coef_key_ <<std::endl;
-  if (!S_->HasEvaluator(suction_head_key_, tag_next_) &&
-      (S_->GetEvaluatorList(suction_head_key_).numParams() == 0)) {
-    Teuchos::ParameterList& kr_plist = S_->GetEvaluatorList(suction_head_key_);
-    kr_plist.setParameters(S_->GetEvaluatorList(sat_key_));
-    kr_plist.set<std::string>("evaluator type", "WRM suction head");
-  }
 
   // -- saturation
   requireAtNext(sat_key_, tag_next_, *S_)
@@ -104,13 +96,6 @@ Permafrost::SetupPhysicalEvaluators_()
   // -- the rel perm evaluator, also with the same underlying WRM.
   S_->GetEvaluatorList(coef_key_).set<double>("permeability rescaling", perm_scale_);
   requireAtNext(coef_key_, tag_next_, *S_)
-    .SetMesh(mesh_)
-    ->SetGhosted()
-    ->AddComponent("cell", AmanziMesh::CELL, 1)
-    ->AddComponent("boundary_face", AmanziMesh::BOUNDARY_FACE, 1);
-
-  // -- the rel perm evaluator, also with the same underlying WRM.
-  requireAtNext(suction_head_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::CELL, 1)
