@@ -317,7 +317,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->ice_density));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->porosity));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->water_content));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->suction_head));
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->matric_pressure));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->temperature));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->hydraulic_conductivity));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->bulk_density));
@@ -337,7 +337,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
      FreeBGCMatrixDouble(&(state->ice_density));
      FreeBGCMatrixDouble(&(state->porosity));
      FreeBGCMatrixDouble(&(state->water_content));
-     FreeBGCMatrixDouble(&(state->suction_head));
+     FreeBGCMatrixDouble(&(state->matric_pressure));
      FreeBGCMatrixDouble(&(state->temperature));
      FreeBGCMatrixDouble(&(state->hydraulic_conductivity));
      FreeBGCMatrixDouble(&(state->bulk_density));

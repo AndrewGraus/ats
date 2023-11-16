@@ -106,7 +106,7 @@ extern "C" {
     BGCMatrixDouble ice_density;
     BGCMatrixDouble porosity;
     BGCMatrixDouble water_content;
-    BGCMatrixDouble suction_head;
+    BGCMatrixDouble matric_pressure;
     BGCMatrixDouble temperature;
     BGCMatrixDouble hydraulic_conductivity;
     BGCMatrixDouble bulk_density;
