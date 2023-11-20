@@ -447,6 +447,7 @@ class Richards : public PK_PhysicalBDF_Default {
   Key sat_ice_key_;
   Key capillary_pressure_gas_liq_key_;
   Key capillary_pressure_liq_ice_key_;
+  Key matric_pressure_key_;
   Key deform_key_;
 
   // debugging control
