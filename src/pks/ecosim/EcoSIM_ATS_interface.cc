@@ -243,7 +243,7 @@ void EcoSIM::Initialize() {
 
   int ierr = 0;
 
-  if (S_->HasRecord(suc_key_, Tags::DEFAULT)) {
+  /*if (S_->HasRecord(suc_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "has suction key." << std::endl;
   } else {
@@ -263,7 +263,7 @@ void EcoSIM::Initialize() {
   } else {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "Does not have suction key at next" << std::endl;
-  }
+  }*/
 
   // Ensure dependencies are filled
   // May not need to update (also causes an assertion error if called before
@@ -836,7 +836,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       state.bulk_density.data[column][i] = (*col_b_dens)[i];
       state.subsurface_water_source.data[column][i] = (*col_ss_water_source)[i];
       state.subsurface_energy_source.data[column][i] = (*col_ss_energy_source)[i];
-      state.matric_pressure.data[i] = (*col_mat_p)[i];
+      state.matric_pressure.data[column][i] = (*col_mat_p)[i];
       
       props.plant_wilting_factor.data[column][i] = (*col_wp)[i];
       props.rooting_depth_fraction.data[column][i] = (*col_rf)[i];
