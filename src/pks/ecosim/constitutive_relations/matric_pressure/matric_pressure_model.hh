@@ -11,15 +11,13 @@ Richards water content evaluator: the standard form as a function of liquid satu
 #define AMANZI_FLOW_MATRIC_PRESSURE_MODEL_HH_
 
 namespace Amanzi {
-namespace Flow {
+namespace Ecosim {
 namespace Relations {
 
 class MatricPressureModel {
 
  public:
-  explicit
-  
-  MatricPressureModel(Teuchos::ParameterList& plist);
+  explicit MatricPressureModel(Teuchos::ParameterList& plist);
 
   double MatricPressure(double phi, double theta, double rho, double cv) const;
 

@@ -83,7 +83,7 @@ Richards::Richards(Teuchos::ParameterList& pk_tree,
     Keys::readKey(*plist_, domain_, "capillary_pressure_gas_liq", "capillary_pressure_gas_liq");
   capillary_pressure_liq_ice_key_ =
     Keys::readKey(*plist_, domain_, "capillary_pressure_liq_ice", "capillary_pressure_liq_ice");
-  matric_pressure_key_ = Keys::readKey(*plist_, domain_, "matric pressure", "matric_pressure");
+  //matric_pressure_key_ = Keys::readKey(*plist_, domain_, "matric pressure", "matric_pressure");
 
   if (S_->IsDeformableMesh(domain_))
     deform_key_ = Keys::readKey(*plist_, domain_, "deformation indicator", "base_porosity");
@@ -462,12 +462,12 @@ Richards::SetupPhysicalEvaluators_()
   //    and at the current time, where it is a copy evaluator
   requireAtCurrent(sat_key_, tag_current_, *S_, name_);
 
-  requireAtNext(matric_pressure_key_, tag_next_, *S_)
+  /*requireAtNext(matric_pressure_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::CELL, 1);
   S_->RequireEvaluator(matric_pressure_key_, tag_next_);
-
+  */
   //    and at the current time, where it is a copy evaluator
   requireAtCurrent(sat_key_, tag_current_, *S_, name_);
 

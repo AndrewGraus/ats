@@ -12,7 +12,7 @@ Richards water content evaluator: the standard form as a function of liquid satu
 #include "matric_pressure_model.hh"
 
 namespace Amanzi {
-namespace Flow {
+namespace Ecosim {
 namespace Relations {
 
 // Constructor from ParameterList
@@ -25,10 +25,10 @@ MatricPressureModel::MatricPressureModel(Teuchos::ParameterList& plist)
 // Initialize parameters
 void MatricPressureModel::InitializeFromPlist_(Teuchos::ParameterList& plist)
 {
-  m_ = plist.get<double>("van genuchten m");
-  n_ = plist.get<double>("van genuchten n");
-  alpha_ = plist.get<double>("van genuchten alpha");
-  sr_ = plist.get<double>("residual saturation [-]");
+  m_ = plist.get<double>("van genuchten m [-]", 0.3671);
+  n_ = plist.get<double>("van genuchten n [-]", 1.58);
+  alpha_ = plist.get<double>("van genuchten alpha [Pa^-1]", 2e-05);
+  sr_ = plist.get<double>("residual saturation [-]", 0.2);
 }
 
 

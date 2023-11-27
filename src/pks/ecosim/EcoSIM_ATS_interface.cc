@@ -220,6 +220,12 @@ void EcoSIM::Setup() {
     ->AddComponent("cell", AmanziMesh::CELL, 1);
   requireAtCurrent(bulk_density_key_, tag_current_, *S_, name_);
 
+  requireAtNext(matric_pressure_key_, tag_next_, *S_)
+    .SetMesh(mesh_)
+    ->SetGhosted()
+    ->AddComponent("cell", AmanziMesh::CELL, 1);
+
+  requireAtCurrent(matric_pressure_key_, tag_current_, *S_, name_);
 
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
@@ -339,6 +345,10 @@ void EcoSIM::Initialize() {
   S_->GetW<CompositeVector>(bulk_density_key_, Tags::DEFAULT, "bulk_density").PutScalar(1.0);
   S_->GetRecordW(bulk_density_key_, Tags::DEFAULT, "bulk_density").set_initialized();
 
+  S_->GetW<CompositeVector>(matric_pressure_key_, Tags::DEFAULT, "matric_pressure").PutScalar(1.0);
+  S_->GetRecordW(matric_pressure_key_, Tags::DEFAULT, "matric_pressure").set_initialized();
+
+
   int num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
   //Looping over the columns and initializing
@@ -455,6 +465,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
   Teuchos::RCP<const CompositeVector> bulk_dens = S_->GetPtr<CompositeVector>(bulk_density_key_, Tags::DEFAULT);
   S_->GetEvaluator(bulk_density_key_, Tags::DEFAULT).Update(*S_, name_);
+
+  Teuchos::RCP<const CompositeVector> matric_pressure = S_->GetPtr<CompositeVector>(matric_pressure_key_, Tags::DEFAULT);
+  S_->GetEvaluator(matric_pressure_key_, Tags::DEFAULT).Update(*S_, name_);
 
   AmanziMesh::Entity_ID num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 

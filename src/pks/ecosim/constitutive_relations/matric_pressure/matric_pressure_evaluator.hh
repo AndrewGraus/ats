@@ -14,15 +14,14 @@ Richards water content evaluator: the standard form as a function of liquid satu
 #include "EvaluatorSecondaryMonotype.hh"
 
 namespace Amanzi {
-namespace Flow {
+namespace Ecosim {
 namespace Relations {
 
 class MatricPressureModel;
 
 class MatricPressureEvaluator : public EvaluatorSecondaryMonotypeCV {
  public:
-  explicit 
-  MatricPressureEvaluator(Teuchos::ParameterList& plist);
+  explicit MatricPressureEvaluator(Teuchos::ParameterList& plist);
   MatricPressureEvaluator(const MatricPressureEvaluator& other) = default;
   virtual Teuchos::RCP<Evaluator> Clone() const override;
 

@@ -8,7 +8,7 @@ Richards water content evaluator: the standard form as a function of liquid satu
 #include "matric_pressure_model.hh"
 
 namespace Amanzi {
-namespace Flow {
+namespace Ecosim {
 namespace Relations {
 
 // Constructor from ParameterList
