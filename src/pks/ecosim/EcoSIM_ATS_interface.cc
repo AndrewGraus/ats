@@ -875,7 +875,13 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       }
     }
     //fill surface variables
+
     state.surface_energy_source.data[column] = surface_energy_source[column];
+
+    *vo_->os() << "Column " << column << std::endl;
+    *vo_->os() << "energy from dict: " << state.surface_energy_source.data[column] << std::endl;
+    *vo_->os() << "energy from State: " << surface_energy_source[column] << std::endl;
+
     state.surface_water_source.data[column] = surface_water_source[column];
 
     props.shortwave_radiation.data[column] = shortwave_radiation[column];
@@ -1026,19 +1032,25 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[column][i];
     }
 
+    *vo_->os() << "Before setting" << column << std::endl;
+    *vo_->os() << "Column " << column << std::endl;
+    *vo_->os() << "energy from dict: " << state.surface_energy_source.data[column] << std::endl;
+    *vo_->os() << "energy from State: " << surface_energy_source[column] << std::endl;
+
+    surface_energy_source[column] = state.surface_energy_source.data[column];
+
+    *vo_->os() << "After setting" << column << std::endl;
+    *vo_->os() << "Column " << column << std::endl;
+    *vo_->os() << "energy from dict: " << state.surface_energy_source.data[column] << std::endl;
+    *vo_->os() << "energy from State: " << surface_energy_source[column] << std::endl;
+
     auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
 
-
-    *vo_->os() << "Printing column to field:" << std::endl;
-    *vo_->os() << "liquid sat" << std::endl;
-    ColumnToField_(column,liquid_saturation,col_l_sat.ptr());
-    *vo_->os() << "water content" << std::endl;
-    ColumnToField_(column,water_content,col_wc.ptr());
-    *vo_->os() << "rel perm" << std::endl;
-    ColumnToField_(column,relative_permeability,col_relative_permeability.ptr());
-    *vo_->os() << "hydraulic cond" << std::endl;
-    ColumnToField_(column,hydraulic_conductivity,col_h_cond.ptr());
     *vo_->os() << "bulk dens" << std::endl;
+    ColumnToField_(column,liquid_saturation,col_l_sat.ptr());
+    ColumnToField_(column,water_content,col_wc.ptr());
+    ColumnToField_(column,relative_permeability,col_relative_permeability.ptr());
+    ColumnToField_(column,hydraulic_conductivity,col_h_cond.ptr());
     ColumnToField_(column,bulk_density,col_b_dens.ptr());
     //ColumnToField_(column,plant_wilting_factor,col_wp.ptr());
     //ColumnToField_(column,rooting_depth_fraction,col_rf.ptr());
