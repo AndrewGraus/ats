@@ -841,6 +841,11 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     // This is for computing depth
     ColDepthDz_(column, col_depth.ptr(), col_dz.ptr());
 
+    *vo_->os() << "Column " << column << std::endl;
+    for (int i=0; i < ncells_per_col_; ++i) {
+      *vo_->os() << "Depth["<< i << "] = " << (*col_depth)[i] << "Dz["<< i << "] = " << (*col_dz)[i] << std::endl;
+    }
+
     for (int i=0; i < ncells_per_col_; ++i) {
       state.liquid_density.data[column][i] = (*col_l_dens)[i];
       state.porosity.data[column][i] = (*col_porosity)[i];
