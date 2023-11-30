@@ -125,7 +125,7 @@ extern "C" {
     BGCMatrixDouble thermal_conductivity;
     BGCMatrixDouble volume;
     BGCMatrixDouble depth;
-    BGCMatrixDouble depth_c
+    BGCMatrixDouble depth_c;
     BGCMatrixDouble dz;
     BGCMatrixDouble plant_wilting_factor;
     BGCMatrixDouble rooting_depth_fraction;
