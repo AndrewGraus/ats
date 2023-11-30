@@ -780,6 +780,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   auto col_rf = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_ss_energy_source = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_ss_water_source = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_depth_c = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
@@ -845,6 +846,13 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     for (int i=0; i < ncells_per_col_; ++i) {
       *vo_->os() << "Depth["<< i << "] = " << (*col_depth)[i] << "Dz["<< i << "] = " << (*col_dz)[i] << std::endl;
     }
+    double sum = 0.0;
+    for (int i = 0; i < ncells_per_col_; ++i) {
+        sum += (*col_dz)[i];
+        (*col_depth_c)[i] = sum;
+    }
+    
+    std::reverse(col_depth_c->begin(), col_depth_c->end());
 
     for (int i=0; i < ncells_per_col_; ++i) {
       state.liquid_density.data[column][i] = (*col_l_dens)[i];
@@ -862,6 +870,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       props.relative_permeability.data[column][i] = (*col_relative_permeability)[i];
       props.volume.data[column][i] = (*col_vol)[i];
       props.depth.data[column][i] = (*col_depth)[i];
+      props.depth_c.data[column][i] = (*col_depth_c)[i];
       props.dz.data[column][i] = (*col_dz)[i];
 
       if (has_gas) {
