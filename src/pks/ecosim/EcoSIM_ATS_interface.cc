@@ -454,10 +454,8 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
     S_->GetEvaluator(ice_density_key_, Tags::DEFAULT).Update(*S_, name_);
   }
 
-  if (has_energy) {
-    S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(thermal_conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
-  }
+  S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(thermal_conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
 
   //Update owned evaluators
   Teuchos::RCP<const CompositeVector> hydra_cond = S_->GetPtr<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT);
@@ -569,15 +567,13 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
             .ViewComponent("cell",false))(0);
   }
 
-  if (has_energy) {
-    S_->GetEvaluator("temperature", tag_next_).Update(*S_, name_);
-    const Epetra_MultiVector& temp = *(*S_->Get<CompositeVector>("temperature", tag_next_)
-        .ViewComponent("cell",false))(0);
+  S_->GetEvaluator("temperature", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& temp = *(*S_->Get<CompositeVector>("temperature", tag_next_)
+      .ViewComponent("cell",false))(0);
 
-    S_->GetEvaluator("thermal_conductivity", tag_next_).Update(*S_, name_);
-    const Epetra_MultiVector& thermal_conductivity = *(*S_->Get<CompositeVector>("thermal_conductivity", tag_next_)
-            .ViewComponent("cell",false))(0);
-  }
+  S_->GetEvaluator("thermal_conductivity", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& thermal_conductivity = *(*S_->Get<CompositeVector>("thermal_conductivity", tag_next_)
+      .ViewComponent("cell",false))(0);
 
   //loop over processes instead:
   num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
@@ -831,13 +827,11 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       FieldToColumn_(column,ice_density,col_i_dens.ptr());
     }
 
-    if (has_energy) {
-      const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
-      const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(thermal_conductivity_key_, water_tag).ViewComponent("cell", false))(0);
+    const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
+    const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(thermal_conductivity_key_, water_tag).ViewComponent("cell", false))(0);
 
-      FieldToColumn_(column,temp, col_temp.ptr());
-      FieldToColumn_(column,thermal_conductivity,col_cond.ptr());
-    }
+    FieldToColumn_(column,temp, col_temp.ptr());
+    FieldToColumn_(column,thermal_conductivity,col_cond.ptr());
 
     // This is for computing depth
     ColDepthDz_(column, col_depth.ptr(), col_dz.ptr());
@@ -882,14 +876,17 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
         props.ice_saturation.data[column][i] = (*col_i_sat)[i];
       }
 
-      if (has_energy) {
-        state.temperature.data[column][i] = (*col_temp)[i];
-        props.thermal_conductivity.data[column][i] = (*col_cond)[i];
-      }
+      state.temperature.data[column][i] = (*col_temp)[i];
+      props.thermal_conductivity.data[column][i] = (*col_cond)[i];
     }
     //fill surface variables
 
     state.surface_energy_source.data[column] = surface_energy_source[column];
+
+    *vo_->os() << "printing temperature:";
+    for (int i=0; i < ncells_per_col_; ++i) {
+    	*vo_->os() << "temp["<< i << "] = " << (*col_temp)[i] << std::endl;
+    }
 
     *vo_->os() << "Column " << column << std::endl;
     *vo_->os() << "energy from dict: " << state.surface_energy_source.data[column] << std::endl;
@@ -906,6 +903,26 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.elevation.data[column] = elevation[column];
     props.aspect.data[column] = aspect[column];
     props.slope.data[column] = slope[column];
+
+    *vo_->os() << "Variable: surface_water_source, Value: " << state.surface_water_source.data[column] << std::endl;
+    *vo_->os() << "Variable: shortwave_radiation, Value: " << shortwave_radiation[column] << std::endl;
+    *vo_->os() << "Variable without [column]: shortwave_radiation, Value: " << shortwave_radiation << std::endl;
+    *vo_->os() << "Variable: longwave_radiation, Value: " << longwave_radiation[column] << std::endl;
+    *vo_->os() << "Variable without [column]: longwave_radiation, Value: " << longwave_radiation << std::endl;
+    *vo_->os() << "Variable: air_temperature, Value: " << air_temperature[column] << std::endl;
+    *vo_->os() << "Variable without [column]: air_temperature, Value: " << air_temperature << std::endl;
+    *vo_->os() << "Variable: vapor_pressure_air, Value: " << vapor_pressure_air[column] << std::endl;
+    *vo_->os() << "Variable without [column]: vapor_pressure_air, Value: " << vapor_pressure_air << std::endl;
+    *vo_->os() << "Variable: wind_speed, Value: " << wind_speed[column] << std::endl;
+    *vo_->os() << "Variable without [column]: wind_speed, Value: " << wind_speed << std::endl;
+    *vo_->os() << "Variable: precipitation, Value: " << precipitation[column] << std::endl;
+    *vo_->os() << "Variable without [column]: precipitation, Value: " << precipitation << std::endl;
+    *vo_->os() << "Variable: elevation, Value: " << elevation[column] << std::endl;
+    *vo_->os() << "Variable without [column]: elevation, Value: " << elevation << std::endl;
+    *vo_->os() << "Variable: aspect, Value: " << aspect[column] << std::endl;
+    *vo_->os() << "Variable without [column]: aspect, Value: " << aspect << std::endl;
+    *vo_->os() << "Variable: slope, Value: " << slope[column] << std::endl;
+    *vo_->os() << "Variable without [column]: slope, Value: " << slope << std::endl;
 
     for (int i = 0; i < state.total_component_concentration.columns; i++) {
       for (int j = 0; j < state.total_component_concentration.cells; j++) {
@@ -1021,18 +1038,16 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       ColumnToField_(column,ice_density,col_i_dens.ptr());
     }
 
-    if (has_energy) {
-      auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
-      auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Tags::DEFAULT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
+    auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
+    auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Tags::DEFAULT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
 
-      for (int i=0; i < ncells_per_col_; ++i) {
-        (*col_temp)[i] = state.temperature.data[column][i];
-        (*col_cond)[i] = props.thermal_conductivity.data[column][i];
-      }
-
-      ColumnToField_(column,temp, col_temp.ptr());
-      ColumnToField_(column,thermal_conductivity,col_cond.ptr());
+    for (int i=0; i < ncells_per_col_; ++i) {
+      (*col_temp)[i] = state.temperature.data[column][i];
+      (*col_cond)[i] = props.thermal_conductivity.data[column][i];
     }
+
+    ColumnToField_(column,temp, col_temp.ptr());
+    ColumnToField_(column,thermal_conductivity,col_cond.ptr());
 
     for (int i=0; i < ncells_per_col_; ++i) {
       (*col_l_dens)[i] = state.liquid_density.data[column][i];
