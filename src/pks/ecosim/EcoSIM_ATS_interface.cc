@@ -411,10 +411,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
                << " t1 = " << S_->get_time(tag_next_) << " h = " << dt << std::endl
                << "----------------------------------------------------------------" << std::endl;
 
-  /**vo_->os() << "Testing WRMs" << std::endl;
-  double s_test = 0.5;
-  double suction_head = wrm_->suction_head(s_test);*/
-
+  
   // Ensure dependencies are filled
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(porosity_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -904,26 +901,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.aspect.data[column] = aspect[column];
     props.slope.data[column] = slope[column];
 
-    *vo_->os() << "Variable: surface_water_source, Value: " << state.surface_water_source.data[column] << std::endl;
-    *vo_->os() << "Variable: shortwave_radiation, Value: " << shortwave_radiation[column] << std::endl;
-    *vo_->os() << "Variable without [column]: shortwave_radiation, Value: " << shortwave_radiation << std::endl;
-    *vo_->os() << "Variable: longwave_radiation, Value: " << longwave_radiation[column] << std::endl;
-    *vo_->os() << "Variable without [column]: longwave_radiation, Value: " << longwave_radiation << std::endl;
-    *vo_->os() << "Variable: air_temperature, Value: " << air_temperature[column] << std::endl;
-    *vo_->os() << "Variable without [column]: air_temperature, Value: " << air_temperature << std::endl;
-    *vo_->os() << "Variable: vapor_pressure_air, Value: " << vapor_pressure_air[column] << std::endl;
-    *vo_->os() << "Variable without [column]: vapor_pressure_air, Value: " << vapor_pressure_air << std::endl;
-    *vo_->os() << "Variable: wind_speed, Value: " << wind_speed[column] << std::endl;
-    *vo_->os() << "Variable without [column]: wind_speed, Value: " << wind_speed << std::endl;
-    *vo_->os() << "Variable: precipitation, Value: " << precipitation[column] << std::endl;
-    *vo_->os() << "Variable without [column]: precipitation, Value: " << precipitation << std::endl;
-    *vo_->os() << "Variable: elevation, Value: " << elevation[column] << std::endl;
-    *vo_->os() << "Variable without [column]: elevation, Value: " << elevation << std::endl;
-    *vo_->os() << "Variable: aspect, Value: " << aspect[column] << std::endl;
-    *vo_->os() << "Variable without [column]: aspect, Value: " << aspect << std::endl;
-    *vo_->os() << "Variable: slope, Value: " << slope[column] << std::endl;
-    *vo_->os() << "Variable without [column]: slope, Value: " << slope << std::endl;
-
     for (int i = 0; i < state.total_component_concentration.columns; i++) {
       for (int j = 0; j < state.total_component_concentration.cells; j++) {
         for (int k = 0; k < state.total_component_concentration.components; k++) {
@@ -1060,21 +1037,10 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[column][i];
     }
 
-    *vo_->os() << "Before setting" << column << std::endl;
-    *vo_->os() << "Column " << column << std::endl;
-    *vo_->os() << "energy from dict: " << state.surface_energy_source.data[column] << std::endl;
-    *vo_->os() << "energy from State: " << surface_energy_source[column] << std::endl;
-
     surface_energy_source[column] = state.surface_energy_source.data[column];
-
-    *vo_->os() << "After setting" << column << std::endl;
-    *vo_->os() << "Column " << column << std::endl;
-    *vo_->os() << "energy from dict: " << state.surface_energy_source.data[column] << std::endl;
-    *vo_->os() << "energy from State: " << surface_energy_source[column] << std::endl;
 
     auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
 
-    *vo_->os() << "bulk dens" << std::endl;
     ColumnToField_(column,liquid_saturation,col_l_sat.ptr());
     ColumnToField_(column,water_content,col_wc.ptr());
     ColumnToField_(column,relative_permeability,col_relative_permeability.ptr());
