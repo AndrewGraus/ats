@@ -1037,7 +1037,15 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[column][i];
     }
 
-    surface_energy_source[column] = state.surface_energy_source.data[column];
+    double energy_source_tot = state.surface_energy_source.data[column];
+
+    *vo_->os() << "ATS timestep: " << dt << " s" << std::endl;
+    *vo_->os() << "Total energy from EcoSIM: " << energy_source_tot << " MJ" <<std::endl;
+    *vo_->os() << "Rate to conserve flux from EcoSIM: " << energy_source_tot/(3600.0) << " MJ/s" <<std::endl;
+    *vo_->os() << "Rate to conserve total energy from EcoSIM: " << energy_source_tot/dt << " MJ/s" <<std::endl;
+    *vo_->os() << "testing using flux conservation: " << std::endl;
+
+    surface_energy_source[column] = state.surface_energy_source.data[column]/(3600.0);
 
     auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
 
