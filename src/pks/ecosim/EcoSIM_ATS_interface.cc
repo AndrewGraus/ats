@@ -1039,10 +1039,10 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
     double energy_source_tot = state.surface_energy_source.data[column];
 
-    *vo_->os() << "ATS timestep: " << dt << " s" << std::endl;
+    *vo_->os() << "ATS timestep: " << dt_ << " s" << std::endl;
     *vo_->os() << "Total energy from EcoSIM: " << energy_source_tot << " MJ" <<std::endl;
     *vo_->os() << "Rate to conserve flux from EcoSIM: " << energy_source_tot/(3600.0) << " MJ/s" <<std::endl;
-    *vo_->os() << "Rate to conserve total energy from EcoSIM: " << energy_source_tot/dt << " MJ/s" <<std::endl;
+    *vo_->os() << "Rate to conserve total energy from EcoSIM: " << energy_source_tot/dt_ << " MJ/s" <<std::endl;
     *vo_->os() << "testing using flux conservation: " << std::endl;
 
     surface_energy_source[column] = state.surface_energy_source.data[column]/(3600.0);
