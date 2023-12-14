@@ -124,7 +124,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     pressure_at_field_capacity = plist_->get<double>("Field Capacity [Mpa]");
     pressure_at_wilting_point = plist_->get<double>("Wilting Point [Mpa]");
 
-    dt_ = plist_->get<double>("initial time step", 1.);
+    dt_ = plist_->get<double>("initial time step");
     c_m_ = plist_->get<double>("heat capacity [J mol^-1 K^-1]");
 
     //Teuchos::OSTab tab = vo_->getOSTab();
@@ -839,10 +839,10 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
         (*col_depth_c)[i] = sum;
     }
 
-    *vo_->os() << "Column " << column << std::endl;
+    /**vo_->os() << "Column " << column << std::endl;
     for (int i=0; i < ncells_per_col_; ++i) {
       *vo_->os() << "Depth["<< i << "] = " << (*col_depth)[i] << " Depth_Reversed["<< i << "] = " << (*col_depth_c)[i] << std::endl;
-    }
+    }*/
    
     for (int i=0; i < ncells_per_col_; ++i) {
       state.liquid_density.data[column][i] = (*col_l_dens)[i];
@@ -880,10 +880,10 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     state.surface_energy_source.data[column] = surface_energy_source[column];
 
-    *vo_->os() << "printing temperature:";
+    /**vo_->os() << "printing temperature:";
     for (int i=0; i < ncells_per_col_; ++i) {
     	*vo_->os() << "temp["<< i << "] = " << (*col_temp)[i] << std::endl;
-    }
+    }*/
 
     *vo_->os() << "Column " << column << std::endl;
     *vo_->os() << "energy from dict: " << state.surface_energy_source.data[column] << std::endl;
