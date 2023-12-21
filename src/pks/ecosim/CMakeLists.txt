@@ -13,6 +13,7 @@ include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/data)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/bulk_density)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/hydraulic_conductivity)
+include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/matric_pressure)
 include_directories(${TPL_INSTALL_PREFIX}/f90src/ATSUtils/)
 
 include_directories(${TPL_INSTALL_PREFIX}/f90src/utils/)

@@ -12,9 +12,7 @@ list(APPEND subdirs elevation overland_conductivity porosity sources water_conte
 set(ats_flow_relations_src_files "")
 set(ats_flow_relations_inc_files "")
 
-message("printing subdirs:")
 foreach(lcv IN LISTS subdirs)
-  message("${lcv}")
   include_directories(${ATS_SOURCE_DIR}/src/pks/flow/constitutive_relations/${lcv})
   
   file(GLOB subdir_sources "./${lcv}/*.cc")
@@ -24,9 +22,7 @@ foreach(lcv IN LISTS subdirs)
   set(ats_flow_relations_inc_files ${ats_flow_relations_inc_files} ${subdir_incs})
 
   file(GLOB registrations "./${lcv}/*_reg.hh" )
-  message("printing reg files:")
   foreach(reg_lcv IN LISTS registrations)
-    message("${reg_lcv}")
     register_abs_evaluator_with_factory(HEADERFILE ${reg_lcv} LISTNAME ATS_FLOW_RELATIONS_REG)
   endforeach(reg_lcv)
 
