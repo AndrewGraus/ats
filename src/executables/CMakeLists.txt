@@ -62,6 +62,8 @@ include_evaluators_directories(LISTNAME ATS_SURFACE_BALANCE_REG_INCLUDES)
 include_evaluators_directories(LISTNAME ATS_BGC_REG_INCLUDES)
 include_evaluators_directories(LISTNAME ATS_MPC_REG_INCLUDES)
 include_evaluators_directories(LISTNAME SED_TRANSPORT_REG_INCLUDES)
+
+
 include_evaluators_directories(LISTNAME ATS_ECOSIM_REG_INCLUDES)
 include_evaluators_directories(LISTNAME ATS_ECOSIM_RELATIONS_REG_INCLUDES)
 include_evaluators_directories(LISTNAME ATS_ECOSIM_DATA_REG_INCLUDES)
@@ -129,6 +131,11 @@ set(ats_link_libs
   ats_ecosim_relations
   )
 
+#In theory covered by ECOSIM_LIBRARIES:
+#If not place this in an if statement?
+#  ats_ecosim
+#  ats_ecosim_data
+#  ats_ecosim_relations
 
 # note, we can be inclusive here, because if they aren't enabled,
 # these won't be defined and will result in empty strings.
