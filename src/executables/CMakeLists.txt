@@ -152,7 +152,7 @@ set(tpl_link_libs
   ${HDF5_LIBRARIES}
   ${CLM_LIBRARIES}
   ${ECOSIM_LIBRARIES}
-  )
+ )
 
 add_amanzi_library(ats_executable
   SOURCE ${ats_src_files}

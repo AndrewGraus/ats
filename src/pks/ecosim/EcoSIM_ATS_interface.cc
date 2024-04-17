@@ -125,7 +125,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     pressure_at_wilting_point = plist_->get<double>("Wilting Point [Mpa]");
 
     dt_ = plist_->get<double>("initial time step");
-    c_m_ = plist_->get<double>("heat capacity [J mol^-1 K^-1]");
+    c_m_ = plist_->get<double>("heat capacity [MJ mol^-1 K^-1]");
 
     //Teuchos::OSTab tab = vo_->getOSTab();
     //*vo_->os() << vo_->color("green") << "heat capacity: " <<  c_m_;
@@ -677,6 +677,8 @@ void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID column,
   AmanziGeometry::Point neg_z(3);
   neg_z.set(0.,0.,-1);
 
+  Teuchos::OSTab tab = vo_->getOSTab();
+
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     // depth centroid
     (*depth)[i] = surf_centroid[2] - mesh_->cell_centroid(col_iter[i])[2];
@@ -686,6 +688,56 @@ void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID column,
     AmanziMesh::Entity_ID_List faces;
     std::vector<int> dirs;
     mesh_->cell_get_faces_and_dirs(col_iter[i], &faces, &dirs);
+
+    double vol = mesh_->cell_volume(col_iter[i]);
+
+    // -- mimics implementation of build_columns() in Mesh
+    double mindp = 999.0;
+    AmanziMesh::Entity_ID f_below = -1;
+    for (std::size_t j=0; j!=faces.size(); ++j) {
+      AmanziGeometry::Point normal = mesh_->face_normal(faces[j]);
+      if (dirs[j] == -1) normal *= -1;
+      normal /= AmanziGeometry::norm(normal);
+
+      double dp = -normal * neg_z;
+      if (dp < mindp) {
+        mindp = dp;
+        f_below = faces[j];
+      }
+    }
+
+    // -- fill the val
+    (*dz)[i] = mesh_->face_centroid(f_above)[2] - mesh_->face_centroid(f_below)[2];
+    AMANZI_ASSERT( (*dz)[i] > 0. );
+    f_above = f_below;
+  }
+}
+
+// helper function for collecting dz, depth, and volume for a given column
+void EcoSIM::VolDepthDz_(AmanziMesh::Entity_ID column,
+                            Teuchos::Ptr<Epetra_SerialDenseVector> depth,
+                            Teuchos::Ptr<Epetra_SerialDenseVector> dz,
+			    Teuchos::Ptr<Epetra_SerialDenseVector> volume) {
+  AmanziMesh::Entity_ID f_above = mesh_surf_->entity_get_parent(AmanziMesh::CELL, column);
+  auto& col_iter = mesh_->cells_of_column(column);
+  ncells_per_col_ = col_iter.size();
+
+  AmanziGeometry::Point surf_centroid = mesh_->face_centroid(f_above);
+  AmanziGeometry::Point neg_z(3);
+  neg_z.set(0.,0.,-1);
+
+  for (std::size_t i=0; i!=col_iter.size(); ++i) {
+    // depth centroid
+    (*depth)[i] = surf_centroid[2] - mesh_->cell_centroid(col_iter[i])[2];
+
+    // dz
+    // -- find face_below
+    AmanziMesh::Entity_ID_List faces;
+    std::vector<int> dirs;
+    mesh_->cell_get_faces_and_dirs(col_iter[i], &faces, &dirs);
+
+    //double vol = mesh_->cell_volume(col_iter[i]);
+    (*volume)[i] = mesh_->cell_volume(col_iter[i]);
 
     // -- mimics implementation of build_columns() in Mesh
     double mindp = 999.0;
@@ -797,7 +849,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     FieldToColumn_(column,relative_permeability,col_relative_permeability.ptr());
     FieldToColumn_(column,liquid_density,col_l_dens.ptr());
     FieldToColumn_(column,rock_density,col_r_dens.ptr());
-    FieldToColumn_(column,cell_volume,col_vol.ptr());
+    //FieldToColumn_(column,cell_volume,col_vol.ptr());
     FieldToColumn_(column,hydraulic_conductivity,col_h_cond.ptr());
     FieldToColumn_(column,bulk_density,col_b_dens.ptr());
     FieldToColumn_(column,plant_wilting_factor,col_wp.ptr());
@@ -831,8 +883,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     FieldToColumn_(column,thermal_conductivity,col_cond.ptr());
 
     // This is for computing depth
-    ColDepthDz_(column, col_depth.ptr(), col_dz.ptr());
+    //ColDepthDz_(column, col_depth.ptr(), col_dz.ptr());
 
+    VolDepthDz_(column, col_depth.ptr(), col_dz.ptr(), col_vol.ptr());
     double sum = 0.0;
     for (int i = ncells_per_col_ - 1; i >= 0; --i) {
         sum += (*col_dz)[i];
@@ -880,14 +933,21 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     state.surface_energy_source.data[column] = surface_energy_source[column];
 
-    /**vo_->os() << "printing temperature:";
+    /**vo_->os() << "printing porosity:";
     for (int i=0; i < ncells_per_col_; ++i) {
-    	*vo_->os() << "temp["<< i << "] = " << (*col_temp)[i] << std::endl;
+    	*vo_->os() << "porosity["<< i << "] = " << (*col_porosity)[i] << std::endl
+              << " struct_porosity["<< i << "] = " << state.porosity.data[column][i] << std::endl;
+    }
+
+    vo_->os() << "printing depth:";
+    for (int i=0; i < ncells_per_col_; ++i) {
+        *vo_->os() << "col_depth["<< i << "] = " << (*col_depth)[i] 
+		<< "struct_depth["<< i << "] = " << props.depth.data[column][i] << std::endl;
     }*/
 
-    *vo_->os() << "Column " << column << std::endl;
-    *vo_->os() << "energy from dict: " << state.surface_energy_source.data[column] << std::endl;
-    *vo_->os() << "energy from State: " << surface_energy_source[column] << std::endl;
+    //*vo_->os() << "Column " << column << std::endl;
+    //*vo_->os() << "energy from dict: " << state.surface_energy_source.data[column] << std::endl;
+    //*vo_->os() << "energy from State: " << surface_energy_source[column] << std::endl;
 
     state.surface_water_source.data[column] = surface_water_source[column];
 
@@ -1093,6 +1153,9 @@ int EcoSIM::AdvanceSingleColumn(double dt, int col)
 */
 int EcoSIM::InitializeSingleProcess(int proc)
 {
+  int num_iterations = 1;
+  int num_columns = 1;
+      
   CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   //ecosim_datatest_wrapper(column, &bgc_props_, &bgc_sizes_);
@@ -1101,12 +1164,8 @@ int EcoSIM::InitializeSingleProcess(int proc)
   /*need some sort of assertions here to double check that the data is actually
   What I want it to be*/
 
-  int num_iterations = 1;
-  int num_columns = 1;
-
   bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, num_columns,ncells_per_col_);
   CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
-
 }
 
 int EcoSIM::AdvanceSingleProcess(double dt, int proc)
