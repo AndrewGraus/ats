@@ -126,10 +126,14 @@ set(ats_link_libs
   ats_surface_balance
   ats_mpc
   ats_mpc_relations
-  ats_ecosim
-  ats_ecosim_data
-  ats_ecosim_relations
   )
+
+if (ENABLE_ECOSIM)
+  list(APPEND ats_link_libs
+    ats_ecosim
+    ats_ecosim_data
+    ats_ecosim_relations)  
+endif()
 
 #In theory covered by ECOSIM_LIBRARIES:
 #If not place this in an if statement?
