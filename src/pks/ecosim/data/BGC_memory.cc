@@ -403,6 +403,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
    AllocateBGCVectorDouble(sizes->num_columns, &(properties->vapor_pressure_air));
    AllocateBGCVectorDouble(sizes->num_columns, &(properties->wind_speed));
    AllocateBGCVectorDouble(sizes->num_columns, &(properties->precipitation));
+   AllocateBGCVectorDouble(sizes->num_columns, &(properties->precipitation_snow));
    AllocateBGCVectorDouble(sizes->num_columns, &(properties->elevation));
    AllocateBGCVectorDouble(sizes->num_columns, &(properties->aspect));
    AllocateBGCVectorDouble(sizes->num_columns, &(properties->slope));
@@ -427,6 +428,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
      FreeBGCVectorDouble(&(properties->vapor_pressure_air));
      FreeBGCVectorDouble(&(properties->wind_speed));
      FreeBGCVectorDouble(&(properties->precipitation));
+     FreeBGCVectorDouble(&(properties->precipitation_snow));
      FreeBGCVectorDouble(&(properties->elevation));
      FreeBGCVectorDouble(&(properties->aspect));
      FreeBGCVectorDouble(&(properties->slope));

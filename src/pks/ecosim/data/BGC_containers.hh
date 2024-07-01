@@ -135,6 +135,7 @@ extern "C" {
     BGCVectorDouble vapor_pressure_air;
     BGCVectorDouble wind_speed;
     BGCVectorDouble precipitation;
+    BGCVectorDouble precipitation_snow;
     BGCVectorDouble elevation;
     BGCVectorDouble aspect;
     BGCVectorDouble slope;
