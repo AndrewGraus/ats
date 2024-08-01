@@ -134,7 +134,6 @@ EnergyBase::AddSources_(const Tag& tag, const Teuchos::Ptr<CompositeVector>& g)
   Teuchos::OSTab tab = vo_->getOSTab();
 
   Epetra_MultiVector& g_c = *g->ViewComponent("cell", false);
-  *vo_->os() << "In AddSources";
   S_->GetEvaluator(cell_vol_key_, tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& cv =
     *S_->Get<CompositeVector>(cell_vol_key_, tag_next_).ViewComponent("cell", false);
@@ -149,7 +148,6 @@ EnergyBase::AddSources_(const Tag& tag, const Teuchos::Ptr<CompositeVector>& g)
     // Add into residual
     unsigned int ncells = g_c.MyLength();
     for (unsigned int c = 0; c != ncells; ++c) {
-      *vo_->os() << "source: " << source1[0][c];
       g_c[0][c] -= source1[0][c] * cv[0][c];
 
     }

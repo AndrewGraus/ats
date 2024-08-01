@@ -73,11 +73,8 @@ EnergyBase::FunctionalResidual(double t_old,
   db_->WriteBoundaryConditions(bc_markers(), bc_values());
 
   // zero out residual
-  *vo_->os() << "In Functional Residual" << std::endl;
   Teuchos::RCP<CompositeVector> res = g->Data();
-  *vo_->os() << "g = " << g << std::endl;
   res->PutScalar(0.0);
-  *vo_->os() << "(should be zero):  g = " << g << std::endl;
 
   // diffusion term, implicit
   ApplyDiffusion_(tag_next_, res.ptr());

@@ -128,9 +128,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     dt_ = plist_->get<double>("initial time step");
     c_m_ = plist_->get<double>("heat capacity [MJ mol^-1 K^-1]");
 
-    //Teuchos::OSTab tab = vo_->getOSTab();
-    //*vo_->os() << vo_->color("green") << "heat capacity: " <<  c_m_;
-
     //This initialized the engine (found in BGCEngine.cc) This is the code that
     //actually points to the driver
     if (!plist_->isParameter("engine")) {
@@ -643,7 +640,6 @@ void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID column, Epetra_Vector& vec,
   auto& col_iter = mesh_->cells_of_column(column);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     vec[col_iter[i]] = (*col_vec)[i];
-    //*vo_->os() << "vel[col_iter] = " << vec[col_iter[i]] << " (*col_vec)[i] = " << (*col_vec)[i] << std::endl;
   }
 }
 
@@ -653,7 +649,6 @@ void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID column, Teuchos::Ptr<Epetra_Se
   auto& col_iter = mesh_->cells_of_column(column);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     (*vec)[col_iter[i]] = (*col_vec)[i];
-    //*vo_->os() << "vel[col_iter] = " << (*vec)[col_iter[i]] << " (*col_vec)[i] = " << (*col_vec)[i] << std::endl;
   }
 }
 
@@ -898,11 +893,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
         sum += (*col_dz)[i];
         (*col_depth_c)[i] = sum;
     }
-
-    /**vo_->os() << "Column " << column << std::endl;
-    for (int i=0; i < ncells_per_col_; ++i) {
-      *vo_->os() << "Depth["<< i << "] = " << (*col_depth)[i] << " Depth_Reversed["<< i << "] = " << (*col_depth_c)[i] << std::endl;
-    }*/
    
     for (int i=0; i < ncells_per_col_; ++i) {
       state.liquid_density.data[column][i] = (*col_l_dens)[i];
@@ -939,23 +929,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     //fill surface variables
 
     state.surface_energy_source.data[column] = surface_energy_source[column];
-
-    /**vo_->os() << "printing porosity:";
-    for (int i=0; i < ncells_per_col_; ++i) {
-    	*vo_->os() << "porosity["<< i << "] = " << (*col_porosity)[i] << std::endl
-              << " struct_porosity["<< i << "] = " << state.porosity.data[column][i] << std::endl;
-    }
-
-    vo_->os() << "printing depth:";
-    for (int i=0; i < ncells_per_col_; ++i) {
-        *vo_->os() << "col_depth["<< i << "] = " << (*col_depth)[i] 
-		<< "struct_depth["<< i << "] = " << props.depth.data[column][i] << std::endl;
-    }*/
-
-    //*vo_->os() << "Column " << column << std::endl;
-    //*vo_->os() << "energy from dict: " << state.surface_energy_source.data[column] << std::endl;
-    //*vo_->os() << "energy from State: " << surface_energy_source[column] << std::endl;
-
     state.surface_water_source.data[column] = surface_water_source[column];
 
     props.shortwave_radiation.data[column] = shortwave_radiation[column];
@@ -1052,7 +1025,15 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   MPI_Barrier(MPI_COMM_WORLD);
 
   num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  double energy_source_tot = state.surface_energy_source.data[0];
+  double water_source_tot = state.surface_water_source.data[0]
+  *vo_->os() << "Reporting Energy data from EcoSIM:"
+  *vo_->os() << "Total energy source from EcoSIM: " << energy_source_tot << " MJ" <<std::endl;
+  *vo_->os() << "Rate to conserve flux from EcoSIM: " << energy_source_tot/(3600.0) << " ?/s" <<std::endl;
 
+  *vo_->os() << "Reporting Water data from EcoSIM:"
+  *vo_->os() << "Total water source from EcoSIM: " << water_source_tot << " MJ" <<std::endl;
+  *vo_->os() << "Rate to conserve flux from EcoSIM: " << water_source_tot/(3600.0) << " ?/s" <<std::endl;
   //Loop over columns on this process
   for (int col=0; col!=num_columns_local; ++col) {
 
@@ -1107,12 +1088,6 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
     double energy_source_tot = state.surface_energy_source.data[column];
 
-    *vo_->os() << "ATS timestep: " << dt_ << " s" << std::endl;
-    *vo_->os() << "Total energy from EcoSIM: " << energy_source_tot << " MJ" <<std::endl;
-    *vo_->os() << "Rate to conserve flux from EcoSIM: " << energy_source_tot/(3600.0) << " MJ/s" <<std::endl;
-    *vo_->os() << "Rate to conserve total energy from EcoSIM: " << energy_source_tot/dt_ << " MJ/s" <<std::endl;
-    *vo_->os() << "testing using flux conservation: " << std::endl;
-
     //As EcoSIM is hourly, but ATS is per second we need to divide the source by seconds per hour
     surface_energy_source[column] = state.surface_energy_source.data[column]/(3600.0);
     surface_water_source[column] = state.surface_water_source.data[column]/(3600.0);
@@ -1130,6 +1105,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     //ColumnToField_(column,rooting_depth_fraction,col_rf.ptr());
   }
 }
+
 /*
 int EcoSIM::InitializeSingleColumn(int col)
 {

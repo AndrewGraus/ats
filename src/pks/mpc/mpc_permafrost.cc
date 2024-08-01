@@ -441,9 +441,6 @@ MPCPermafrost::FunctionalResidual(double t_old,
   esource = *g->SubVector(3)->Data()->ViewComponent("cell", false);
   changedEvaluatorPrimary(energy_exchange_key_, tag_next_, *S_);
 
-  *vo_->os() << "Water flux: " << source << std::endl;
-  *vo_->os() << "Energy flux: " << esource << std::endl;
-
   // Evaluate the subsurface energy residual.
   domain_energy_pk_->FunctionalResidual(
     t_old, t_new, u_old->SubVector(1), u_new->SubVector(1), g->SubVector(1));
