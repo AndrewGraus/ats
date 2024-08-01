@@ -109,7 +109,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     vp_air_key_ = Keys::readKey(*plist_, domain_surface_, "vapor pressure air", "vapor_pressure_air");
     wind_speed_key_ = Keys::readKey(*plist_, domain_surface_, "wind speed", "wind_speed");
     p_rain_key_ = Keys::readKey(*plist_, domain_surface_, "precipitation rain", "precipitation_rain");
-    p_snow_key_ = Keys::readKey(*plist_, domain_surface_, "precipitation snow", "precipitation_snow")
+    p_snow_key_ = Keys::readKey(*plist_, domain_surface_, "precipitation snow", "precipitation_snow");
     elev_key_ = Keys::readKey(*plist_, domain_surface_, "elevation", "elevation");
     aspect_key_ = Keys::readKey(*plist_, domain_surface_, "aspect", "aspect");
     slope_key_ = Keys::readKey(*plist_, domain_surface_, "slope", "slope_magnitude");
