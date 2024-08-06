@@ -1026,18 +1026,18 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
   num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
   double energy_source_tot = state.surface_energy_source.data[0];
-  double water_source_tot = state.surface_water_source.data[0]
-  *vo_->os() << "Reporting Energy data from EcoSIM:"
+  double water_source_tot = state.surface_water_source.data[0];
+
+  Teuchos::OSTab tab = vo_->getOSTab();	
+  *vo_->os() << "Reporting Energy data from EcoSIM: " << std::endl;
   *vo_->os() << "Total energy source from EcoSIM: " << energy_source_tot << " MJ" <<std::endl;
   *vo_->os() << "Rate to conserve flux from EcoSIM: " << energy_source_tot/(3600.0) << " ?/s" <<std::endl;
 
-  *vo_->os() << "Reporting Water data from EcoSIM:"
+  *vo_->os() << "Reporting Water data from EcoSIM: " << std::endl;
   *vo_->os() << "Total water source from EcoSIM: " << water_source_tot << " MJ" <<std::endl;
   *vo_->os() << "Rate to conserve flux from EcoSIM: " << water_source_tot/(3600.0) << " ?/s" <<std::endl;
   //Loop over columns on this process
   for (int col=0; col!=num_columns_local; ++col) {
-
-    Teuchos::OSTab tab = vo_->getOSTab();
 
     if (has_gas) {
       auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Tags::DEFAULT, saturation_gas_key_).ViewComponent("cell",false))(0);
