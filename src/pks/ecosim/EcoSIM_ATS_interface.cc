@@ -109,7 +109,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     vp_air_key_ = Keys::readKey(*plist_, domain_surface_, "vapor pressure air", "vapor_pressure_air");
     wind_speed_key_ = Keys::readKey(*plist_, domain_surface_, "wind speed", "wind_speed");
     p_rain_key_ = Keys::readKey(*plist_, domain_surface_, "precipitation rain", "precipitation_rain");
-    p_snow_key_ = Keys::readKey(*plist_, domain_surface_, "precipitation snow", "precipitation_snow");
+    //p_snow_key_ = Keys::readKey(*plist_, domain_surface_, "precipitation snow", "precipitation_snow");
     elev_key_ = Keys::readKey(*plist_, domain_surface_, "elevation", "elevation");
     aspect_key_ = Keys::readKey(*plist_, domain_surface_, "aspect", "aspect");
     slope_key_ = Keys::readKey(*plist_, domain_surface_, "slope", "slope_magnitude");
@@ -433,7 +433,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(p_rain_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(p_snow_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(p_snow_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -541,9 +541,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& p_rain = *(*S_->Get<CompositeVector>("surface-precipitation_rain", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("surface-precipitation_snow", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& p_snow = *(*S_->Get<CompositeVector>("surface-precipitation_snow", tag_next_)
-          .ViewComponent("cell",false))(0);
+  //S_->GetEvaluator("surface-precipitation_snow", tag_next_).Update(*S_, name_);
+  //const Epetra_MultiVector& p_snow = *(*S_->Get<CompositeVector>("surface-precipitation_snow", tag_next_)
+  //        .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("surface-elevation", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("surface-elevation", tag_next_)
@@ -793,7 +793,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& vapor_pressure_air = *(*S_->Get<CompositeVector>(vp_air_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& wind_speed= *(*S_->Get<CompositeVector>(wind_speed_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& precipitation = *(*S_->Get<CompositeVector>(p_rain_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& precipitation_snow = *(*S_->Get<CompositeVector>(p_snow_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& precipitation_snow = *(*S_->Get<CompositeVector>(p_snow_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& elevation = *(*S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& aspect = *(*S_->Get<CompositeVector>(aspect_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key_, water_tag).ViewComponent("cell", false))(0);
@@ -937,7 +937,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.vapor_pressure_air.data[column] = vapor_pressure_air[column];
     props.wind_speed.data[column] = wind_speed[column];
     props.precipitation.data[column] = precipitation[column];
-    props.precipitation_snow.data[column] = precipitation_snow[column];
+    //props.precipitation_snow.data[column] = precipitation_snow[column];
     props.elevation.data[column] = elevation[column];
     props.aspect.data[column] = aspect[column];
     props.slope.data[column] = slope[column];
