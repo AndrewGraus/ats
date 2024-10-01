@@ -962,6 +962,15 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   props.heat_capacity = c_m_;
   props.field_capacity = pressure_at_field_capacity;
   props.wilting_point = pressure_at_wilting_point;
+
+  Teuchos::OSTab tab = vo_->getOSTab();
+  
+  /*for (int column=0; column!=num_columns_local; ++column) {
+  	*vo_->os() << "for column: " << column << std::endl;
+	for (int i=0; i < ncells_per_col_; ++i) {
+	   *vo_->os() << "T["<< i << "] = " << state.temperature.data[column][i] << std::endl; 
+    }	
+  }*/
 }
 
 void EcoSIM::CopyFromEcoSIM_process(const int column,
@@ -1143,7 +1152,11 @@ int EcoSIM::InitializeSingleProcess(int proc)
 {
   int num_iterations = 1;
   int num_columns = 1;
-      
+  
+  num_columns = num_columns_local;
+
+  Teuchos::OSTab tab = vo_->getOSTab();
+
   CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   //ecosim_datatest_wrapper(column, &bgc_props_, &bgc_sizes_);
@@ -1151,6 +1164,10 @@ int EcoSIM::InitializeSingleProcess(int proc)
 
   /*need some sort of assertions here to double check that the data is actually
   What I want it to be*/
+
+  //Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "num_columns: " << num_columns << std::endl;
+  *vo_->os() << "ncells_per_col_: " << ncells_per_col_ << std::endl;
 
   bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, num_columns,ncells_per_col_);
   CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
@@ -1164,6 +1181,8 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
 
   int num_iterations = 1;
   int num_columns = 1;
+
+  num_columns = num_columns_local;
 
   bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
                                          bgc_sizes_, num_iterations, num_columns);
