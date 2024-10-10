@@ -223,6 +223,7 @@ class EcoSIM : public PK_Physical {
   Key subsurface_water_source_key_;
   Key surface_energy_source_ecosim_key_;
   Key surface_water_source_ecosim_key_;
+  Key surface_test_key_;
 
   Teuchos::RCP<BGCEngine> bgc_engine_;
 

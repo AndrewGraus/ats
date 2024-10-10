@@ -90,6 +90,9 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     surface_water_source_ecosim_key_ =
       Keys::readKey(*plist_, domain_surface_, "surface water source ecosim", "ecosim_water_source");
 
+    surface_test_key = 
+      Keys::readKey(*plist_, domain_surface_, "surface test", "test");
+
     //Snow
     ecosim_snow_depth_key_ = Keys::readKey(*plist_, domain_surface_, "ecosim snow depth", "ecosim_snow_depth");
     //snow_source_key_ = Keys::readKey(plist, domain_snow_, "snow mass source - sink", "source_sink");
@@ -836,6 +839,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& surface_water_source = *(*S_->Get<CompositeVector>(surface_water_source_ecosim_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& subsurface_water_source = *(*S_->Get<CompositeVector>(subsurface_water_source_key_, water_tag).ViewComponent("cell", false))(0);
 
+  const Epetra_Vector& surface_test = *(*S_->Get<CompositeVector>(surface_test_key, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& snow_depth = *(*S_->Get<CompositeVector>(snow_depth_key_, water_tag).ViewComponent("cell", false))(0);
 
   //const Epetra_Vector& ecosim_snow_depth = *(*S_->Get<CompositeVector>(ecosim_snow_depth_key_, water_tag).ViewComponent("cell", false))(0);
@@ -965,6 +969,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     state.surface_energy_source.data[column] = surface_energy_source[column];
     state.surface_water_source.data[column] = surface_water_source[column];
+    state.surface_test.data[column] = surface_test[column]
 
     props.shortwave_radiation.data[column] = shortwave_radiation[column];
     props.longwave_radiation.data[column] = longwave_radiation[column];
@@ -1037,6 +1042,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).ViewComponent("cell", false))(0);
   auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_key_, Tags::DEFAULT, subsurface_water_source_key_).ViewComponent("cell", false))(0);
 
+  auto& surface_test = *(*S_->GetW<CompositeVector>(surface_test_key_, Tags::DEFAULT, surface_test_key_).ViewComponent("cell", false))(0);
   auto& snow_depth = *(*S_->GetW<CompositeVector>(snow_depth_key_, Tags::DEFAULT, snow_depth_key_).ViewComponent("cell", false))(0);
 
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -1133,6 +1139,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     //As EcoSIM is hourly, but ATS is per second we need to divide the source by seconds per hour
     surface_energy_source[column] = state.surface_energy_source.data[column]/(3600.0);
     surface_water_source[column] = state.surface_water_source.data[column]/(3600.0);
+    surface_test[column] = state.surface_test.data[column];
     snow_depth[column] = state.snow_depth.data[column];
 
     //AG - 7/1/24 I'm not sure what this is doing I think it's from when I was testing comparing old to new values 
