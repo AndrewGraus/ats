@@ -54,6 +54,7 @@ include_directories(${ECOSIM_BUILD_PREFIX}/f90src/balances/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/ecosim_datatype/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SoilPhys/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SurfPhys/)
+include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SnowPhys/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/PhysData/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/ecosim_mods/)
 

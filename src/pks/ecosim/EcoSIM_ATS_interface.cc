@@ -91,7 +91,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
       Keys::readKey(*plist_, domain_surface_, "surface water source ecosim", "ecosim_water_source");
 
     //Snow
-    snow_depth_key_ = Keys::readKey(*plist_, domain_, "snow depth", "snow_depth");
+    ecosim_snow_depth_key_ = Keys::readKey(*plist_, domain_surface_, "ecosim snow depth", "ecosim_snow_depth");
     //snow_source_key_ = Keys::readKey(plist, domain_snow_, "snow mass source - sink", "source_sink");
     //new_snow_key_ = Keys::readKey(plist, domain_snow_, "new snow source", "source");
 
@@ -118,6 +118,10 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     elev_key_ = Keys::readKey(*plist_, domain_surface_, "elevation", "elevation");
     aspect_key_ = Keys::readKey(*plist_, domain_surface_, "aspect", "aspect");
     slope_key_ = Keys::readKey(*plist_, domain_surface_, "slope", "slope_magnitude");
+    surface_snow_depth_key_ = Keys::readKey(*plist_, domain_, "surface snow depth", "surface-snow-depth");
+    snow_depth_key_ = Keys::readKey(*plist_, domain_, "snow depth", "snow-depth");
+    //surface_snow_depth_key_ = Keys::readKey(*plist_, domain_surface_, "surface snow depth", "surface-snow-depth");
+    //snow_depth_key_ = Keys::readKey(*plist_, domain_surface_, "snow depth", "snow-depth");
 
     //Atmospheric abundance keys
     atm_n2_ = plist_->get<double>("atmospheric N2");
@@ -230,6 +234,14 @@ void EcoSIM::Setup() {
 
   requireAtCurrent(matric_pressure_key_, tag_current_, *S_, name_);
 
+  /*requireAtNext(matric_pressure_key_, tag_next_, *S_)
+    .SetMesh(mesh_)
+    ->SetGhosted()
+    ->AddComponent("cell", AmanziMesh::CELL, 1);
+
+  requireAtCurrent(matric_pressure_key_, tag_current_, *S_, name_);
+  */
+
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << vo_->color("green") << "Setup of PK was successful"
@@ -329,6 +341,16 @@ void EcoSIM::Initialize() {
     has_energy = false;
   }
   */
+  if (S_->HasRecord(surface_snow_depth_key_, Tags::DEFAULT)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "found surface_snow_depth_key" << std::endl;
+  } else if (S_->HasRecord(snow_depth_key_, Tags::DEFAULT)) {
+    Teuchos::OSTab tab = vo_->getOSTab();
+    *vo_->os() << "found snow_depth_key" << std::endl;
+  } else {
+    *vo_->os() << "neither snow depth key found" << std::endl;
+  }
+
   if (S_->HasRecord(ice_density_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "found ice key" << std::endl;
@@ -351,6 +373,8 @@ void EcoSIM::Initialize() {
   S_->GetW<CompositeVector>(matric_pressure_key_, Tags::DEFAULT, "matric_pressure").PutScalar(1.0);
   S_->GetRecordW(matric_pressure_key_, Tags::DEFAULT, "matric_pressure").set_initialized();
 
+  //S_->GetW<CompositeVector>(ecosim_snow_depth_key_, Tags::DEFAULT, "ecosim_snow_depth").PutScalar(0.0);
+  //S_->GetRecordW(ecosim_snow_depth_key_, Tags::DEFAULT, "ecosim_snow_depth").set_initialized();
 
   int num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
 
@@ -812,6 +836,10 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& surface_water_source = *(*S_->Get<CompositeVector>(surface_water_source_ecosim_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& subsurface_water_source = *(*S_->Get<CompositeVector>(subsurface_water_source_key_, water_tag).ViewComponent("cell", false))(0);
 
+  const Epetra_Vector& snow_depth = *(*S_->Get<CompositeVector>(snow_depth_key_, water_tag).ViewComponent("cell", false))(0);
+
+  //const Epetra_Vector& ecosim_snow_depth = *(*S_->Get<CompositeVector>(ecosim_snow_depth_key_, water_tag).ViewComponent("cell", false))(0);
+
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -1048,13 +1076,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   double snow_depth_cell = state.snow_depth.data[0];
 
   Teuchos::OSTab tab = vo_->getOSTab();	
-  *vo_->os() << "Reporting Energy data from EcoSIM: " << std::endl;
-  *vo_->os() << "Total energy source from EcoSIM: " << energy_source_tot << " MJ/hr" <<std::endl;
-  *vo_->os() << "Rate to conserve flux from EcoSIM: " << energy_source_tot/(3600.0) << " MJ/s" <<std::endl;
+  *vo_->os() << "snow depth (ATS): " << snow_depth_cell << " m" <<std::endl;
 
-  *vo_->os() << "Reporting Water data from EcoSIM: " << std::endl;
-  *vo_->os() << "Total water source from EcoSIM: " << water_source_tot << " m/hr" <<std::endl;
-  *vo_->os() << "Rate to conserve flux from EcoSIM: " << water_source_tot/(3600.0) << " m/s" <<std::endl;
   //Loop over columns on this process
   for (int col=0; col!=num_columns_local; ++col) {
 
@@ -1110,7 +1133,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     //As EcoSIM is hourly, but ATS is per second we need to divide the source by seconds per hour
     surface_energy_source[column] = state.surface_energy_source.data[column]/(3600.0);
     surface_water_source[column] = state.surface_water_source.data[column]/(3600.0);
-    snow_depth[column] = state.snow_depth.data[column]
+    snow_depth[column] = state.snow_depth.data[column];
 
     //AG - 7/1/24 I'm not sure what this is doing I think it's from when I was testing comparing old to new values 
     //auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
