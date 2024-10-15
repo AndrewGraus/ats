@@ -325,7 +325,6 @@ void AllocateBGCState(const BGCSizes* const sizes,
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(state->subsurface_water_source));
    AllocateBGCVectorDouble(sizes->num_columns, &(state->surface_water_source));
    AllocateBGCVectorDouble(sizes->num_columns, &(state->surface_energy_source));
-   AllocateBGCVectorDouble(sizes->num_columns, &(state->surface_test));
    AllocateBGCVectorDouble(sizes->num_columns, &(state->snow_depth));
    AllocateBGCTensorDouble(sizes->ncells_per_col_, sizes->num_columns, sizes->num_components, &(state->total_component_concentration));
    //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
@@ -346,7 +345,6 @@ void AllocateBGCState(const BGCSizes* const sizes,
      FreeBGCMatrixDouble(&(state->subsurface_water_source));
      FreeBGCVectorDouble(&(state->surface_energy_source));
      FreeBGCVectorDouble(&(state->surface_water_source));
-     FreeBGCVectorDouble(&(state->surface_test));
      FreeBGCVectorDouble(&(state->snow_depth));
      FreeBGCTensorDouble(&(state->total_component_concentration));
    }

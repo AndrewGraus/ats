@@ -114,7 +114,6 @@ extern "C" {
     BGCMatrixDouble subsurface_energy_source;
     BGCVectorDouble surface_energy_source;
     BGCVectorDouble surface_water_source;
-    BGCVectorDouble surface_test;
     BGCVectorDouble snow_depth;
     BGCTensorDouble total_component_concentration;
   } BGCState;
