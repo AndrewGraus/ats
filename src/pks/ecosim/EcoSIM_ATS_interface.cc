@@ -181,6 +181,31 @@ void EcoSIM::Setup() {
     }
   }
 
+  //Lets try this has record thing
+  /*if (!S_->HasRecord(snow_depth_key_)) {
+    S_->Require<CompositeVector, CompositeVectorSpace>(
+         snow_depth_key_ , tag_next_, snow_depth_key_, "surface-snow_depth")
+        .SetMesh(mesh_)
+        ->SetGhosted(false)
+        ->SetComponent("cell", AmanziMesh::CELL, 1);
+  }*/
+  
+  /*if (!S_->HasRecord(snow_depth_key_)) {
+    S_->Require<CompositeVector, CompositeVectorSpace>(alquimia_aux_data_key_, tag_next_, passwd_)
+      .SetMesh(mesh_)
+      ->SetGhosted(false)
+      ->SetComponent("cell", AmanziMesh::CELL, num_aux_data);
+  }*/
+
+  //Key snow_depth_get_key = Keys::getKey(domain_surface_, "surface-snow_depth");
+
+  if (!S_->HasRecord(snow_depth_key_,tag_next_)) {
+        S_->Require<CompositeVector, CompositeVectorSpace>(snow_depth_key_, tag_next_, snow_depth_key_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+  }  
+
   //This is for the Auxiliary Data which we will need
   //commenting for now because we don't need it yet
   /*
@@ -234,12 +259,12 @@ void EcoSIM::Setup() {
   S_->RequireEvaluator(test_key_, tag_current_);
   */
 
-  S_->RequireEvaluator(snow_depth_key_, tag_current_);
+  /*S_->RequireEvaluator(snow_depth_key_, tag_current_);
   S_->Require<CompositeVector, CompositeVectorSpace>(snow_depth_key_, tag_current_)
     .SetMesh(mesh_surf_)
     ->AddComponent("cell", AmanziMesh::CELL, 1);
   S_->RequireEvaluator(snow_depth_key_, tag_current_);  
-
+  */
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << vo_->color("green") << "Setup of PK was successful"
@@ -598,9 +623,10 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& thermal_conductivity = *(*S_->Get<CompositeVector>("thermal_conductivity", tag_next_)
       .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator(snow_depth_key_, tag_current_).Update(*S_, name_);
+  /*S_->GetEvaluator(snow_depth_key_, tag_current_).Update(*S_, name_);
   const Epetra_MultiVector& snow_depth =
   *S_->Get<CompositeVector>(snow_depth_key_, tag_current_).ViewComponent("cell", false);
+  */
 
   //loop over processes instead:
   num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
@@ -830,6 +856,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& surface_water_source = *(*S_->Get<CompositeVector>(surface_water_source_ecosim_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& subsurface_water_source = *(*S_->Get<CompositeVector>(subsurface_water_source_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& snow_depth = *(*S_->Get<CompositeVector>(snow_depth_key_, water_tag).ViewComponent("cell", false))(0);
+  //trying alquimia's method
+  const auto& snow_depth_alt = *S_->Get<CompositeVector>(snow_depth_key_, tag_next_).ViewComponent("cell");
+
 
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -1028,8 +1057,14 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).ViewComponent("cell", false))(0);
   auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_key_, Tags::DEFAULT, subsurface_water_source_key_).ViewComponent("cell", false))(0);
 
-  //auto& surface_test = *(*S_->GetW<CompositeVector>(surface_test_key_, Tags::DEFAULT, surface_test_key_).ViewComponent("cell", false))(0);
+  //Following Alquimia's example:
+  
+  auto& snow_depth_alt = *S_->GetW<CompositeVector>(snow_depth_key_,tag_next_,snow_depth_key_).ViewComponent("cell");
   auto& snow_depth = *(*S_->GetW<CompositeVector>(snow_depth_key_, Tags::DEFAULT, snow_depth_key_).ViewComponent("cell", false))(0);
+  
+  //This is how surface quantities are grabbed in copy to, is this better???
+  //Epetra_Vector& snow_depth_const = *(*S_->GetW<CompositeVector>(snow_depth_key_, water_tag).ViewComponent("cell", false))(0);
+  //Epetra_MultiVector& snow_depth_EMV = *S_->GetW<CompositeVector>("surface-snow_depth", tag_next_, "surface-snow_depth").ViewComponent("cell", false);
 
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -1068,7 +1103,11 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   double snow_depth_cell = state.snow_depth.data[0];
 
   Teuchos::OSTab tab = vo_->getOSTab();	
-  *vo_->os() << "snow depth (ATS): " << snow_depth_cell << " m" <<std::endl;
+  //*vo_->os() << "snow depth (ATS): " << snow_depth_cell << " m" <<std::endl;
+
+  //for (int i=0; i < ncells_per_col_; ++i) {
+  //  *vo_->os() << "cell: " << i << " snow_depth: " << snow_depth[ii] << " m, state: " << state.snow_depth.data[i] << " m" <<std::endl;
+  //}
 
   //Loop over columns on this process
   for (int col=0; col!=num_columns_local; ++col) {
@@ -1123,10 +1162,19 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     //double energy_source_tot = state.surface_energy_source.data[column];
 
     //As EcoSIM is hourly, but ATS is per second we need to divide the source by seconds per hour
-    surface_energy_source[column] = state.surface_energy_source.data[column]/(3600.0);
-    surface_water_source[column] = state.surface_water_source.data[column]/(3600.0);
+    surface_energy_source[col] = state.surface_energy_source.data[col]/(3600.0);
+    surface_water_source[col] = state.surface_water_source.data[col]/(3600.0);
     //surface_test[column] = state.surface_test.data[column];
-    snow_depth[column] = state.snow_depth.data[column];
+    //snow_depth[col] = state.snow_depth.data[col];    
+    snow_depth_alt[0][col] = state.snow_depth.data[col];
+    //snow_depth_alt[col][0] = state.snow_depth.data[col];
+    //snow_depth_EMV[col] = &state.snow_depth.data[col];
+
+    //*vo_->os() << "col: " << col << " snow_depth: " << state.snow_depth.data[col] << ", snow_depth_auto: " << snow_depth_auto[col] 
+    //	    << ", snow_depth_EMV: " << snow_depth_EMV[col] << std::endl;
+
+    //*vo_->os() << "col: " << col << " snow_depth: " << state.snow_depth.data[col] << ", snow_depth_auto: " << snow_depth_auto[col] 
+    //        << std::endl;
 
     //AG - 7/1/24 I'm not sure what this is doing I think it's from when I was testing comparing old to new values 
     //auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
