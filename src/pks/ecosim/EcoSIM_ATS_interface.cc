@@ -181,55 +181,12 @@ void EcoSIM::Setup() {
     }
   }
 
-  //Lets try this has record thing
-  /*if (!S_->HasRecord(snow_depth_key_)) {
-    S_->Require<CompositeVector, CompositeVectorSpace>(
-         snow_depth_key_ , tag_next_, snow_depth_key_, "surface-snow_depth")
-        .SetMesh(mesh_)
-        ->SetGhosted(false)
-        ->SetComponent("cell", AmanziMesh::CELL, 1);
-  }*/
-  
-  /*if (!S_->HasRecord(snow_depth_key_)) {
-    S_->Require<CompositeVector, CompositeVectorSpace>(alquimia_aux_data_key_, tag_next_, passwd_)
-      .SetMesh(mesh_)
-      ->SetGhosted(false)
-      ->SetComponent("cell", AmanziMesh::CELL, num_aux_data);
-  }*/
-
-  //Key snow_depth_get_key = Keys::getKey(domain_surface_, "surface-snow_depth");
-
   if (!S_->HasRecord(snow_depth_key_,tag_next_)) {
         S_->Require<CompositeVector, CompositeVectorSpace>(snow_depth_key_, tag_next_, snow_depth_key_)
           .SetMesh(mesh_surf_)
           ->SetGhosted(false)
           ->SetComponent("cell", AmanziMesh::CELL, 1);
   }  
-
-  //This is for the Auxiliary Data which we will need
-  //commenting for now because we don't need it yet
-  /*
-  if (plist_->isParameter("auxiliary data")) {
-    auto names = plist_->get<Teuchos::Array<std::string> >("auxiliary data");
-
-    for (auto it = names.begin(); it != names.end(); ++it) {
-      Key aux_field_name = Keys::getKey(domain_, *it);
-      if (!S_->HasRecord(aux_field_name)) {
-        S_->Require<CompositeVector, CompositeVectorSpace>(aux_field_name, tag_next_, passwd_)
-          .SetMesh(mesh_)->SetGhosted(false)->SetComponent("cell", AmanziMesh::CELL, 1);
-      }
-    }
-  }
-
-  // Setup more auxiliary data
-  if (!S_->HasRecord(alquimia_aux_data_key_, tag_next_)) {
-    int num_aux_data = bgc_engine_->Sizes().num_aux_integers + bgc_engine_->Sizes().num_aux_doubles;
-    S_->Require<CompositeVector, CompositeVectorSpace>(alquimia_aux_data_key_, tag_next_, passwd_)
-      .SetMesh(mesh_)->SetGhosted(false)->SetComponent("cell", AmanziMesh::CELL, num_aux_data);
-
-    S_->GetRecordW(alquimia_aux_data_key_, tag_next_, passwd_).set_io_vis(false);
-  }
-  */
 
   //Setup Evaluators
   requireAtNext(hydraulic_conductivity_key_, tag_next_, *S_)
@@ -252,19 +209,6 @@ void EcoSIM::Setup() {
 
   requireAtCurrent(matric_pressure_key_, tag_current_, *S_, name_);
 
-  /*S_->RequireEvaluator(test_key_, tag_current_);
-  S_->Require<CompositeVector, CompositeVectorSpace>(test_key_, tag_current_)
-    .SetMesh(mesh_surf_)
-    ->AddComponent("cell", AmanziMesh::CELL, 1);  
-  S_->RequireEvaluator(test_key_, tag_current_);
-  */
-
-  /*S_->RequireEvaluator(snow_depth_key_, tag_current_);
-  S_->Require<CompositeVector, CompositeVectorSpace>(snow_depth_key_, tag_current_)
-    .SetMesh(mesh_surf_)
-    ->AddComponent("cell", AmanziMesh::CELL, 1);
-  S_->RequireEvaluator(snow_depth_key_, tag_current_);  
-  */
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << vo_->color("green") << "Setup of PK was successful"
@@ -286,93 +230,6 @@ void EcoSIM::Initialize() {
   bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num, num_columns_);
 
   int ierr = 0;
-
-  /*if (S_->HasRecord(suc_key_, Tags::DEFAULT)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "has suction key." << std::endl;
-  } else {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "Does not have suction key at default." << std::endl;
-  }
-  if (S_->HasRecord(suc_key_, Tags::CURRENT)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "has suction key at current" << std::endl;
-  } else {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "Does not have suction key at current" << std::endl;
-  }
-  if (S_->HasRecord(suc_key_, Tags::NEXT)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "has suction key at next" << std::endl;
-  } else {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "Does not have suction key at next" << std::endl;
-  }*/
-
-  // Ensure dependencies are filled
-  // May not need to update (also causes an assertion error if called before
-  // The PK that owns the variable
-  /*S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(porosity_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(relative_permeability_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(liquid_density_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(rock_density_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(subsurface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(subsurface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
-  */
-  //S_->GetEvaluator(suc_key_, Tags::DEFAULT).Update(*S_, name_);
-
-  //Surface properties from met data
-  /*S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(p_rain_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(surface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(surface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
-
-  if (S_->HasRecord(gas_density_key_test_, Tags::DEFAULT)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "found mass density gas key" << std::endl;
-    S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(gas_density_key_, Tags::DEFAULT).Update(*S_, name_);
-    has_gas = true;
-  } else {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "Did not find gas key" << std::endl;
-    has_gas = false;
-  }
-
-  if (S_->HasRecord(T_key_, Tags::DEFAULT)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "found temp key" << std::endl;
-    S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(thermal_conductivity_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(cell_volume_key_, Tags::DEFAULT).Update(*S_, name_);
-    has_energy = true;
-  } else {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "Did not find temp key" << std::endl;
-    has_energy = false;
-  }
-  */
-  /*if (S_->HasRecord(surface_snow_depth_key_, Tags::DEFAULT)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "found surface_snow_depth_key" << std::endl;
-  } else if (S_->HasRecord(snow_depth_key_, Tags::DEFAULT)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "found snow_depth_key" << std::endl;
-  } else {
-    *vo_->os() << "neither snow depth key found" << std::endl;
-  }*/
 
   if (S_->HasRecord(ice_density_key_, Tags::DEFAULT)) {
     Teuchos::OSTab tab = vo_->getOSTab();
@@ -397,11 +254,6 @@ void EcoSIM::Initialize() {
   S_->GetRecordW(matric_pressure_key_, Tags::DEFAULT, "matric_pressure").set_initialized();
 
   int num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-
-  //Looping over the columns and initializing
-  /*for (int col=0; col!=num_columns_; ++col) {
-    ierr = InitializeSingleColumn(col);
-  }*/
 
   //loop over processes instead:
   num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
@@ -490,7 +342,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
   if (has_gas) {
     S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
-    S_->GetEvaluator(gas_density_key_, Tags::DEFAULT).Update(*S_, name_);
+    //S_->GetEvaluator(gas_density_key_, Tags::DEFAULT).Update(*S_, name_);
   }
 
   if (has_ice) {
@@ -555,9 +407,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
           .ViewComponent("cell",false))(0);*/
 
   if (has_gas) {
-    S_->GetEvaluator("mass_density_gas", tag_next_).Update(*S_, name_);
-    const Epetra_MultiVector& gas_density = *(*S_->Get<CompositeVector>("mass_density_gas", tag_next_)
-            .ViewComponent("cell",false))(0);
+    //S_->GetEvaluator("mass_density_gas", tag_next_).Update(*S_, name_);
+    //const Epetra_MultiVector& gas_density = *(*S_->Get<CompositeVector>("mass_density_gas", tag_next_)
+    //        .ViewComponent("cell",false))(0);
 
     S_->GetEvaluator("saturation_gas", tag_next_).Update(*S_, name_);
     const Epetra_MultiVector& gas_saturation = *(*S_->Get<CompositeVector>("saturation_gas", tag_next_)
@@ -622,11 +474,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator("thermal_conductivity", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& thermal_conductivity = *(*S_->Get<CompositeVector>("thermal_conductivity", tag_next_)
       .ViewComponent("cell",false))(0);
-
-  /*S_->GetEvaluator(snow_depth_key_, tag_current_).Update(*S_, name_);
-  const Epetra_MultiVector& snow_depth =
-  *S_->Get<CompositeVector>(snow_depth_key_, tag_current_).ViewComponent("cell", false);
-  */
 
   //loop over processes instead:
   num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
@@ -855,10 +702,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
   const Epetra_Vector& surface_water_source = *(*S_->Get<CompositeVector>(surface_water_source_ecosim_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& subsurface_water_source = *(*S_->Get<CompositeVector>(subsurface_water_source_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& snow_depth = *(*S_->Get<CompositeVector>(snow_depth_key_, water_tag).ViewComponent("cell", false))(0);
-  //trying alquimia's method
-  const auto& snow_depth_alt = *S_->Get<CompositeVector>(snow_depth_key_, tag_next_).ViewComponent("cell");
-
 
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -919,10 +762,10 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     if (has_gas) {
       const Epetra_Vector& gas_saturation = *(*S_->Get<CompositeVector>(saturation_gas_key_, water_tag).ViewComponent("cell", false))(0);
-      const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_density_key_, water_tag).ViewComponent("cell", false))(0);
+      //const Epetra_Vector& gas_density = *(*S_->Get<CompositeVector>(gas_density_key_, water_tag).ViewComponent("cell", false))(0);
 
       FieldToColumn_(column,gas_saturation,col_g_sat.ptr());
-      FieldToColumn_(column,gas_density,col_g_dens.ptr());
+      //FieldToColumn_(column,gas_density,col_g_dens.ptr());
     }
 
     if (has_ice) {
@@ -970,7 +813,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
       if (has_gas) {
         props.gas_saturation.data[column][i] = (*col_g_sat)[i];
-        state.gas_density.data[column][i] = (*col_g_dens)[i];
+        //state.gas_density.data[column][i] = (*col_g_dens)[i];
       }
 
       if (has_ice) {
@@ -985,7 +828,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     state.surface_energy_source.data[column] = surface_energy_source[column];
     state.surface_water_source.data[column] = surface_water_source[column];
-    state.snow_depth.data[column] = snow_depth[column];
 
     props.shortwave_radiation.data[column] = shortwave_radiation[column];
     props.longwave_radiation.data[column] = longwave_radiation[column];
@@ -1057,14 +899,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).ViewComponent("cell", false))(0);
   auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_key_, Tags::DEFAULT, subsurface_water_source_key_).ViewComponent("cell", false))(0);
 
-  //Following Alquimia's example:
   
-  auto& snow_depth_alt = *S_->GetW<CompositeVector>(snow_depth_key_,tag_next_,snow_depth_key_).ViewComponent("cell");
-  auto& snow_depth = *(*S_->GetW<CompositeVector>(snow_depth_key_, Tags::DEFAULT, snow_depth_key_).ViewComponent("cell", false))(0);
-  
-  //This is how surface quantities are grabbed in copy to, is this better???
-  //Epetra_Vector& snow_depth_const = *(*S_->GetW<CompositeVector>(snow_depth_key_, water_tag).ViewComponent("cell", false))(0);
-  //Epetra_MultiVector& snow_depth_EMV = *S_->GetW<CompositeVector>("surface-snow_depth", tag_next_, "surface-snow_depth").ViewComponent("cell", false);
+  auto& snow_depth = *S_->GetW<CompositeVector>(snow_depth_key_,tag_next_,snow_depth_key_).ViewComponent("cell");
 
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -1102,26 +938,19 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   double water_source_tot = state.surface_water_source.data[0];
   double snow_depth_cell = state.snow_depth.data[0];
 
-  Teuchos::OSTab tab = vo_->getOSTab();	
-  //*vo_->os() << "snow depth (ATS): " << snow_depth_cell << " m" <<std::endl;
-
-  //for (int i=0; i < ncells_per_col_; ++i) {
-  //  *vo_->os() << "cell: " << i << " snow_depth: " << snow_depth[ii] << " m, state: " << state.snow_depth.data[i] << " m" <<std::endl;
-  //}
-
   //Loop over columns on this process
   for (int col=0; col!=num_columns_local; ++col) {
 
     if (has_gas) {
       auto& gas_saturation = *(*S_->GetW<CompositeVector>(saturation_gas_key_, Tags::DEFAULT, saturation_gas_key_).ViewComponent("cell",false))(0);
-      auto& gas_density = *(*S_->GetW<CompositeVector>(gas_density_key_, Tags::DEFAULT, gas_density_key_).ViewComponent("cell",false))(0);
+      //auto& gas_density = *(*S_->GetW<CompositeVector>(gas_density_key_, Tags::DEFAULT, gas_density_key_).ViewComponent("cell",false))(0);
       for (int i=0; i < ncells_per_col_; ++i) {
-        (*col_g_dens)[i] = state.gas_density.data[column][i];
+        //(*col_g_dens)[i] = state.gas_density.data[column][i];
         (*col_g_sat)[i] = props.gas_saturation.data[column][i];
       }
 
       ColumnToField_(column,gas_saturation,col_g_sat.ptr());
-      ColumnToField_(column,gas_density,col_g_dens.ptr());
+      //ColumnToField_(column,gas_density,col_g_dens.ptr());
     }
 
     if (has_ice) {
@@ -1164,21 +993,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     //As EcoSIM is hourly, but ATS is per second we need to divide the source by seconds per hour
     surface_energy_source[col] = state.surface_energy_source.data[col]/(3600.0);
     surface_water_source[col] = state.surface_water_source.data[col]/(3600.0);
-    //surface_test[column] = state.surface_test.data[column];
-    //snow_depth[col] = state.snow_depth.data[col];    
-    snow_depth_alt[0][col] = state.snow_depth.data[col];
-    //snow_depth_alt[col][0] = state.snow_depth.data[col];
-    //snow_depth_EMV[col] = &state.snow_depth.data[col];
-
-    //*vo_->os() << "col: " << col << " snow_depth: " << state.snow_depth.data[col] << ", snow_depth_auto: " << snow_depth_auto[col] 
-    //	    << ", snow_depth_EMV: " << snow_depth_EMV[col] << std::endl;
-
-    //*vo_->os() << "col: " << col << " snow_depth: " << state.snow_depth.data[col] << ", snow_depth_auto: " << snow_depth_auto[col] 
-    //        << std::endl;
-
-    //AG - 7/1/24 I'm not sure what this is doing I think it's from when I was testing comparing old to new values 
-    //auto& new_e_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
-    //auto& new_w_source = *(*S_->GetW<CompositeVector>(surface_water_source_key_, Tags::DEFAULT, surface_water_source_key_).ViewComponent("cell", false))(0);
+    snow_depth[0][col] = state.snow_depth.data[col];
 
     ColumnToField_(column,liquid_saturation,col_l_sat.ptr());
     ColumnToField_(column,water_content,col_wc.ptr());
