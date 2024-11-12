@@ -151,10 +151,11 @@ void AllocateBGCMatrixDouble(const int cells, const int columns, BGCMatrixDouble
     matrix->columns = columns;
     matrix->capacity_cells = nearest_power_of_2(cells);
     matrix->capacity_columns = nearest_power_of_2(columns);
-    matrix->data = (double**) calloc((size_t)matrix->capacity_columns, sizeof(double*));
-    for (int i = 0; i < matrix->columns; ++i) {
-      matrix->data[i] = (double*) calloc((size_t)matrix->capacity_cells, sizeof(double));
-    }
+    matrix->data = (double*) calloc((size_t)matrix->capacity_cells * matrix->capacity_columns, sizeof(double));
+    
+    //for (int i = 0; i < matrix->columns; ++i) {
+    //  matrix->data[i] = (double*) calloc((size_t)matrix->capacity_cells, sizeof(double));
+    //}
     //ALQUIMIA_ASSERT(NULL != matrix->data);
   } else {
     matrix->cells= 0;
@@ -182,10 +183,10 @@ void AllocateBGCMatrixInt(const int cells, const int columns, BGCMatrixInt* matr
     matrix->columns= columns;
     matrix->capacity_cells= nearest_power_of_2(cells);
     matrix->capacity_columns= nearest_power_of_2(columns);
-    matrix->data = (int**) calloc((size_t)matrix->capacity_columns, sizeof(int*));
-    for (int i = 0; i < matrix->columns; ++i) {
-      matrix->data[i] = (int*) calloc((size_t)matrix->capacity_cells, sizeof(int));
-    }
+    matrix->data = (int*) calloc((size_t)matrix->capacity_cells * matrix->capacity_columns, sizeof(int));
+    //for (int i = 0; i < matrix->columns; ++i) {
+    //  matrix->data[i] = (int*) calloc((size_t)matrix->capacity_cells, sizeof(int));
+    //}
     //ALQUIMIA_ASSERT(NULL != matrix->data);
   } else {
     matrix->cells= 0;

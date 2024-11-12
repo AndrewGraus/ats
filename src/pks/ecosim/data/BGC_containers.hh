@@ -66,17 +66,17 @@ extern "C" {
 
   typedef struct {
     int cells, columns, capacity_cells, capacity_columns;
-    double** data;
+    double* data;
   } BGCMatrixDouble;
 
   typedef struct {
     int cells, columns, capacity_cells, capacity_columns;
-    int** data;
+    int* data;
   } BGCMatrixInt;
 
   typedef struct {
     int cells, columns, capacity;
-    char** data;
+    char* data;
   } BGCMatrixString;
 
   typedef struct {

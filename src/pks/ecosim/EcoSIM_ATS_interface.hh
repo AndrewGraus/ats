@@ -184,6 +184,7 @@ class EcoSIM : public PK_Physical {
   int num_columns_global_ptype;
   double saved_time_;
   double current_time_;
+  double t_ecosim = 0.0;
 
   // keys
   Key tcc_key_;
