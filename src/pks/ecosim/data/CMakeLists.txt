@@ -23,7 +23,7 @@ set(ECOSIM_INSTALL_PREFIX ${ECOSIM_DIR}/ecosim)
 #set(ECOSIM_LIB_LOCATION ${ECOSIM_LIBRARY_DIR})
 set(ECOSIM_LIB_LOCATION ${ECOSIM_DIR}/ecosim/local/lib)
 set(ECOSIM_BUILD_PREFIX ${ECOSIM_DIR}/ecosim/build)
-set(ECOSIM_CMAKE_BINARY_DIR ${ECOSIM_DIR}/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release)
+#set(ECOSIM_CMAKE_BINARY_DIR ${ECOSIM_DIR}/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release)
 set(NETCDF_LIB ${ECOSIM_DIR}/lib)
 
 message("In ATS-EcoSIM data CMakeLists:")
@@ -79,7 +79,7 @@ set(ats_ecosim_data_inc_files
 )
 
 file(GLOB ECOSIM_LIBRARIES
-  ${ECOSIM_LIB_LOCATION}/*.a
+ ${ECOSIM_LIB_LOCATION}/*.a
 )
 
 set(ats_ecosim_data_link_libs
@@ -105,7 +105,10 @@ set(ats_ecosim_data_link_libs
   ${NETCDF_LIB}/libnetcdff.so
   ${NETCDF_LIB}/libnetcdff.so.7
   ${NETCDF_LIB}/libnetcdff.so.7.1.0
+  /global2/packages/software/gcc/12.3.0/lib64/libgfortran.so.5
 )
+
+message(STATUS "ats_ecosim_data_link_libs: ${ats_ecosim_data_link_libs}")
 
 # make the library
 add_amanzi_library(ats_ecosim_data

@@ -57,7 +57,7 @@ if(ENABLE_ECOSIM)
   #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/PhysData/)
   #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_mods/)
 
-  message("At includ_directories")
+  message("At include_directories")
   include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Utils/)
   include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Minimath/)
   include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Modelconfig/)
@@ -73,7 +73,8 @@ if(ENABLE_ECOSIM)
 
 
   include_directories(${ECOSIM_INCLUDE_DIRS})
-
+  
+  message("EcoSIM inc dirs: ")
   message(eco_inc_file="${ECOSIM_INCLUDE_DIRS}")
 
   # ATS EcoSIM pk
@@ -113,8 +114,9 @@ if(ENABLE_ECOSIM)
   file(GLOB ECOSIM_LIBRARIES
   ${ECOSIM_LIB_LOCATION}/*.a
   )
-
-  find_package(NetCDF REQUIRED)
+  
+  
+find_package(NetCDF REQUIRED)
 
   set(ats_ecosim_link_libs
   ${Teuchos_LIBRARIES}
@@ -136,7 +138,10 @@ if(ENABLE_ECOSIM)
   ats_operators
   ats_ecosim_data
   ats_ecosim_relations
+  /global2/packages/software/gcc/12.3.0/lib64/libgfortran.so.5  
   )
+
+  message(STATUS "ats_ecosim_link_libs: ${ats_ecosim_link_libs}") 
 
   message(inc_files="${ats_ecosim_inc_files}")
 

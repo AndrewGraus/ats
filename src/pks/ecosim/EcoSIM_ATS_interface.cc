@@ -705,6 +705,8 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& surface_water_source = *(*S_->Get<CompositeVector>(surface_water_source_ecosim_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& subsurface_water_source = *(*S_->Get<CompositeVector>(subsurface_water_source_key_, water_tag).ViewComponent("cell", false))(0);
 
+  auto& snow_depth = *S_->GetW<CompositeVector>(snow_depth_key_,tag_next_,snow_depth_key_).ViewComponent("cell");
+
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -822,6 +824,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
     state.surface_energy_source.data[column] = surface_energy_source[column];
     state.surface_water_source.data[column] = surface_water_source[column];
+    state.snow_depth.data[column] = snow_depth[0][column];
 
     props.shortwave_radiation.data[column] = shortwave_radiation[column];
     props.longwave_radiation.data[column] = longwave_radiation[column];
@@ -832,6 +835,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.elevation.data[column] = elevation[column];
     props.aspect.data[column] = aspect[column];
     props.slope.data[column] = slope[column];
+
 
     for (int i = 0; i < state.total_component_concentration.columns; i++) {
       for (int j = 0; j < state.total_component_concentration.cells; j++) {
@@ -855,7 +859,8 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   props.wilting_point = pressure_at_wilting_point;
 
   Teuchos::OSTab tab = vo_->getOSTab();
-  
+  *vo_->os() << "(CopyToEcoSIM) precipitation = " << props.precipitation.data[1] << " m/s" << std::endl;   
+
   /*for (int column=0; column!=num_columns_local; ++column) {
   	*vo_->os() << "for column: " << column << std::endl;
 	for (int i=0; i < ncells_per_col_; ++i) {
@@ -939,6 +944,9 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     surface_water_source[col] = state.surface_water_source.data[col]/(3600.0);
     snow_depth[0][col] = state.snow_depth.data[col];
   }
+
+  Teuchos::OSTab tab = vo_->getOSTab();
+  *vo_->os() << "(CopyFromEcoSIM) Q_w = " << surface_water_source[1] << " m/s " << "snow_depth = " << snow_depth[0][1] << std::endl;
 
   /*auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
   for (int column = 0; column != num_columns_local; ++column) {
