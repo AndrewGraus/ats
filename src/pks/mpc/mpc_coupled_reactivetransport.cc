@@ -32,6 +32,12 @@ MPCCoupledReactiveTransport::MPCCoupledReactiveTransport(
 
   alquimia_timer_ = Teuchos::TimeMonitor::getNewCounter("alquimia " + name());
   alquimia_surf_timer_ = Teuchos::TimeMonitor::getNewCounter("alquimia surface " + name());
+}
+
+void
+MPCCoupledReactiveTransport::parseParameterList()
+{
+  WeakMPC::parseParameterList();
 
   domain_ = Keys::readDomain(*plist_, "domain", "domain");
   domain_surf_ = Keys::readDomainHint(*plist_, domain_, "domain", "surface");
@@ -173,7 +179,10 @@ MPCCoupledReactiveTransport::get_dt()
   double dTchem = coupled_chemistry_pk_->get_dt();
 
   if (!chem_step_succeeded_ && (dTchem / dTtran > 0.99)) { dTchem *= 0.5; }
-  return dTchem;
+
+  if (dTtran > dTchem) dTtran = dTchem;
+
+  return dTtran;
 }
 
 
@@ -209,7 +218,7 @@ MPCCoupledReactiveTransport::AdvanceStep(double t_old, double t_new, bool reinit
     return fail;
   } else {
     transport_pk_surf_->debugger()->WriteCellVector("tcc (chem)", *tcc_surf);
-    transport_pk_surf_->VV_PrintSoluteExtrema(*tcc_surf, t_new - t_old);
+    transport_pk_surf_->PrintSoluteExtrema(*tcc_surf, t_new - t_old);
   }
 
   // Chemistry in the subsurface
@@ -218,15 +227,19 @@ MPCCoupledReactiveTransport::AdvanceStep(double t_old, double t_new, bool reinit
   S_->GetEvaluator(mol_dens_key_, tag_next_).Update(*S_, name_);
   Teuchos::RCP<const Epetra_MultiVector> mol_dens =
     S_->Get<CompositeVector>(mol_dens_key_, tag_next_).ViewComponent("cell", true);
-  fail = advanceChemistry(chemistry_pk_, t_old, t_new, reinit, *mol_dens, tcc, *alquimia_timer_);
-  changedEvaluatorPrimary(tcc_key_, tag_next_, *S_);
+  try {
+    fail = advanceChemistry(chemistry_pk_, t_old, t_new, reinit, *mol_dens, tcc, *alquimia_timer_);
+    changedEvaluatorPrimary(tcc_key_, tag_next_, *S_);
+  } catch (const Errors::Message& chem_error) {
+    fail = true;
+  }
   if (fail) {
     if (vo_->os_OK(Teuchos::VERB_MEDIUM))
       *vo_->os() << chemistry_pk_->name() << " failed." << std::endl;
     return fail;
   } else {
     transport_pk_->debugger()->WriteCellVector("tcc (chem)", *tcc);
-    transport_pk_->VV_PrintSoluteExtrema(*tcc, t_new - t_old);
+    transport_pk_->PrintSoluteExtrema(*tcc, t_new - t_old);
   }
 
   chem_step_succeeded_ = true;

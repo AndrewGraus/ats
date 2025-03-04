@@ -40,7 +40,7 @@ include_directories(${ATS_SOURCE_DIR}/src/pks)
 include_directories(${ATS_SOURCE_DIR}/src/pks/mpc)
 include_directories(${ATS_SOURCE_DIR}/src/pks/energy)
 include_directories(${ATS_SOURCE_DIR}/src/pks/flow)
-include_directories(${ATS_SOURCE_DIR}/src/pks/deformation)
+include_directories(${ATS_SOURCE_DIR}/src/pks/deform)
 include_directories(${ATS_SOURCE_DIR}/src/pks/transport)
 include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim)
 include_directories(${ATS_SOURCE_DIR}/src/operators/upwinding)
@@ -53,6 +53,7 @@ include_directories(${ATS_BINARY_DIR})
 include_evaluators_directories(LISTNAME REGISTER_AMANZI_STATE_EVALUATORS_INCLUDES)
 include_evaluators_directories(LISTNAME ATS_RELATIONS_REG_INCLUDES)
 include_evaluators_directories(LISTNAME ATS_TRANSPORT_REG_INCLUDES)
+include_evaluators_directories(LISTNAME ATS_TRANSPORT_RELATIONS_REG_INCLUDES)
 include_evaluators_directories(LISTNAME ATS_ENERGY_PKS_REG_INCLUDES)
 include_evaluators_directories(LISTNAME ATS_ENERGY_RELATIONS_REG_INCLUDES)
 include_evaluators_directories(LISTNAME ATS_FLOW_PKS_REG_INCLUDES)
@@ -95,7 +96,6 @@ set(amanzi_link_libs
   dbg
   data_structures
   mesh
-  mesh_audit
   mesh_functions
   functions
   geometry
@@ -126,6 +126,7 @@ set(ats_link_libs
   ats_surface_balance
   ats_mpc
   ats_mpc_relations
+  ats_transport_relations
   )
 
 if (ENABLE_ECOSIM)
@@ -187,7 +188,7 @@ if (BUILD_TESTS)
            SOURCE test/Main.cc test/executable_mesh_factory.cc
            LINK_LIBS ats_executable ${ats_link_libs} ${UnitTest_LIBRARIES} ${NOX_LIBRARIES} ${HDF5_LIBRARIES})
   add_amanzi_test(executable_mesh_factory_np2 executable_mesh_factory NPROCS 2 KIND uint)
-  add_amanzi_test(executable_mesh_factory_np4 executable_mesh_factory NPROCS 2 KIND uint)
+  add_amanzi_test(executable_mesh_factory_np4 executable_mesh_factory NPROCS 4 KIND uint)
 
   # test for coupled water preconditioners
   add_amanzi_test(executable_coupled_water executable_coupled_water
@@ -202,3 +203,10 @@ add_amanzi_executable(ats
   LINK_LIBS ats_executable ${fates_link_libs} ${tpl_link_libs} ${ats_link_libs} ${amanzi_link_libs}
   OUTPUT_NAME ats
   OUTPUT_DIRECTORY ${ATS_BINARY_DIR})
+
+# set this here for now
+# add option to bootstrap before completion
+if (ENABLE_ELM_ATS_API)
+  message("building elm_ats api")
+  add_subdirectory(elm_ats_api)
+endif()

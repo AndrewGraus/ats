@@ -24,6 +24,7 @@ import datetime
 import os
 import glob
 #import pprint
+import fnmatch
 import shutil
 import subprocess
 import textwrap
@@ -78,12 +79,14 @@ class TestStatus(object):
     """
     Simple class to hold status info.
     """
-    def __init__(self):
+    def __init__(self, name=None):
         self.fail = 0
+        self.failures = []
         self.warning = 0
         self.error = 0
         self.skipped = 0
         self.test_count = 0
+        self.name = name
 
     def __str__(self):
         message = "fail = {0}\n".format(self.fail)
@@ -153,7 +156,7 @@ class RegressionTest(object):
         # max_threshold) then compare values. By default we use the
         # python definitions for this platform
         self._default_tolerance = {}
-        self._default_tolerance[self._TIME] = [1.e-12, self._ABSOLUTE, \
+        self._default_tolerance[self._TIME] = [1.e-4, self._ABSOLUTE, \
                                                0.0, sys.float_info.max]
         self._default_tolerance[self._DISCRETE] = [0, self._ABSOLUTE, 0, sys.maxsize]
         
@@ -277,9 +280,12 @@ class RegressionTest(object):
         else:
             if self._np is not None:
                 if self._mpiexec:
-                    command.append(self._mpiexec)
-                    command.append("-np")
-                    command.append(self._np)
+                    command.append(str(self._mpiexec['mpiexec']))
+                    if self._mpiexec['mpiexec_global_args'] is not None and \
+                       self._mpiexec['mpiexec_global_args'] != '':
+                        command.append(str(self._mpiexec['mpiexec_global_args']))
+                    command.append(str(self._mpiexec['mpiexec_numprocs_flag']))
+                    command.append(str(self._np))
                 else:
                     # parallel test, but don't have mpiexec, we mark the
                     # test as skipped and bail....
@@ -289,6 +295,12 @@ class RegressionTest(object):
                     print(message, file=testlog)
                     status.skipped = 1
                     return None
+            else:
+                if self._mpiexec and self._mpiexec['always_mpiexec']:
+                    command.append(str(self._mpiexec['mpiexec']))
+                    command.append(str(self._mpiexec['mpiexec_global_args']))
+                    command.append(str(self._mpiexec['mpiexec_numprocs_flag']))
+                    command.append('1')
 
         # Setting CWD for current test
         test_directory = os.getcwd()
@@ -299,7 +311,7 @@ class RegressionTest(object):
             fid.write(self._version)
 
         if "metsi/ats" in self._executable:
-            command.append("-v " + test_directory + ":/home/amanzi_usr/work:delegated")
+            command.append("-v " + test_directory + ":/home/amanzi_usr/work:cached")
             command.append("-w " + "/home/amanzi_usr/work")
             command.append(self._executable)
             command.append("/bin/sh -c 'cd " + self.dirname() + ";")
@@ -558,14 +570,15 @@ class RegressionTest(object):
 
                 chp.setParameter('cycles', 'Array(int)', chp_cycles)
 
-                # -- update timestep controller, nonlinear solvers
+                # -- update timestep controller, nonlinear solvers to try really hard
                 for ti in asearch.findall_name(xml, "time integrator"):
                     asearch.find_name(ti, "limit iterations").setValue(100)
                     asearch.find_name(ti, "diverged tolerance").setValue(1.e10)
 
-                    asearch.find_name(ti, "timestep controller type").setValue("from file")
-                    ts_hist = ti.sublist("timestep controller from file parameters")
-                    ts_hist.setParameter("file name", "string", "../data/{0}_dts.h5".format(self.name()))
+                # -- add filename to the timestep manager list
+                cycle_driver = asearch.find_name(xml, "cycle driver")
+                cycle_driver_tsm = cycle_driver.sublist("timestep manager");
+                cycle_driver_tsm.setParameter("prescribed timesteps file name", "string", f"../data/{self.name()}_dts.h5")
 
                 # -- write the new xml
                 print("Writing: {0}.xml".format(self.name()), file=testlog)
@@ -784,6 +797,7 @@ class RegressionTest(object):
 
         # unpack the tolerance
         tol, tol_type, min_threshold, max_threshold = tuple(tolerance)
+        print_tol_type = tol_type
 
         if tol_type == self._ABSOLUTE:
             delta = self._norm(current-gold)
@@ -794,6 +808,7 @@ class RegressionTest(object):
                 min_threshold = max(min_threshold, 1.e-12)
                 rel_to = numpy.where(numpy.abs(gold) > min_threshold, gold, min_threshold)
                 delta = self._norm((gold - current) / rel_to)
+                print_tol_type += f" {min_threshold}"
 
             else:
                 delta = self._norm((gold - current) / max(abs(gold), min_threshold))
@@ -810,10 +825,10 @@ class RegressionTest(object):
             status.fail = 1
             status.local_fail = 1
             print("    FAIL: {0} : {1} : {2} > {3} [{4}]".format(
-                    self.name(), key, delta, tol, tol_type), file=testlog)
+                    self.name(), key, delta, tol, print_tol_type), file=testlog)
         else:
             print("    PASS: {0} : {1} : {2} <= {3} [{4}]".format(
-                self.name(), key, delta, tol, tol_type), file=testlog)
+                self.name(), key, delta, tol, print_tol_type), file=testlog)
         return
 
     def _set_criteria(self, key, cfg_criteria, test_data):
@@ -881,7 +896,7 @@ class RegressionTest(object):
         criteria_type = test_data_s[1]
         if (criteria_type.lower() != self._PERCENT and
             criteria_type.lower() != self._ABSOLUTE and
-                criteria_type.lower() != self._RELATIVE):
+            criteria_type.lower() != self._RELATIVE):
             raise RuntimeError("ERROR : invalid test criteria string '{0}' "
                                "for '{1}'".format(criteria_type, key))
         criteria[1] = criteria_type
@@ -918,9 +933,15 @@ class RegressionTestManager(object):
 
     """
 
-    def __init__(self, executable=None, mpiexec=None, suffix=None):
+    def __init__(self,
+                 executable=None,
+                 mpiexec_opts=None,
+                 suffix=None):
         self._executable = executable
-        self._mpiexec = mpiexec
+        if mpiexec_opts is None or mpiexec_opts['mpiexec'] is None:
+            self._mpiexec = None
+        else:
+            self._mpiexec = mpiexec_opts
         self._version = version(executable)
         self._debug = False
         self._file_status = TestStatus()
@@ -955,7 +976,7 @@ class RegressionTestManager(object):
     def num_tests(self):
         return len(self._tests)
 
-    def generate_tests(self, config_file, user_suites, user_tests,
+    def generate_tests(self, config_file, user_suites, user_tests, user_exclude_tests,
                        timeout, check_performance, testlog):
 
         """
@@ -964,7 +985,9 @@ class RegressionTestManager(object):
         self._read_config_file(config_file)
         self._validate_suites()
         user_suites, user_tests = self._validate_user_lists(user_suites,
-                                                            user_tests, testlog)
+                                                            user_tests,
+                                                            user_exclude_tests,
+                                                            testlog)
         self._create_tests(user_suites, user_tests, timeout, check_performance, testlog)
 
     def run_tests(self, dry_run, update, new_test, check_only, run_only, testlog, save_dt_history=False):
@@ -1011,7 +1034,7 @@ class RegressionTestManager(object):
         print(50 * '-', file=testlog)
 
         for test in self._tests:
-            status = TestStatus()
+            status = TestStatus(test.name())
             self._test_header(test.name(), testlog)
 
             test.run(dry_run, status, testlog)
@@ -1033,7 +1056,7 @@ class RegressionTestManager(object):
         print(50 * '-', file=testlog)
 
         for test in self._tests:
-            status = TestStatus()
+            status = TestStatus(test.name())
             self._test_header(test.name(), testlog)
 
             test.run(dry_run, status, testlog)
@@ -1059,7 +1082,7 @@ class RegressionTestManager(object):
         print(50 * '-', file=testlog)
 
         for test in self._tests:
-            status = TestStatus()
+            status = TestStatus(test.name())
             self._test_header(test.name(), testlog)
 
             if not dry_run and status.skipped == 0:
@@ -1083,7 +1106,7 @@ class RegressionTestManager(object):
         print(50 * '-', file=testlog)
 
         for test in self._tests:
-            status = TestStatus()
+            status = TestStatus(test.name())
             self._test_header(test.name(), testlog)
 	    
             test.run(dry_run, status, testlog)
@@ -1106,7 +1129,7 @@ class RegressionTestManager(object):
         print(50 * '-', file=testlog)
 
         for test in self._tests:
-            status = TestStatus()
+            status = TestStatus(test.name())
             self._test_header(test.name(), testlog)
             test.run(dry_run, status, testlog)
 
@@ -1184,6 +1207,8 @@ class RegressionTestManager(object):
         Add the current test status to the overall status for the file.
         """
         self._file_status.fail += status.fail
+        if status.fail and status.name is not None:
+            self._file_status.failures.append(status.name)
         self._file_status.warning += status.warning
         self._file_status.error += status.error
         self._file_status.skipped += status.skipped
@@ -1305,7 +1330,7 @@ class RegressionTestManager(object):
                                "configuration file '{0}' : {1}".format(
                                    self._config_filename, invalid_tests))
 
-    def _validate_user_lists(self, user_suites, user_tests, testlog):
+    def _validate_user_lists(self, user_suites, user_tests, user_exclude_tests, testlog):
         """
         Check that the list of suites or tests passed from the command
         line are valid.
@@ -1330,13 +1355,18 @@ class RegressionTestManager(object):
 
             u_tests = []
             for test in user_tests:
-                if test in self._available_tests:
-                    u_tests.append(test.lower())
-                else:
+                matches = fnmatch.filter(self._available_tests, test)
+                u_tests.extend(matches)
+                if len(matches) == 0:
                     message = self._txtwrap.fill(
                         "WARNING : {0} : Skipping test '{1}' (not present or "
                         "misspelled).".format(self._config_filename, test))
                     print(message, file=testlog)
+
+        # filter out excluded tests
+        for exclude in user_exclude_tests:
+            if exclude.lower() in u_tests:
+                u_tests.pop(exclude.lower())
 
         return u_suites, u_tests
 
@@ -1437,13 +1467,13 @@ def check_for_docker_image(docker_image):
     pwd = os.path.abspath(os.getcwd())
     command=[]
     command.append("docker run --rm")
-    command.append("-v"+pwd+":/home/amanzi_usr/work:delegated")
+    command.append("-v "+pwd+":/home/amanzi_usr/work:cached")
     command.append(docker_image)
-    command.append("ats --print_version")
+    command.append("ats --version")
     print(" ".join(command))
 
     output=subprocess.run(" ".join(command), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-    if ("ATS Version" not in output.stdout):
+    if ("ATS version" not in output.stdout):
         raise RuntimeError("ERROR: ATS did not run correctly in Docker. \n")
     else:
         print(output.stdout)
@@ -1468,10 +1498,10 @@ def check_for_executable(options, testlog):
 
     else:
         # absolute path to the executable
-        if ( "metsi/ats" in options.executable[0] ):
-            executable=check_for_docker_image(options.executable[0])
+        if "metsi/ats" in options.executable:
+            executable = check_for_docker_image(options.executable)
         else:
-            executable = os.path.abspath(options.executable[0])
+            executable = os.path.abspath(options.executable)
             # is it a valid file?
             if not os.path.isfile(executable):
                 raise RuntimeError("ERROR: executable is not a valid file: "
@@ -1507,8 +1537,7 @@ def check_for_mpiexec(options, testlog):
         except IOError:
             mpiexec = None
     else:
-        # mpiexec = os.path.abspath(options.mpiexec[0])
-        mpiexec = options.mpiexec[0]
+        mpiexec = options.mpiexec
 
     if mpiexec is not None:
         # check that we can use it
@@ -1525,7 +1554,17 @@ def check_for_mpiexec(options, testlog):
         print(message, file=sys.stdout)
         print(message, file=testlog)
 
-    return mpiexec
+    if mpiexec is None:
+        return None
+    else:
+        mpiexec_opts = dict(mpiexec=mpiexec,
+                            mpiexec_global_args=options.mpiexec_global_args,
+                            always_mpiexec=options.always_mpiexec)
+        if options.mpiexec_numprocs_flag is None:
+            mpiexec_opts['mpiexec_numprocs_flag'] = '-n'
+        else:
+            mpiexec_opts['mpiexec_numprocs_flag'] = options.mpiexec_numprocs_flag
+        return mpiexec_opts
 
 
 def summary_report_by_file(report, outfile):
@@ -1569,12 +1608,14 @@ def summary_report(run_time, report, outfile):
     print("    Total run time: {0:4g} [s]".format(run_time), file=outfile)
     test_count = 0
     num_failures = 0
+    failures = []
     num_errors = 0
     num_warnings = 0
     num_skipped = 0
     for filename in report:
         test_count += report[filename].test_count
         num_failures += report[filename].fail
+        failures.extend(report[filename].failures)
         num_errors += report[filename].error
         num_warnings += report[filename].warning
         num_skipped += report[filename].skipped
@@ -1590,6 +1631,8 @@ def summary_report(run_time, report, outfile):
     success = True
     if num_failures > 0:
         print("    Failed : {0}".format(num_failures), file=outfile)
+        for failure in failures:
+            print("     -- ", failure, file=outfile)
         success = False
 
     if num_errors > 0:

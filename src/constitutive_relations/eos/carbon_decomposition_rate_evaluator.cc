@@ -23,18 +23,19 @@ CarbonDecomposeRateEvaluator::CarbonDecomposeRateEvaluator(Teuchos::ParameterLis
   : EvaluatorSecondaryMonotypeCV(plist)
 {
   Tag tag = my_keys_.front().second;
-  auto domain = Keys::getDomain(my_keys_.front().first); //surface_column domain
+  domain_ = Keys::getDomain(my_keys_.front().first); // column, domain
+  domain_surf_ = Keys::readDomainHint(plist, domain_, "subsurface", "surface"); 
 
-  temp_key_ = Keys::readKey(plist, domain, "temperature", "temperature");
+  temp_key_ = Keys::readKey(plist, domain_, "temperature", "temperature");
   dependencies_.insert(KeyTag{ temp_key_, tag });
 
-  pres_key_ = Keys::readKey(plist, domain, "pressure", "pressure");
+  pres_key_ = Keys::readKey(plist, domain_, "pressure", "pressure");
   dependencies_.insert(KeyTag{ pres_key_, tag });
 
-  por_key_ = Keys::readKey(plist, domain, "porosity", "porosity");
+  por_key_ = Keys::readKey(plist, domain_, "porosity", "porosity");
   dependencies_.insert(KeyTag{ por_key_, tag });
 
-  depth_key_ = Keys::readKey(plist, domain, "depth", "depth");
+  depth_key_ = Keys::readKey(plist, domain_, "depth", "depth");
   dependencies_.insert(KeyTag{ depth_key_, tag });
 
   q10_ = plist_.get<double>("Q10 [-]", 2.0);
@@ -53,21 +54,27 @@ CarbonDecomposeRateEvaluator::Evaluate_(const State& S, const std::vector<Compos
 {
   Tag tag = my_keys_.front().second;
   Epetra_MultiVector& res_c = *result[0]->ViewComponent("cell", false);
-  AMANZI_ASSERT(res_c.MyLength() == 0); // this PK only valid on column mesh
 
   const auto& temp_c = *S.Get<CompositeVector>(temp_key_, tag).ViewComponent("cell", false);
   const auto& pres_c = *S.Get<CompositeVector>(pres_key_, tag).ViewComponent("cell", false);
   const auto& por_c = *S.Get<CompositeVector>(por_key_, tag).ViewComponent("cell", false);
   const auto& depth_c = *S.Get<CompositeVector>(depth_key_, tag).ViewComponent("cell", false);
 
-  for (int c = 0; c != res_c.MyLength(); ++c) {
-    if (temp_c[0][c] >= 273.15) {
-      double f_temp = Func_Temp(temp_c[0][c], q10_);
-      double f_depth = Func_Depth(depth_c[0][c]);
-      double f_pres_temp = Func_TempPres(temp_c[0][c], pres_c[0][c]);
-      res_c[0][c] = (f_temp * f_depth * f_pres_temp) * (1 - por_c[0][c]);
-    } else {
-      res_c[0][c] = 0.;
+  const auto& mesh = *S.GetMesh(domain_);
+  const auto& mesh_surf = *S.GetMesh(domain_surf_);
+
+  for (int col = 0; col != mesh.columns.num_columns_owned; ++col) {
+    const auto& col_cells = mesh.columns.getCells(col);
+    for (int c = 0; c != col_cells.size(); ++c) {
+      if (temp_c[0][col_cells[c]] >= 273.15) {
+        double dz = mesh.getCellVolume(col_cells[c]) / mesh_surf.getCellVolume(col);
+        double f_temp = Func_Temp(temp_c[0][col_cells[c]], q10_);
+        double f_depth = Func_Depth(depth_c[0][col_cells[c]]);
+        double f_pres_temp = Func_TempPres(temp_c[0][col_cells[c]], pres_c[0][col_cells[c]]);
+        res_c[0][col_cells[c]] = (f_temp * f_depth * f_pres_temp * dz) * (1 - por_c[0][col_cells[c]]);
+      } else {
+        res_c[0][col_cells[c]] = 0.;
+      }
     }
   }
 }

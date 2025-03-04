@@ -18,6 +18,10 @@ MPCPermafrostSplitFlux::MPCPermafrostSplitFlux(Teuchos::ParameterList& FElist,
                                                const Teuchos::RCP<State>& S,
                                                const Teuchos::RCP<TreeVector>& solution)
   : PK(FElist, plist, S, solution), MPCSubcycled(FElist, plist, S, solution)
+{}
+
+void
+MPCPermafrostSplitFlux::parseParameterList()
 {
   // collect domain names
   domain_set_ = Keys::readDomain(*plist_);          // e.g. surface or surface_column:*
@@ -25,10 +29,16 @@ MPCPermafrostSplitFlux::MPCPermafrostSplitFlux(Teuchos::ParameterList& FElist,
 
   // determine whether we are coupling subdomains or coupling 3D domains
   is_domain_set_ = S_->HasDomainSet(domain_set_);
-  if (is_domain_set_)
+  if (is_domain_set_) {
     domain_ = Keys::getDomainInSet(domain_set_, "*");
-  else
+
+    // if we are using domain sets, need to know if the subdomains are
+    // subcycled or not -- this determines their tags.
+    auto names = plist_->get<Teuchos::Array<std::string>>("PKs order");
+    ds_is_subcycling_ = pks_list_->sublist(names[1]).get<bool>("subcycle", false);
+  } else {
     domain_ = domain_set_;
+  }
 
   domain_sub_ = Keys::readDomainHint(*plist_, domain_set_, "surface", "subsurface");
   domain_snow_ = Keys::readDomainHint(*plist_, domain_set_, "surface", "snow");
@@ -41,6 +51,33 @@ MPCPermafrostSplitFlux::MPCPermafrostSplitFlux(Teuchos::ParameterList& FElist,
     Errors::Message msg("WeakMPCSemiCoupled: \"coupling type\" must be one of \"pressure\", "
                         "\"flux\", or \"hybrid\".");
     Exceptions::amanzi_throw(msg);
+  }
+
+  if (coupling_ != "pressure") {
+    cv_key_ = Keys::readKey(*plist_, domain_star_, "cell volume", "cell_volume");
+
+    p_lateral_flow_source_ =
+      Keys::readKey(*plist_, domain_, "water lateral flow source", "water_lateral_flow_source");
+    p_lateral_flow_source_suffix_ = Keys::getVarName(p_lateral_flow_source_);
+
+    T_lateral_flow_source_ =
+      Keys::readKey(*plist_, domain_, "energy lateral flow source", "energy_lateral_flow_source");
+    T_lateral_flow_source_suffix_ = Keys::getVarName(T_lateral_flow_source_);
+
+    if (is_domain_set_) {
+      auto domain_set = S_->GetDomainSet(domain_set_);
+      for (const auto& domain : *domain_set) {
+        auto p_key = Keys::getKey(domain, p_lateral_flow_source_suffix_);
+        Tag ds_tag_next = get_ds_tag_next_(domain);
+        requireAtNext(p_key, ds_tag_next, *S_, name_);
+
+        auto T_key = Keys::getKey(domain, T_lateral_flow_source_suffix_);
+        requireAtNext(T_key, ds_tag_next, *S_, name_);
+      }
+    } else {
+      requireAtNext(p_lateral_flow_source_, tags_[1].second, *S_, name_);
+      requireAtNext(T_lateral_flow_source_, tags_[1].second, *S_, name_);
+    }
   }
 
   // collect keys and names
@@ -79,17 +116,7 @@ MPCPermafrostSplitFlux::MPCPermafrostSplitFlux(Teuchos::ParameterList& FElist,
                                            "temperature primary variable star",
                                            Keys::getVarName(T_primary_variable_));
 
-  // -- flux variables for coupling
-  if (coupling_ != "pressure") {
-    p_lateral_flow_source_ =
-      Keys::readKey(*plist_, domain_, "water lateral flow source", "water_lateral_flow_source");
-    p_lateral_flow_source_suffix_ = Keys::getVarName(p_lateral_flow_source_);
-    T_lateral_flow_source_ =
-      Keys::readKey(*plist_, domain_, "energy lateral flow source", "energy_lateral_flow_source");
-    T_lateral_flow_source_suffix_ = Keys::getVarName(T_lateral_flow_source_);
-
-    cv_key_ = Keys::readKey(*plist_, domain_star_, "cell volume", "cell_volume");
-  }
+  MPCSubcycled::parseParameterList();
 };
 
 
@@ -106,37 +133,37 @@ MPCPermafrostSplitFlux::Setup()
         Tag ds_tag_next = get_ds_tag_next_(domain);
         requireAtNext(p_key, ds_tag_next, *S_, name_)
           .SetMesh(S_->GetMesh(domain))
-          ->SetComponent("cell", AmanziMesh::CELL, 1);
+          ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
         auto T_key = Keys::getKey(domain, T_lateral_flow_source_suffix_);
         requireAtNext(T_key, ds_tag_next, *S_, name_)
           .SetMesh(S_->GetMesh(domain))
-          ->SetComponent("cell", AmanziMesh::CELL, 1);
+          ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
       }
     } else {
       requireAtNext(p_lateral_flow_source_, tags_[1].second, *S_, name_)
         .SetMesh(S_->GetMesh(Keys::getDomain(p_lateral_flow_source_)))
-        ->SetComponent("cell", AmanziMesh::CELL, 1);
+        ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
       requireAtNext(T_lateral_flow_source_, tags_[1].second, *S_, name_)
         .SetMesh(S_->GetMesh(Keys::getDomain(T_lateral_flow_source_)))
-        ->SetComponent("cell", AmanziMesh::CELL, 1);
+        ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
     }
 
     // also need conserved quantities at old and new times
     requireAtNext(p_conserved_variable_star_, tags_[0].second, *S_)
       .SetMesh(S_->GetMesh(domain_star_))
-      ->AddComponent("cell", AmanziMesh::CELL, 1);
+      ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
     requireAtCurrent(p_conserved_variable_star_, tags_[0].first, *S_)
       .SetMesh(S_->GetMesh(domain_star_))
-      ->AddComponent("cell", AmanziMesh::CELL, 1);
+      ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
     requireAtNext(T_conserved_variable_star_, tags_[0].second, *S_)
       .SetMesh(S_->GetMesh(domain_star_))
-      ->AddComponent("cell", AmanziMesh::CELL, 1);
+      ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
     requireAtCurrent(T_conserved_variable_star_, tags_[0].first, *S_)
       .SetMesh(S_->GetMesh(domain_star_))
-      ->AddComponent("cell", AmanziMesh::CELL, 1);
+      ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
   }
 }
 
@@ -834,6 +861,32 @@ MPCPermafrostSplitFlux::CopyStarToPrimary_DomainSet_Hybrid_()
       changedEvaluatorPrimary(T_key, ds_tag_next, *S_);
     }
     ++ds_iter;
+  }
+}
+
+
+Tag
+MPCPermafrostSplitFlux::get_ds_tag_next_(const std::string& subdomain)
+{
+  if (ds_is_subcycling_) {
+    AMANZI_ASSERT(Keys::starts_with(subdomain, "surface_"));
+    AMANZI_ASSERT(tags_[1].second == Tags::NEXT); // no nested subcycling
+    return Tag(
+      Keys::getKey(subdomain.substr(std::string("surface_").size(), std::string::npos), "next"));
+  } else {
+    return Tag{ tags_[1].second };
+  }
+}
+
+Tag
+MPCPermafrostSplitFlux::get_ds_tag_current_(const std::string& subdomain)
+{
+  if (ds_is_subcycling_) {
+    AMANZI_ASSERT(Keys::starts_with(subdomain, "surface_"));
+    return Tag(Keys::getKey(subdomain.substr(std::string("surface_").size(), std::string::npos),
+                            tags_[1].first.get()));
+  } else {
+    return Tag{ tags_[1].first };
   }
 }
 

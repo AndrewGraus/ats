@@ -62,7 +62,7 @@ struct CoupledWaterProblem {
     // create meshes
     auto& regions_list = plist->sublist("regions");
     auto gm = Teuchos::rcp(new GeometricModel(3, regions_list, *comm));
-    ATS::Mesh::createMeshes(*plist, comm, gm, *S);
+    ATS::Mesh::createMeshes(plist, comm, gm, *S);
 
     // create the PK
     Teuchos::ParameterList pk_tree_list("PK tree");
@@ -77,6 +77,7 @@ struct CoupledWaterProblem {
     Amanzi::PKFactory pk_factory;
     auto pk_as_pk = pk_factory.CreatePK("coupled water", pk_tree_list, plist, S, soln);
     pk = Teuchos::rcp_dynamic_cast<MPCCoupledWater>(pk_as_pk);
+    pk->parseParameterList();
     AMANZI_ASSERT(pk.get());
 
     // setup stage

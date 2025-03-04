@@ -64,6 +64,9 @@ class MPC : virtual public PK {
   {}
 
   // PK methods
+  // -- parsing plist
+  virtual void parseParameterList() override;
+
   // -- setup
   virtual void Setup() override;
 
@@ -88,9 +91,6 @@ class MPC : virtual public PK {
   // Calculate any diagnostics at S->time(), currently for visualization.
   virtual void CalculateDiagnostics(const Tag& tag) override;
 
-  // Is the step valid?
-  virtual bool ValidStep() override;
-
   // -- transfer operators
   virtual void State_to_Solution(const Tag& tag, TreeVector& soln) override;
 
@@ -104,6 +104,8 @@ class MPC : virtual public PK {
  protected:
   // constructs sub-pks
   void init_(Comm_ptr_type comm = Teuchos::null);
+  Teuchos::RCP<Teuchos::ParameterList> getSubPKPlist_(int i);
+  Teuchos::RCP<Teuchos::ParameterList> getSubPKPlist_(const std::string& name);
 
  protected:
   typedef std::vector<Teuchos::RCP<PK_t>> SubPKList;
@@ -113,6 +115,14 @@ class MPC : virtual public PK {
 
   SubPKList sub_pks_;
 };
+
+
+template <class PK_t>
+void
+MPC<PK_t>::parseParameterList()
+{
+  for (auto& pk : sub_pks_) pk->parseParameterList();
+}
 
 
 // -----------------------------------------------------------------------------
@@ -226,28 +236,6 @@ MPC<PK_t>::CalculateDiagnostics(const Tag& tag)
 
 
 // -----------------------------------------------------------------------------
-// loop over sub-PKs, calling their ValidStep
-// -----------------------------------------------------------------------------
-template <class PK_t>
-bool
-MPC<PK_t>::ValidStep()
-{
-  Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "Validating time step." << std::endl;
-
-  for (auto& pk : sub_pks_) {
-    bool valid = pk->ValidStep();
-    if (!valid) {
-      if (vo_->os_OK(Teuchos::VERB_MEDIUM))
-        *vo_->os() << "Invalid time step, sub_pk: " << pk->name() << " is invalid." << std::endl;
-      return valid;
-    }
-  }
-  return true;
-}
-
-
-// -----------------------------------------------------------------------------
 // Marks sub-PKs as changed.
 // -----------------------------------------------------------------------------
 template <class PK_t>
@@ -292,6 +280,23 @@ MPC<PK_t>::init_(Comm_ptr_type comm)
     sub_pks_.push_back(pk);
   }
 };
+
+
+template <class PK_t>
+Teuchos::RCP<Teuchos::ParameterList>
+MPC<PK_t>::getSubPKPlist_(int i)
+{
+  Teuchos::Array<std::string> names = plist_->get<Teuchos::Array<std::string>>("PKs order");
+  return Teuchos::sublist(Teuchos::sublist(global_list_, "PKs"), names[i]);
+}
+
+
+template <class PK_t>
+Teuchos::RCP<Teuchos::ParameterList>
+MPC<PK_t>::getSubPKPlist_(const std::string& name)
+{
+  return Teuchos::sublist(Teuchos::sublist(global_list_, "PKs"), name);
+}
 
 
 } // namespace Amanzi

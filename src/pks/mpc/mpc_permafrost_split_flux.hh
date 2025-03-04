@@ -75,6 +75,9 @@ class MPCPermafrostSplitFlux : public MPCSubcycled {
                          const Teuchos::RCP<TreeVector>& solution);
 
   // PK methods
+  // -- read input plist
+  virtual void parseParameterList() override;
+
   // -- initialize in reverse order
   virtual void Initialize() override;
   virtual void Setup() override;
@@ -97,27 +100,8 @@ class MPCPermafrostSplitFlux : public MPCSubcycled {
   void CopyStarToPrimary_Standard_Flux_();
   void CopyStarToPrimary_Standard_Hybrid_();
 
-  Tag get_ds_tag_next_(const std::string& subdomain)
-  {
-    if (subcycling_[1]) {
-      AMANZI_ASSERT(Keys::starts_with(subdomain, "surface_"));
-      return Tag(Keys::getKey(subdomain.substr(std::string("surface_").size(), std::string::npos),
-                              tags_[1].second.get()));
-    } else {
-      return Tag{ tags_[1].second };
-    }
-  }
-  Tag get_ds_tag_current_(const std::string& subdomain)
-  {
-    if (subcycling_[1]) {
-      AMANZI_ASSERT(Keys::starts_with(subdomain, "surface_"));
-      return Tag(Keys::getKey(subdomain.substr(std::string("surface_").size(), std::string::npos),
-                              tags_[1].first.get()));
-    } else {
-      return Tag{ tags_[1].first };
-    }
-  }
-
+  Tag get_ds_tag_next_(const std::string& subdomain);
+  Tag get_ds_tag_current_(const std::string& subdomain);
 
  protected:
   Key p_primary_variable_;
@@ -153,6 +137,7 @@ class MPCPermafrostSplitFlux : public MPCSubcycled {
   std::string coupling_;
 
   bool is_domain_set_;
+  bool ds_is_subcycling_;
 
  private:
   // factory registration

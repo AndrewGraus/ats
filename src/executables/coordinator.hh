@@ -13,7 +13,9 @@
 
 #include "Teuchos_Time.hpp"
 #include "Teuchos_RCP.hpp"
+#include "Teuchos_Comm.hpp"
 #include "Teuchos_ParameterList.hpp"
+#include "Teuchos_TimeMonitor.hpp"
 #include "Epetra_MpiComm.h"
 #include "AmanziComm.hh"
 #include "AmanziTypes.hh"
@@ -21,7 +23,9 @@
 #include "VerboseObject.hh"
 
 namespace Amanzi {
+namespace Utils {
 class TimeStepManager;
+} // namespace Utils
 class Visualization;
 class Checkpoint;
 class State;
@@ -36,7 +40,10 @@ namespace ATS {
 
 class Coordinator {
  public:
-  Coordinator(const Teuchos::RCP<Teuchos::ParameterList>& plist, const Amanzi::Comm_ptr_type& comm);
+  Coordinator(const Teuchos::RCP<Teuchos::ParameterList>& plist,
+              const Teuchos::RCP<Teuchos::Time>& wallclock_timer,
+              const Teuchos::RCP<const Teuchos::Comm<int>>& teuchos_comm,
+              const Amanzi::Comm_ptr_type& comm);
 
   // PK methods
   void setup();
@@ -45,12 +52,14 @@ class Coordinator {
   void report_memory();
 
   bool advance();
-  void visualize(bool force = false);
-  void checkpoint(bool force = false);
+  bool visualize(bool force = false);
+  void observe();
+  bool checkpoint(bool force = false);
   double get_dt(bool after_fail = false);
 
  protected:
-  void InitializeFromPlist_();
+  void initializeFromPlist_();
+  void reportOneTimer_(const std::string& timer);
 
   // PK container and factory
   Teuchos::RCP<Amanzi::PK> pk_;
@@ -59,8 +68,8 @@ class Coordinator {
   Teuchos::RCP<Amanzi::State> S_;
   Teuchos::RCP<Amanzi::TreeVector> soln_;
 
-  // time step manager
-  Teuchos::RCP<Amanzi::TimeStepManager> tsm_;
+  // timestep manager
+  Teuchos::RCP<Amanzi::Utils::TimeStepManager> tsm_;
 
   // misc setup information
   Teuchos::RCP<Teuchos::ParameterList> plist_;
@@ -83,10 +92,13 @@ class Coordinator {
   // observations
   std::vector<Teuchos::RCP<Amanzi::UnstructuredObservations>> observations_;
 
+  // Teuchos Communicator for timers... will go away in tpetra
+  Teuchos::RCP<const Teuchos::Comm<int>> teuchos_comm_;
+
   // timers
-  Teuchos::RCP<Teuchos::Time> setup_timer_;
-  Teuchos::RCP<Teuchos::Time> cycle_timer_;
-  Teuchos::RCP<Teuchos::Time> timer_;
+  std::map<std::string, Teuchos::RCP<Teuchos::Time>> timers_;
+  Teuchos::RCP<Teuchos::Time> wallclock_timer_;
+  Teuchos::TimeMonitor wallclock_monitor_;
   double duration_;
   bool subcycled_ts_;
 

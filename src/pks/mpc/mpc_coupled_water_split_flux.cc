@@ -19,7 +19,14 @@ MPCCoupledWaterSplitFlux::MPCCoupledWaterSplitFlux(
   const Teuchos::RCP<State>& S,
   const Teuchos::RCP<TreeVector>& solution)
   : PK(FElist, plist, S, solution), MPCSubcycled(FElist, plist, S, solution)
+{}
+
+
+void
+MPCCoupledWaterSplitFlux::parseParameterList()
 {
+  MPCSubcycled::parseParameterList();
+
   // collect domain names
   domain_set_ = Keys::readDomain(*plist_);          // e.g. surface or surface_column:*
   domain_star_ = Keys::readDomain(*plist_, "star"); // e.g. surface_star
@@ -68,6 +75,8 @@ MPCCoupledWaterSplitFlux::MPCCoupledWaterSplitFlux(
     p_lateral_flow_source_ =
       Keys::readKey(*plist_, domain_, "water lateral flow source", "water_lateral_flow_source");
     p_lateral_flow_source_suffix_ = Keys::getVarName(p_lateral_flow_source_);
+    S_->GetEvaluatorList(p_lateral_flow_source_).set("evaluator type", "primary variable");
+
     cv_key_ = Keys::readKey(*plist_, domain_star_, "cell volume", "cell_volume");
   }
 };
@@ -86,24 +95,24 @@ MPCCoupledWaterSplitFlux::Setup()
         Tag ds_tag_next = get_ds_tag_next_(domain);
         S_->Require<CompositeVector, CompositeVectorSpace>(p_key, ds_tag_next, p_key)
           .SetMesh(S_->GetMesh(domain))
-          ->SetComponent("cell", AmanziMesh::CELL, 1);
+          ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
         requireEvaluatorPrimary(p_key, ds_tag_next, *S_);
       }
     } else {
       S_->Require<CompositeVector, CompositeVectorSpace>(
           p_lateral_flow_source_, tags_[1].second, p_lateral_flow_source_)
         .SetMesh(S_->GetMesh(Keys::getDomain(p_lateral_flow_source_)))
-        ->SetComponent("cell", AmanziMesh::CELL, 1);
+        ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
       requireEvaluatorPrimary(p_lateral_flow_source_, tags_[1].second, *S_);
     }
 
     // also need conserved quantities at old and new times
     S_->Require<CompositeVector, CompositeVectorSpace>(p_conserved_variable_star_, tags_[0].second)
       .SetMesh(S_->GetMesh(domain_star_))
-      ->AddComponent("cell", AmanziMesh::CELL, 1);
+      ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
     S_->Require<CompositeVector, CompositeVectorSpace>(p_conserved_variable_star_, tags_[0].first)
       .SetMesh(S_->GetMesh(domain_star_))
-      ->AddComponent("cell", AmanziMesh::CELL, 1);
+      ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
     S_->RequireEvaluator(p_conserved_variable_star_, tags_[0].second);
     //S_->RequireEvaluator(p_conserved_variable_star_, tags_[0].first);
   }

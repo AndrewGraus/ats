@@ -11,12 +11,12 @@ on:
       - ats-*
 
 jobs:
-  build_test:
+  build:
     runs-on: ubuntu-latest
-    name: Build and test with Docker
+    name: Build Docker
     steps:
     - name: Check out the Amanzi repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: amanzi/amanzi
         ref: master
@@ -30,6 +30,13 @@ jobs:
       id: amanzi_branch
       run: |
         echo "AMANZI_BRANCH=$(git ls-remote --heads origin ${GITHUB_REF_NAME} | sed 's/.*refs\/heads\///')" >> $GITHUB_ENV
+    - name: If so, checkout Amanzi to get the right TPLs version
+      id: amanzi_branch_checkout
+      uses: actions/checkout@v4
+      with:
+        repository: amanzi/amanzi
+        ref: ${{env.AMANZI_BRANCH}}
+        submodules: recursive
     - name: Does ats-regression-tests branch of the same name exist?
       id: ats_tests_branch
       working-directory: src/physics/ats/testing/ats-regression-tests
@@ -40,7 +47,7 @@ jobs:
       run: |
         echo "ATS_BRANCH_TAG=$(echo ${{env.ATS_BRANCH}} | sed -e 's/\//--/g')" >> $GITHUB_ENV
     - name: Get TPLs version
-      id: version 
+      id: version
       working-directory: Docker
       run: |
         echo "AMANZI_TPLS_VER=$(./get_tpls_version.sh)" >> $GITHUB_ENV
@@ -52,7 +59,7 @@ jobs:
         echo "Tag reference = ${{env.ATS_BRANCH_TAG}}"
         echo "TPLs version = ${{env.AMANZI_TPLS_VER}}"
     - name: Login to Docker Hub
-      uses: docker/login-action@v1
+      uses: docker/login-action@v3
       with:
         username: ${{secrets.DOCKERHUB_USERNAME}}
         password: ${{secrets.DOCKERHUB_PASSWORD}}
@@ -60,14 +67,59 @@ jobs:
       id: docker
       working-directory: Docker
       run:
-        docker build --build-arg amanzi_branch=${{env.AMANZI_BRANCH}} --build-arg ats_branch=${{env.ATS_BRANCH}} --build-arg ats_tests_branch=${{env.ATS_TESTS_BRANCH}} --build-arg amanzi_tpls_ver=${{env.AMANZI_TPLS_VER}} -t metsi/ats:${{env.ATS_BRANCH_TAG}}-latest -f Dockerfile-ATS-build .      
+        docker build --build-arg amanzi_branch=${{env.AMANZI_BRANCH}} --build-arg ats_branch=${{env.ATS_BRANCH}} --build-arg ats_tests_branch=${{env.ATS_TESTS_BRANCH}} --build-arg amanzi_tpls_ver=${{env.AMANZI_TPLS_VER}} -t metsi/ats:${{env.ATS_BRANCH_TAG}}-latest -f Dockerfile-ATS-build .
     - name: Docker push
       working-directory: Docker
       run:
         docker push ${{secrets.DOCKERHUB_USERNAME}}/ats:${{env.ATS_BRANCH_TAG}}-latest
+  serial-reg15-tests:
+    runs-on: ubuntu-latest
+    name: serial and regression 1-5 series tests
+    needs: build
+    steps:
+    - name: Check out the Amanzi repo
+      uses: actions/checkout@v4
+      with:
+        repository: amanzi/amanzi
+        ref: master
+        submodules: recursive
+    - name: Extract the ATS branch name
+      id: branch
+      working-directory: Docker
+      run: |
+        echo "ATS_BRANCH=$GITHUB_REF_NAME" >> $GITHUB_ENV
+    - name: Filter the branch name to generate a tag for Docker
+      id: tag
+      run: |
+        echo "ATS_BRANCH_TAG=$(echo ${{env.ATS_BRANCH}} | sed -e 's/\//--/g')" >> $GITHUB_ENV
     - name: Run tests
       id: tests
       working-directory: Docker
       run:
-        docker run --rm ${{secrets.DOCKERHUB_USERNAME}}/ats:${{env.ATS_BRANCH_TAG}}-latest /bin/bash -c "cd ~/amanzi_builddir/ats; ctest"
-        
+        docker run --rm ${{secrets.DOCKERHUB_USERNAME}}/ats:${{env.ATS_BRANCH_TAG}}-latest /bin/bash -c "cd ~/amanzi_builddir/ats; ctest --output-on-failure -LE PARALLEL -E 'ats_regression_test-[1-9][0-9]|ats_regression_test-0[6-9]'"
+  parallel-tests:
+    runs-on: ubuntu-latest
+    name: parallel and regression 6-10 series tests
+    needs: build
+    steps:
+    - name: Check out the Amanzi repo
+      uses: actions/checkout@v4
+      with:
+        repository: amanzi/amanzi
+        ref: master
+        submodules: recursive
+    - name: Extract the ATS branch name
+      id: branch
+      working-directory: Docker
+      run: |
+        echo "ATS_BRANCH=$GITHUB_REF_NAME" >> $GITHUB_ENV
+    - name: Filter the branch name to generate a tag for Docker
+      id: tag
+      run: |
+        echo "ATS_BRANCH_TAG=$(echo ${{env.ATS_BRANCH}} | sed -e 's/\//--/g')" >> $GITHUB_ENV
+    - name: Run tests
+      id: tests
+      working-directory: Docker
+      run:
+        docker run --rm ${{secrets.DOCKERHUB_USERNAME}}/ats:${{env.ATS_BRANCH_TAG}}-latest /bin/bash -c "cd ~/amanzi_builddir/ats; ctest --output-on-failure -L PARALLEL; ctest --output-on-failure -R 'ats_regression_test-0[6-9]|ats_regression_test-[1-9][0-9]'"
+

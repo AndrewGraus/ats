@@ -12,17 +12,20 @@
 
 A simple model based on relaxation from current water content to a saturated water content.
 
+.. code::
+
           |
           | source
           V
          /   \
       I /     \
        V       |
-  --Theta--    | T
+   --Theta--    | T
        ^       |
        | D     |
        V       V
-  ----------------------
+   -- -- -- -- -- -- --
+
 
 This is the model for drainage D.
 
@@ -68,6 +71,10 @@ class DrainageEvaluator : public EvaluatorSecondaryMonotypeCV {
                                           const Key& wrt_key,
                                           const Tag& wrt_tag,
                                           const std::vector<CompositeVector*>& results) override;
+
+  virtual void EnsureCompatibility_Structure_(State& S) override {
+    EnsureCompatibility_StructureSame_(S);
+  }
 
  protected:
   Key drainage_key_;

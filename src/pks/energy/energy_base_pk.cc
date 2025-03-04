@@ -23,7 +23,7 @@
 #include "CompositeVectorFunction.hh"
 #include "CompositeVectorFunctionFactory.hh"
 #include "pk_helpers.hh"
-#include "Mesh_Algorithms.hh"
+#include "MeshAlgorithms.hh"
 
 #include "energy_base.hh"
 
@@ -48,8 +48,37 @@ EnergyBase::EnergyBase(Teuchos::ParameterList& FElist,
     coupled_to_surface_via_flux_(false),
     decoupled_from_subsurface_(false),
     niter_(0),
-    flux_exists_(true)
+    flux_exists_(true),
+    is_source_term_(false),
+    is_source_term_differentiable_(false),
+    is_source_term_finite_differentiable_(false)
+{}
+
+
+
+// call to allow a PK to modify its own list or lists of its children.
+void
+EnergyBase::parseParameterList()
 {
+  if (!plist_->isParameter("absolute error tolerance")) {
+    plist_->set("absolute error tolerance", 76.e-6);
+    // energy of 1 degree C of water per mass_atol, in MJ/mol water
+  }
+
+  // set some defaults for inherited PKs
+  if (!plist_->isParameter("conserved quantity key suffix"))
+    plist_->set<std::string>("conserved quantity key suffix", "energy");
+
+  // need to deprecate the use of enthalpy list in the PK! --ETC
+  enthalpy_key_ = Keys::readKey(*plist_, domain_, "enthalpy", "enthalpy");
+  if (plist_->isSublist("enthalpy evaluator")) {
+    Teuchos::ParameterList& enth_list = S_->GetEvaluatorList(enthalpy_key_);
+    enth_list.setParameters(plist_->sublist("enthalpy evaluator"));
+    enth_list.set<std::string>("evaluator type", "enthalpy");
+  }
+
+  PK_PhysicalBDF_Default::parseParameterList();
+
   // set a default error tolerance
   if (domain_.find("surface") != std::string::npos) {
     mass_atol_ = plist_->get<double>("mass absolute error tolerance", .01 * 55000.);
@@ -60,23 +89,16 @@ EnergyBase::EnergyBase(Teuchos::ParameterList& FElist,
     // porosity * particle density soil * heat capacity soil * 1 degree
     // or, dry bulk density soil * heat capacity soil * 1 degree, in MJ
   }
-  if (!plist_->isParameter("absolute error tolerance")) {
-    plist_->set("absolute error tolerance", 76.e-6);
-    // energy of 1 degree C of water per mass_atol, in MJ/mol water
-  }
 
   // source terms
   is_source_term_ = plist_->get<bool>("source term", false);
   if (is_source_term_ && source_key_.empty()) {
     source_key_ = Keys::readKey(*plist_, domain_, "source", "total_energy_source");
+    is_source_term_finite_differentiable_ = plist_->get<bool>("source term finite difference", false);
   }
-  is_source_term_differentiable_ = plist_->get<bool>("source term is differentiable", true);
-  is_source_term_finite_differentiable_ = plist_->get<bool>("source term finite difference", false);
 
   // get keys
-  conserved_key_ = Keys::readKey(*plist_, domain_, "conserved quantity", "energy");
   wc_key_ = Keys::readKey(*plist_, domain_, "water content", "water_content");
-  enthalpy_key_ = Keys::readKey(*plist_, domain_, "enthalpy", "enthalpy");
   flux_key_ = Keys::readKey(*plist_, domain_, "water flux", "water_flux");
   energy_flux_key_ =
     Keys::readKey(*plist_, domain_, "diffusive energy flux", "diffusive_energy_flux");
@@ -113,7 +135,7 @@ EnergyBase::SetupPhysicalEvaluators_()
   requireAtNext(conserved_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
-    ->AddComponent("cell", AmanziMesh::CELL, 1);
+    ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
   S_->RequireDerivative<CompositeVector, CompositeVectorSpace>(
     conserved_key_, tag_next_, key_, tag_next_);
 
@@ -121,7 +143,7 @@ EnergyBase::SetupPhysicalEvaluators_()
   requireAtNext(conductivity_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
-    ->AddComponent("cell", AmanziMesh::CELL, 1);
+    ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 }
 
 // -------------------------------------------------------------
@@ -134,7 +156,7 @@ EnergyBase::SetupEnergy_()
   // Get data for special-case entities.
   requireAtNext(cell_vol_key_, tag_next_, *S_)
     .SetMesh(mesh_)
-    ->AddComponent("cell", AmanziMesh::CELL, 1);
+    ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
   S_->Require<double>("atmospheric_pressure", Tags::DEFAULT);
 
@@ -142,20 +164,14 @@ EnergyBase::SetupEnergy_()
   if (is_source_term_) {
     requireAtNext(source_key_, tag_next_, *S_)
       .SetMesh(mesh_)
-      ->AddComponent("cell", AmanziMesh::CELL, 1);
+      ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
-    if (is_source_term_differentiable_ && (!is_source_term_finite_differentiable_)) {
-      // NOTE, the following line is commented out because of the bug, amanzi/ats#167
-      //&& S_->GetEvaluator(source_key_, tag_next_).IsDifferentiableWRT(*S_, key_, tag_next_)) {
+    if (!is_source_term_finite_differentiable_
+        && S_->GetEvaluator(source_key_, tag_next_).IsDifferentiableWRT(*S_, key_, tag_next_)) {
+      is_source_term_differentiable_ = true;
       // require derivative of source
       S_->RequireDerivative<CompositeVector, CompositeVectorSpace>(
-          source_key_, tag_next_, key_, tag_next_)
-        .SetMesh(mesh_)
-        ->AddComponent("cell", AmanziMesh::CELL, 1);
-      // NOTE, remove SetMesh/AddComponent lines after fixing amanzi/ats#167.
-      // The mesh should get set by the evaluator, but when
-      // the evaluator isn't actually differentiable, it
-      // doesn't get done.
+        source_key_, tag_next_, key_, tag_next_);
     }
   }
 
@@ -170,7 +186,8 @@ EnergyBase::SetupEnergy_()
   bc_diff_flux_ = bc_factory.CreateDiffusiveFlux();
   bc_flux_ = bc_factory.CreateTotalFlux();
 
-  bc_adv_ = Teuchos::rcp(new Operators::BCs(mesh_, AmanziMesh::FACE, WhetStone::DOF_Type::SCALAR));
+  bc_adv_ = Teuchos::rcp(
+    new Operators::BCs(mesh_, AmanziMesh::Entity_kind::FACE, WhetStone::DOF_Type::SCALAR));
 
   // -- nonlinear coefficient
   std::string method_name =
@@ -190,12 +207,12 @@ EnergyBase::SetupEnergy_()
     S_->Require<CompositeVector, CompositeVectorSpace>(uw_conductivity_key_, tag_next_, name_)
       .SetMesh(mesh_)
       ->SetGhosted()
-      ->SetComponent("face", AmanziMesh::FACE, 1);
+      ->SetComponent("face", AmanziMesh::Entity_kind::FACE, 1);
   } else if (coef_location == "standard: cell") {
     S_->Require<CompositeVector, CompositeVectorSpace>(uw_conductivity_key_, tag_next_, name_)
       .SetMesh(mesh_)
       ->SetGhosted()
-      ->SetComponent("cell", AmanziMesh::CELL, 1);
+      ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
   } else {
     Errors::Message message("Unknown upwind coefficient location in energy.");
     Exceptions::amanzi_throw(message);
@@ -263,7 +280,7 @@ EnergyBase::SetupEnergy_()
       S_->Require<CompositeVector, CompositeVectorSpace>(duw_conductivity_key_, tag_next_, name_)
         .SetMesh(mesh_)
         ->SetGhosted()
-        ->SetComponent("face", AmanziMesh::FACE, 1);
+        ->SetComponent("face", AmanziMesh::Entity_kind::FACE, 1);
 
       upwinding_deriv_ =
         Teuchos::rcp(new Operators::UpwindTotalFlux(name_, tag_next_, energy_flux_key_, 1.e-8));
@@ -285,11 +302,6 @@ EnergyBase::SetupEnergy_()
   // -- set up the evaluator for enthalpy, whether or not we advect the thing,
   //    we may need it for exchange fluxes with surface/subsurface coupling,
   //    etc.
-  if (plist_->isSublist("enthalpy evaluator")) {
-    Teuchos::ParameterList& enth_list = S_->GetEvaluatorList(enthalpy_key_);
-    enth_list.setParameters(plist_->sublist("enthalpy evaluator"));
-    enth_list.set<std::string>("evaluator type", "enthalpy");
-  }
   is_advection_term_ = plist_->get<bool>("include thermal advection", true);
   if (is_advection_term_) {
     // -- create the forward operator for the advection term
@@ -313,8 +325,8 @@ EnergyBase::SetupEnergy_()
       requireAtNext(enthalpy_key_, tag_next_, *S_)
         .SetMesh(mesh_)
         ->SetGhosted()
-        ->AddComponent("cell", AmanziMesh::CELL, 1)
-        ->AddComponent("boundary_face", AmanziMesh::BOUNDARY_FACE, 1);
+        ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1)
+        ->AddComponent("boundary_face", AmanziMesh::Entity_kind::BOUNDARY_FACE, 1);
       S_->RequireDerivative<CompositeVector, CompositeVectorSpace>(
           enthalpy_key_, tag_next_, key_, tag_next_)
         .SetGhosted();
@@ -323,21 +335,21 @@ EnergyBase::SetupEnergy_()
       requireAtNext(adv_energy_flux_key_, tag_next_, *S_, name_)
         .SetMesh(mesh_)
         ->SetGhosted()
-        ->SetComponent("face", AmanziMesh::FACE, 1);
+        ->SetComponent("face", AmanziMesh::Entity_kind::FACE, 1);
 
     } else {
       // -- enthalpy data, evaluator
       requireAtCurrent(enthalpy_key_, tag_current_, *S_)
         .SetMesh(mesh_)
         ->SetGhosted()
-        ->AddComponent("cell", AmanziMesh::CELL, 1)
-        ->AddComponent("boundary_face", AmanziMesh::BOUNDARY_FACE, 1);
+        ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1)
+        ->AddComponent("boundary_face", AmanziMesh::Entity_kind::BOUNDARY_FACE, 1);
 
       // -- diagnostic for advected energy
       requireAtCurrent(adv_energy_flux_key_, tag_current_, *S_, name_)
         .SetMesh(mesh_)
         ->SetGhosted()
-        ->SetComponent("face", AmanziMesh::FACE, 1);
+        ->SetComponent("face", AmanziMesh::Entity_kind::FACE, 1);
     }
   }
 
@@ -355,7 +367,7 @@ EnergyBase::SetupEnergy_()
       *plist_, domain_surf, "surface-subsurface energy flux", "surface_subsurface_energy_flux");
     S_->Require<CompositeVector, CompositeVectorSpace>(ss_flux_key_, tag_next_)
       .SetMesh(S_->GetMesh(domain_surf))
-      ->AddComponent("cell", AmanziMesh::CELL, 1);
+      ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
   }
 
   // -- coupled to a surface via a Dirichlet condition
@@ -370,7 +382,7 @@ EnergyBase::SetupEnergy_()
     ss_primary_key_ = Keys::readKey(*plist_, domain_surf, "temperature", "temperature");
     S_->Require<CompositeVector, CompositeVectorSpace>(ss_primary_key_, tag_next_)
       .SetMesh(S_->GetMesh(domain_surf))
-      ->AddComponent("cell", AmanziMesh::CELL, 1);
+      ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
   }
 
   decoupled_from_subsurface_ =
@@ -385,7 +397,7 @@ EnergyBase::SetupEnergy_()
 
   // Require the primary variable
   CompositeVectorSpace matrix_cvs = matrix_->RangeMap();
-  matrix_cvs.AddComponent("boundary_face", AmanziMesh::BOUNDARY_FACE, 1);
+  matrix_cvs.AddComponent("boundary_face", AmanziMesh::Entity_kind::BOUNDARY_FACE, 1);
   S_->Require<CompositeVector, CompositeVectorSpace>(key_, tag_next_, name_)
     .Update(matrix_cvs)
     ->SetGhosted();
@@ -394,20 +406,22 @@ EnergyBase::SetupEnergy_()
   requireAtNext(flux_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
-    ->AddComponent("face", AmanziMesh::FACE, 1);
+    ->AddComponent("face", AmanziMesh::Entity_kind::FACE, 1);
   //    and at the current time, where it is a copy evaluator
   requireAtCurrent(flux_key_, tag_current_, *S_, name_);
 
   // require a water content field -- used for computing energy density in the
   // error norm
-  requireAtNext(wc_key_, tag_next_, *S_).SetMesh(mesh_)->AddComponent("cell", AmanziMesh::CELL, 1);
+  requireAtNext(wc_key_, tag_next_, *S_)
+    .SetMesh(mesh_)
+    ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
   requireAtCurrent(wc_key_, tag_current_, *S_, name_);
 
   // Require fields for the energy fluxes
   requireAtNext(energy_flux_key_, tag_next_, *S_, name_)
     .SetMesh(mesh_)
     ->SetGhosted()
-    ->SetComponent("face", AmanziMesh::FACE, 1);
+    ->SetComponent("face", AmanziMesh::Entity_kind::FACE, 1);
 
   // Globalization and other timestep control flags
   modify_predictor_for_freezing_ = plist_->get<bool>("modify predictor for freezing", false);
@@ -584,7 +598,7 @@ EnergyBase::UpdateBoundaryConditions_(const Tag& tag)
     int ncells_surface = temp.MyLength();
     for (int c = 0; c != ncells_surface; ++c) {
       // -- get the surface cell's equivalent subsurface face
-      AmanziMesh::Entity_ID f = surface->entity_get_parent(AmanziMesh::CELL, c);
+      AmanziMesh::Entity_ID f = surface->getEntityParent(AmanziMesh::Entity_kind::CELL, c);
 
       // -- set that value to dirichlet
       markers[f] = Operators::OPERATOR_BC_DIRICHLET;
@@ -604,12 +618,12 @@ EnergyBase::UpdateBoundaryConditions_(const Tag& tag)
     int ncells_surface = flux.MyLength();
     for (int c = 0; c != ncells_surface; ++c) {
       // -- get the surface cell's equivalent subsurface face
-      AmanziMesh::Entity_ID f = surface->entity_get_parent(AmanziMesh::CELL, c);
+      AmanziMesh::Entity_ID f = surface->getEntityParent(AmanziMesh::Entity_kind::CELL, c);
 
       // -- set that value to Neumann
       markers[f] = Operators::OPERATOR_BC_NEUMANN;
       // flux provided by the coupler is in units of J / s, whereas Neumann BCs are J/s/A
-      values[f] = flux[0][c] / mesh_->face_area(f);
+      values[f] = flux[0][c] / mesh_->getFaceArea(f);
 
       // -- mark advective BCs as Dirichlet: this ensures the surface
       //    temperature is picked up and advective fluxes are treated
@@ -619,11 +633,11 @@ EnergyBase::UpdateBoundaryConditions_(const Tag& tag)
   }
 
   // mark all remaining boundary conditions as zero diffusive flux conditions
-  AmanziMesh::Entity_ID_List cells;
-  int nfaces_owned = mesh_->num_entities(AmanziMesh::FACE, AmanziMesh::Parallel_type::OWNED);
+  int nfaces_owned =
+    mesh_->getNumEntities(AmanziMesh::Entity_kind::FACE, AmanziMesh::Parallel_kind::OWNED);
   for (int f = 0; f < nfaces_owned; f++) {
     if (markers[f] == Operators::OPERATOR_BC_NONE) {
-      mesh_->face_get_cells(f, AmanziMesh::Parallel_type::ALL, &cells);
+      auto cells = mesh_->getFaceCells(f);
       int ncells = cells.size();
 
       if (ncells == 1) {
@@ -692,14 +706,14 @@ EnergyBase::IsAdmissible(Teuchos::RCP<const TreeVector> up)
 
   double minT_l = minT;
   double maxT_l = maxT;
-  mesh_->get_comm()->MaxAll(&maxT_l, &maxT, 1);
-  mesh_->get_comm()->MinAll(&minT_l, &minT, 1);
+  mesh_->getComm()->MaxAll(&maxT_l, &maxT, 1);
+  mesh_->getComm()->MinAll(&minT_l, &minT, 1);
 
   if (vo_->os_OK(Teuchos::VERB_HIGH)) {
     *vo_->os() << "    Admissible T? (min/max): " << minT << ",  " << maxT << std::endl;
   }
 
-  Teuchos::RCP<const Comm_type> comm_p = mesh_->get_comm();
+  Teuchos::RCP<const Comm_type> comm_p = mesh_->getComm();
   Teuchos::RCP<const MpiComm_type> mpi_comm_p =
     Teuchos::rcp_dynamic_cast<const MpiComm_type>(comm_p);
   const MPI_Comm& comm = mpi_comm_p->Comm();
@@ -819,8 +833,7 @@ EnergyBase::CalculateConsistentFaces(const Teuchos::Ptr<CompositeVector>& u)
 
   int f_owned = u_f.MyLength();
   for (int f = 0; f != f_owned; ++f) {
-    AmanziMesh::Entity_ID_List cells;
-    mesh_->face_get_cells(f, AmanziMesh::Parallel_type::ALL, &cells);
+    auto cells = mesh_->getFaceCells(f);
     int ncells = cells.size();
 
     double face_value = 0.0;
@@ -881,7 +894,8 @@ EnergyBase::ModifyCorrection(double h,
         AmanziMesh::Entity_ID c = getFaceOnBoundaryInternalCell(*mesh_, f);
         const auto& Acc = matrix_diff_->local_op()->matrices_shadow[f];
         double T_bf_val =
-          (Acc(0, 0) * (T_c[0][c] - dT_c[0][c]) - bc_values()[f] * mesh_->face_area(f)) / Acc(0, 0);
+          (Acc(0, 0) * (T_c[0][c] - dT_c[0][c]) - bc_values()[f] * mesh_->getFaceArea(f)) /
+          Acc(0, 0);
         dT_bf[0][bf] = T_bf[0][bf] - T_bf_val;
       }
     }
@@ -909,7 +923,7 @@ EnergyBase::ModifyCorrection(double h,
         }
       }
     }
-    mesh_->get_comm()->SumAll(&my_limited, &n_limited, 1);
+    mesh_->getComm()->SumAll(&my_limited, &n_limited, 1);
   }
 
   if (n_limited > 0) {

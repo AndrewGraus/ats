@@ -56,6 +56,11 @@ class DistributedTilesRateEvaluator : public EvaluatorSecondary {
 
   virtual void EnsureCompatibility(State& S) override;
 
+  // derivatives aren't implemented here
+  bool IsDifferentiableWRT(const State& S, const Key& wrt_key, const Tag& wrt_tag) const override {
+    return false;
+  }
+
  protected:
   // Required methods from EvaluatorSecondary
   virtual void Update_(State& S) override;
@@ -71,11 +76,11 @@ class DistributedTilesRateEvaluator : public EvaluatorSecondary {
   // my dependencies
   Key catch_id_key_;
   Key pres_key_;
-  Key mol_dens_key_;
+  Key mol_dens_key_, mass_dens_key_, visc_key_;
   Key factor_key_;
 
   double p_enter_;
-  double k_;
+  double ka_, kb_, d_, L_, th_;
   int num_ditches_;
   int num_components_;
 

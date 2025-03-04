@@ -13,7 +13,8 @@ namespace Amanzi {
 namespace Flow {
 
 // registry of method
-Utils::RegisteredFactory<Evaluator, RelPermEvaluator> RelPermEvaluator::factory_("WRM rel perm");
+Utils::RegisteredFactory<Evaluator, RelPermEvaluator>
+  RelPermEvaluator::factory_("relative permeability, water retention model");
 
 } // namespace Flow
 } // namespace Amanzi

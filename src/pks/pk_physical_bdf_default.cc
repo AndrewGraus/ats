@@ -14,11 +14,26 @@ Standard base for most PKs, this combines both domains/meshes of
 PKPhysicalBase and BDF methods of PK_BDF_Default.
 ------------------------------------------------------------------------- */
 
-#include "boost/math/special_functions/fpclassify.hpp"
 #include "pk_helpers.hh"
 #include "pk_physical_bdf_default.hh"
 
 namespace Amanzi {
+
+void
+PK_PhysicalBDF_Default::parseParameterList()
+{
+  PK_Physical_Default::parseParameterList();
+
+  // primary variable max change
+  max_valid_change_ = plist_->get<double>("max valid change", -1.0);
+
+  conserved_key_ = Keys::readKey(*plist_, domain_, "conserved quantity");
+  atol_ = plist_->get<double>("absolute error tolerance", 1.0);
+  rtol_ = plist_->get<double>("relative error tolerance", 1.0);
+  fluxtol_ = plist_->get<double>("flux error tolerance", 1.0);
+
+  cell_vol_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
+}
 
 // -----------------------------------------------------------------------------
 // Setup
@@ -31,29 +46,21 @@ PK_PhysicalBDF_Default::Setup()
   PK_BDF_Default::Setup();
 
   // boundary conditions
-  bc_ = Teuchos::rcp(new Operators::BCs(mesh_, AmanziMesh::FACE, WhetStone::DOF_Type::SCALAR));
+  bc_ = Teuchos::rcp(
+    new Operators::BCs(mesh_, AmanziMesh::Entity_kind::FACE, WhetStone::DOF_Type::SCALAR));
 
   // convergence criteria is based on a conserved quantity
-  if (conserved_key_.empty()) {
-    conserved_key_ = Keys::readKey(*plist_, domain_, "conserved quantity");
-  }
   requireAtNext(conserved_key_, tag_next_, *S_)
     .SetMesh(mesh_)
-    ->AddComponent("cell", AmanziMesh::CELL, true);
+    ->SetGhosted()
+    ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, true);
   // we also use a copy of the conserved quantity, as this is a better choice in the error norm
   requireAtCurrent(conserved_key_, tag_current_, *S_, name_, true);
 
   // cell volume used throughout
-  if (cell_vol_key_.empty()) {
-    cell_vol_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
-  }
   requireAtNext(cell_vol_key_, tag_next_, *S_)
     .SetMesh(mesh_)
-    ->AddComponent("cell", AmanziMesh::CELL, true);
-
-  atol_ = plist_->get<double>("absolute error tolerance", 1.0);
-  rtol_ = plist_->get<double>("relative error tolerance", 1.0);
-  fluxtol_ = plist_->get<double>("flux error tolerance", 1.0);
+    ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, true);
 };
 
 
@@ -105,7 +112,7 @@ PK_PhysicalBDF_Default::ErrorNorm(Teuchos::RCP<const TreeVector> u,
   Teuchos::RCP<const CompositeVector> dvec = res->Data();
   double h = S_->get_time(tag_next_) - S_->get_time(tag_current_);
 
-  Teuchos::RCP<const Comm_type> comm_p = mesh_->get_comm();
+  Teuchos::RCP<const Comm_type> comm_p = mesh_->getComm();
   Teuchos::RCP<const MpiComm_type> mpi_comm_p =
     Teuchos::rcp_dynamic_cast<const MpiComm_type>(comm_p);
   const MPI_Comm& comm = mpi_comm_p->Comm();
@@ -135,8 +142,7 @@ PK_PhysicalBDF_Default::ErrorNorm(Teuchos::RCP<const TreeVector> u,
       int nfaces = dvec->size(*comp, false);
 
       for (unsigned int f = 0; f != nfaces; ++f) {
-        AmanziMesh::Entity_ID_List cells;
-        mesh_->face_get_cells(f, AmanziMesh::Parallel_type::OWNED, &cells);
+        auto cells = mesh_->getFaceCells(f);
         double cv_min =
           cells.size() == 1 ? cv[0][cells[0]] : std::min(cv[0][cells[0]], cv[0][cells[1]]);
         double conserved_min = cells.size() == 1 ?
@@ -188,6 +194,33 @@ PK_PhysicalBDF_Default::ErrorNorm(Teuchos::RCP<const TreeVector> u,
 };
 
 
+// -----------------------------------------------------------------------------
+// Ensures the step size is smaller than max_valid_change
+// -----------------------------------------------------------------------------
+bool
+PK_PhysicalBDF_Default::IsValid(const Teuchos::RCP<const TreeVector>& up)
+{
+  Teuchos::OSTab tab = vo_->getOSTab();
+  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "Validating timestep." << std::endl;
+
+  if (max_valid_change_ > 0.0) {
+    const CompositeVector& var_new = S_->Get<CompositeVector>(key_, tag_next_);
+    const CompositeVector& var_old = S_->Get<CompositeVector>(key_, tag_current_);
+    CompositeVector dvar(var_new);
+    dvar.Update(-1., var_old, 1.);
+    double change = 0.;
+    dvar.NormInf(&change);
+    if (change > max_valid_change_) {
+      if (vo_->os_OK(Teuchos::VERB_LOW))
+        *vo_->os() << "Invalid timestep, max primary variable change=" << change
+                   << " > limit=" << max_valid_change_ << std::endl;
+      return false;
+    }
+  }
+  return true;
+}
+
+
 void
 PK_PhysicalBDF_Default::CommitStep(double t_old, double t_new, const Tag& tag_next)
 {
@@ -198,6 +231,7 @@ PK_PhysicalBDF_Default::CommitStep(double t_old, double t_new, const Tag& tag_ne
   Tag tag_current = tag_next == tag_next_ ? tag_current_ : Tags::CURRENT;
 
   // copy over conserved quantity
+  S_->Get<CompositeVector>(conserved_key_, tag_next).ScatterMasterToGhosted();
   assign(conserved_key_, tag_current, tag_next, *S_);
 }
 

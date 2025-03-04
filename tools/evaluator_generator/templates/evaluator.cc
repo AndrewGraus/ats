@@ -91,9 +91,9 @@ namespace Amanzi {
           }
         }
       }
-    }
-  } // namespace }
+    } // namespace Relations
+  }   // namespace }
 } // namespace Amanzi
 } // namespace Amanzi
-}
-} //namespace
+} // namespace Amanzi
+} // namespace Amanzi

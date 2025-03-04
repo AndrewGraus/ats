@@ -41,10 +41,6 @@ Solves the diffusion wave equation for overland flow with pressure as a primary 
     * `"source key`" ``[string]`` **DOMAIN-water_source** Typically
       not set, as the default is good. ``[m s^-1]`` or ``[mol s^-1]``
     * `"water source in meters`" ``[bool]`` **true** Is the source term in ``[m s^-1]``?
-    * `"source term is differentiable`" ``[bool]`` **true** Can the source term
-      be differentiated with respect to the primary variable?
-    * `"explicit source term`" ``[bool]`` **false** Apply the source term from
-      the previous time step.
 
     END
 
@@ -159,6 +155,9 @@ class OverlandPressureFlow : public PK_PhysicalBDF_Default {
   // Virtual destructor
   virtual ~OverlandPressureFlow() {}
 
+  // parse input list
+  virtual void parseParameterList() override;
+
   // main methods
   // -- Initialize owned (dependent) variables.
   virtual void Setup() override;
@@ -176,7 +175,7 @@ class OverlandPressureFlow : public PK_PhysicalBDF_Default {
   // computes the non-linear functional g = g(t,u,udot)
   void FunctionalResidual(double t_old,
                           double t_new,
-                          Teuchos::RCP<TreeVector> u_old,
+                          Teuchos::RCP<const TreeVector> u_old,
                           Teuchos::RCP<TreeVector> u_new,
                           Teuchos::RCP<TreeVector> g) override;
 
@@ -227,6 +226,7 @@ class OverlandPressureFlow : public PK_PhysicalBDF_Default {
   void AddAccumulation_(const Teuchos::Ptr<CompositeVector>& g);
   // -- source terms
   void AddSourceTerms_(const Teuchos::Ptr<CompositeVector>& g);
+  void AddSourcesToPrecon_(double h);
 
   void test_ApplyPreconditioner(double t, Teuchos::RCP<const TreeVector> up, double h);
 
@@ -266,7 +266,7 @@ class OverlandPressureFlow : public PK_PhysicalBDF_Default {
   Operators::UpwindMethod upwind_method_;
 
   bool is_source_term_;
-  bool source_in_meters_;
+  bool is_source_term_differentiable_;
   bool source_only_if_unfrozen_;
 
   bool modify_predictor_with_consistent_faces_;

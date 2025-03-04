@@ -12,10 +12,10 @@
 
 */
 
-#include "boost/math/tools/roots.hpp"
-#include "predictor_delegate_bc_flux.hh"
-
+#include "Brent.hh"
 #include "Op.hh"
+
+#include "predictor_delegate_bc_flux.hh"
 
 namespace Amanzi {
 namespace Flow {
@@ -33,7 +33,7 @@ PredictorDelegateBCFlux::ModifyPredictor(const Teuchos::Ptr<CompositeVector>& u)
       double lambda = u_f[0][f];
       // only do if below saturated
       if (lambda < 101325.) {
-        int ierr = CalculateLambdaToms_(f, u, lambda);
+        int ierr = CalculateLambda_(f, u, lambda);
         AMANZI_ASSERT(!ierr);
         if (!ierr) u_f[0][f] = lambda;
       }
@@ -47,15 +47,12 @@ Teuchos::RCP<PredictorDelegateBCFlux::FluxBCFunctor>
 PredictorDelegateBCFlux::CreateFunctor_(int f, const Teuchos::Ptr<const CompositeVector>& pres)
 {
   // inner cell and its water retention model
-  AmanziMesh::Entity_ID_List cells;
-  mesh_->face_get_cells(f, AmanziMesh::Parallel_type::ALL, &cells);
+  auto cells = mesh_->getFaceCells(f);
   AMANZI_ASSERT(cells.size() == 1);
   int c = cells[0];
 
   // that cell's faces
-  AmanziMesh::Entity_ID_List faces;
-  std::vector<int> dirs;
-  mesh_->cell_get_faces_and_dirs(c, &faces, &dirs);
+  const auto& [faces, dirs] = mesh_->getCellFacesAndDirections(c);
 
   // index within that cell's faces
   unsigned int n = std::find(faces.begin(), faces.end(), f) - faces.begin();
@@ -84,7 +81,7 @@ PredictorDelegateBCFlux::CreateFunctor_(int f, const Teuchos::Ptr<const Composit
   }
 
   // gravity flux
-  double bc_flux = mesh_->face_area(f) * (*bc_values_)[f];
+  double bc_flux = mesh_->getFaceArea(f) * (*bc_values_)[f];
   double gflux = rhs_f[0][faces[n]] / Krel;
 
 #if DEBUG_FLAG
@@ -106,9 +103,9 @@ PredictorDelegateBCFlux::CreateFunctor_(int f, const Teuchos::Ptr<const Composit
 }
 
 int
-PredictorDelegateBCFlux::CalculateLambdaToms_(int f,
-                                              const Teuchos::Ptr<const CompositeVector>& pres,
-                                              double& lambda)
+PredictorDelegateBCFlux::CalculateLambda_(int f,
+                                          const Teuchos::Ptr<const CompositeVector>& pres,
+                                          double& lambda)
 {
 #if DEBUG_FLAG
   std::cout << " Flux correcting face " << f << ": q = " << (*bc_values_)[f] << std::endl;
@@ -121,9 +118,8 @@ PredictorDelegateBCFlux::CalculateLambdaToms_(int f,
 
   // -- convergence criteria
   double eps = std::max(1.e-4 * std::abs((*bc_values_)[f]), 1.e-8);
-  Tol_ tol(eps);
-  boost::uintmax_t max_it = 100;
-  boost::uintmax_t actual_it(max_it);
+  int max_it = 100;
+  int actual_it(max_it);
 
   double res = (*func)(lambda);
   double left = 0.;
@@ -166,19 +162,18 @@ PredictorDelegateBCFlux::CalculateLambdaToms_(int f,
             << std::endl;
 #endif
 
-  std::pair<double, double> result =
-    boost::math::tools::toms748_solve(*func, left, right, lres, rres, tol, actual_it);
+  double result = Utils::findRootBrent(*func, left, right, eps, &actual_it);
   if (actual_it >= max_it) {
     std::cout << " Failed to converged in " << actual_it << " steps." << std::endl;
     return 3;
   }
 
-  lambda = (result.first + result.second) / 2.;
+  lambda = result;
 #if DEBUG_FLAG
   std::cout << "  Converged to " << lambda << " in " << actual_it << " steps." << std::endl;
 
   AmanziMesh::Entity_ID_List cells;
-  mesh_->face_get_cells(f, AmanziMesh::Parallel_type::ALL, &cells);
+  cells = mesh_->getFaceCells(f);
   AMANZI_ASSERT(cells.size() == 1);
   int c = cells[0];
 

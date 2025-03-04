@@ -22,7 +22,9 @@
 #include "rooting_depth_fraction_evaluator.hh"
 #include "snow_meltrate_evaluator.hh"
 #include "transpiration_distribution_evaluator.hh"
+#include "transpiration_distribution_relperm_evaluator.hh"
 #include "radiation_balance_evaluator.hh"
+#include "canopy_radiation_evaluator.hh"
 #include "seb_twocomponent_evaluator.hh"
 #include "seb_threecomponent_evaluator.hh"
 
@@ -61,22 +63,28 @@ Utils::RegisteredFactory<Evaluator, PETPriestleyTaylorEvaluator>
   PETPriestleyTaylorEvaluator::reg_("potential evapotranspiration, Priestley-Taylor");
 
 Utils::RegisteredFactory<Evaluator, EvaporationDownregulationEvaluator>
-  EvaporationDownregulationEvaluator::reg_("evaporation downregulation via soil resistance");
+  EvaporationDownregulationEvaluator::reg_("evaporation downregulation, soil resistance");
 
 Utils::RegisteredFactory<Evaluator, PlantWiltingFactorEvaluator>
   PlantWiltingFactorEvaluator::reg_("plant wilting factor");
 
 Utils::RegisteredFactory<Evaluator, RootingDepthFractionEvaluator>
-  RootingDepthFractionEvaluator::reg_("rooting depth fraction");
+  RootingDepthFractionEvaluator::reg_("root fraction");
 
 Utils::RegisteredFactory<Evaluator, TranspirationDistributionEvaluator>
-  TranspirationDistributionEvaluator::reg_("transpiration distribution via rooting depth");
+  TranspirationDistributionEvaluator::reg_("transpiration distribution, rooting depth");
+Utils::RegisteredFactory<Evaluator, TranspirationDistributionRelPermEvaluator>
+  TranspirationDistributionRelPermEvaluator::reg_(
+    "transpiration distribution, relative permeability");
 
 Utils::RegisteredFactory<Evaluator, SnowMeltRateEvaluator>
   SnowMeltRateEvaluator::reg_("snow melt rate");
 
 Utils::RegisteredFactory<Evaluator, RadiationBalanceEvaluator>
   RadiationBalanceEvaluator::reg_("radiation balance, surface and canopy");
+
+Utils::RegisteredFactory<Evaluator, CanopyRadiationEvaluator>
+  CanopyRadiationEvaluator::reg_("canopy radiation balance from above");
 
 Utils::RegisteredFactory<Evaluator, SEBTwoComponentEvaluator>
   SEBTwoComponentEvaluator::reg_("surface energy balance, two components");

@@ -23,7 +23,7 @@ called `"main`".  That list contains the following required elements:
 
     * `"cycle driver`" ``[coordinator-spec]``  See below.
     * `"mesh`" ``[mesh-typed-spec-list]`` A list of Mesh_ objects.
-    * `"regions`" ``[region-typedsublist-spec-list]`` A list of Region_ objects.
+    * `"regions`" ``[region-typedinline-spec-list]`` A list of Region_ objects.
     * `"visualization`" ``[visualization-spec-list]`` A list of Visualization_ objects.
     * `"observations`" ``[observation-spec-list]`` An list of Observation_ objects.
     * `"checkpoint`" ``[checkpoint-spec]`` A Checkpoint_ spec.
@@ -73,7 +73,7 @@ simulation, including starting and ending times and restart options.
 Note: Either `"end cycle`" or `"end time`" are required, and if
 both are present, the simulation will stop with whichever arrives
 first.  An `"end cycle`" is commonly used to ensure that, in the case
-of a time step crash, we do not continue on forever spewing output.
+of a timestep crash, we do not continue on forever spewing output.
 
 Example:
 

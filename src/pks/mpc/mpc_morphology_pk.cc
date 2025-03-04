@@ -82,8 +82,8 @@ Morphology_PK::Setup(const Teuchos::Ptr<State>& S)
   std::vector<std::string> name(1);
 
   if (!S->HasField(vertex_coord_key_)) {
-    int dim = mesh_->space_dimension();
-    location[0] = AmanziMesh::NODE;
+    int dim = mesh_->getSpaceDimension();
+    location[0] = AmanziMesh::Entity_kind::NODE;
     num_dofs[0] = dim;
     name[0] = "node";
 
@@ -94,8 +94,8 @@ Morphology_PK::Setup(const Teuchos::Ptr<State>& S)
   }
 
   if (S->HasMesh(domain_3d_) && (!S->HasField(vertex_coord_key_3d_))) {
-    int dim = mesh_3d_->space_dimension();
-    location[0] = AmanziMesh::NODE;
+    int dim = mesh_3d_->getSpaceDimension();
+    location[0] = AmanziMesh::Entity_kind::NODE;
     num_dofs[0] = dim;
     name[0] = "node";
 
@@ -106,8 +106,8 @@ Morphology_PK::Setup(const Teuchos::Ptr<State>& S)
   }
 
   if (S->HasMesh(domain_ss_) && (!S->HasField(vertex_coord_key_ss_))) {
-    int dim = mesh_ss_->space_dimension();
-    location[0] = AmanziMesh::NODE;
+    int dim = mesh_ss_->getSpaceDimension();
+    location[0] = AmanziMesh::Entity_kind::NODE;
     num_dofs[0] = dim;
     name[0] = "node";
 
@@ -122,7 +122,7 @@ Morphology_PK::Setup(const Teuchos::Ptr<State>& S)
     S->Require<CompositeVector, CompositeVectorSpace>(elevation_increase_key_, Tags::NEXT, "state")
       .SetMesh(mesh_)
       ->SetGhosted(false)
-      ->SetComponent("cell", AmanziMesh::CELL, 1);
+      ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
     Teuchos::ParameterList deform_plist;
     deform_plist.set("evaluator name", elevation_increase_key_);
     deform_eval_ = Teuchos::rcp(new EvaluatorPrimary(deform_plist));
@@ -138,7 +138,7 @@ Morphology_PK::Setup(const Teuchos::Ptr<State>& S)
   Key stem_diameter_key = Keys::getKey(domain_, "stem_diameter");
   Key plant_area_key = Keys::getKey(domain_, "plant_area");
 
-  location[0] = AmanziMesh::CELL;
+  location[0] = AmanziMesh::Entity_kind::CELL;
   num_dofs[0] = num_veg_species;
   name[0] = "cell";
 
@@ -226,7 +226,7 @@ Morphology_PK::AdvanceStep(double t_old, double t_new, bool reinit)
 
   if (dt_step < dt_MPC_) {
     std::stringstream messagestream;
-    messagestream << "Actual step is less than prescribed MPC time step.";
+    messagestream << "Actual step is less than prescribed MPC timestep.";
     Errors::Message message(messagestream.str());
     Exceptions::amanzi_throw(message);
   }
@@ -261,7 +261,6 @@ Morphology_PK::AdvanceStep(double t_old, double t_new, bool reinit)
       S_next_->set_time(t_old + dt_done + dt_next);
       S_inter_->set_time(t_old + dt_done);
       fail = flow_pk_->AdvanceStep(t_old + dt_done, t_old + dt_done + dt_next, reinit);
-      fail |= !flow_pk_->ValidStep();
 
       if (fail) {
         if (vo_->getVerbLevel() >= Teuchos::VERB_HIGH) *vo_->os() << "Master step is failed\n";
@@ -289,7 +288,7 @@ Morphology_PK::AdvanceStep(double t_old, double t_new, bool reinit)
       sed_transport_pk_->CommitStep(t_old + dt_done, t_old + dt_done + dt_next, S_next_);
       dt_done += dt_next;
 
-      // we're done with this time step, copy the state
+      // we're done with this timestep, copy the state
       *S_inter_ = *S_next_;
     }
     ncycles++;
@@ -376,10 +375,11 @@ Morphology_PK::Initialize_MeshVertices_(const Teuchos::Ptr<State>& S,
                                         Key vert_field_key)
 {
   // spatial dimension
-  int dim = mesh->space_dimension();
+  int dim = mesh->getSpaceDimension();
   Amanzi::AmanziGeometry::Point coords(dim);
   // number of vertices
-  int nV = mesh->num_entities(Amanzi::AmanziMesh::NODE, Amanzi::AmanziMesh::Parallel_type::OWNED);
+  int nV = mesh->getNumEntities(Amanzi::AmanziMesh::Entity_kind::NODE,
+                                Amanzi::AmanziMesh::Parallel_kind::OWNED);
 
   Epetra_MultiVector& vc =
     *S->GetPtrW<CompositeVector>(vert_field_key, "state")->ViewComponent("node", false);
@@ -387,7 +387,7 @@ Morphology_PK::Initialize_MeshVertices_(const Teuchos::Ptr<State>& S,
   // search the id of the mid point on the top
   for (int iV = 0; iV < nV; iV++) {
     // get the coords of the node
-    mesh->node_get_coordinates(iV, &coords);
+    coords = mesh->getNodeCoordinate(iV);
     for (int s = 0; s < dim; ++s) { vc[s][iV] = coords[s]; }
   }
 
@@ -399,7 +399,7 @@ void
 Morphology_PK::Update_MeshVertices_(const Teuchos::Ptr<State>& S)
 {
   // spatial dimension
-  int dim = mesh_ss_->space_dimension();
+  int dim = mesh_ss_->getSpaceDimension();
   Amanzi::AmanziGeometry::Point coords(dim);
   // number of vertices
 
@@ -407,8 +407,9 @@ Morphology_PK::Update_MeshVertices_(const Teuchos::Ptr<State>& S)
     *S->GetPtrW<CompositeVector>(vertex_coord_key_ss_, "state")->ViewComponent("node", true);
 
 
-  const Epetra_MultiVector& dz =
-    *S->Get<CompositeVector>(elevation_increase_key_).ViewComponent("cell");
+  const auto& dz_cv = S->Get<CompositeVector>(elevation_increase_key_);
+  dz_cv.ScatterMasterToGhosted();
+  const Epetra_MultiVector& dz = *dz_cv.ViewComponent("cell", true);
 
   int ncells = dz.MyLength();
 
@@ -417,13 +418,13 @@ Morphology_PK::Update_MeshVertices_(const Teuchos::Ptr<State>& S)
 
   for (int c = 0; c < ncells; c++) {
     AmanziMesh::Entity_ID domain_face;
-    domain_face = mesh_->entity_get_parent(AmanziMesh::CELL, c);
+    domain_face = mesh_->getEntityParent(AmanziMesh::Entity_kind::CELL, c);
 
-    mesh_ss_->face_get_nodes(domain_face, &nodes);
+    nodes = mesh_ss_->getFaceNodes(domain_face);
     int nnodes = nodes.size();
     for (int i = 0; i < nnodes; i++) {
-      mesh_ss_->node_get_coordinates(nodes[i], &coords);
-      mesh_ss_->node_get_cells(nodes[i], Amanzi::AmanziMesh::Parallel_type::OWNED, &cells);
+      coords = mesh_ss_->getNodeCoordinate(nodes[i]);
+      cells = mesh_ss_->getNodeCells(nodes[i], Amanzi::AmanziMesh::Parallel_kind::ALL);
       int nsize = cells.size();
       double old = coords[2];
 

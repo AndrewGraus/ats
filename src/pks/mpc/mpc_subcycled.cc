@@ -9,12 +9,9 @@
 
 /*
   MPC for subcycling one PK relative to another.
-
-  NOTE: this is currently a hack-job, as it really does flow + transport
-  coupling.  It will be made more general, and an MPC flow + transport will be
-  done better eventually, but for now, we proceed forward.  Blocked by ATS#115.
 */
 
+#include "Event.hh"
 #include "mpc_subcycled.hh"
 #include "pk_helpers.hh"
 
@@ -31,7 +28,9 @@ MPCSubcycled::MPCSubcycled(Teuchos::ParameterList& pk_tree,
 {
   init_();
 
-  // Master PK is the PK whose time step size sets the size, the subcycled is subcycled.
+  // NOTE: this must be done prior to set_tags(), therefore before even parseParameterList()
+  //
+  // Master PK is the PK whose timestep size sets the size, the subcycled is subcycled.
   subcycling_ = plist_->get<Teuchos::Array<int>>("subcycle");
   if (subcycling_.size() != sub_pks_.size()) {
     Errors::Message msg(
@@ -39,9 +38,15 @@ MPCSubcycled::MPCSubcycled(Teuchos::ParameterList& pk_tree,
     Exceptions::amanzi_throw(msg);
   }
   dts_.resize(sub_pks_.size(), -1);
+}
+
+void
+MPCSubcycled::parseParameterList()
+{
+  MPC<PK>::parseParameterList();
 
   // min dt allowed in subcycling
-  target_dt_ = plist_->get<double>("subcycling target time step [s]", -1);
+  target_dt_ = plist_->get<double>("subcycling target timestep [s]", -1);
 }
 
 
@@ -109,7 +114,6 @@ MPCSubcycled::get_dt()
     ++i;
   }
 
-  for (auto& dt_local : dts_) dt_local = std::min(dt_local, dt);
   dt_ = dt;
   return dt;
 }
@@ -151,19 +155,18 @@ MPCSubcycled::AdvanceStep_i_(std::size_t i, double t_old, double t_new, bool rei
 
     S_->set_time(tag_subcycle_current, t_old);
     while (!done) {
-      dt_inner = std::min(dt_inner, t_new - t_inner);
+      if (Utils::isNearEqual(t_new, t_inner + dt_inner) || (t_inner + dt_inner) > t_new) {
+        dt_inner = t_new - t_inner;
+      }
+
       S_->Assign("dt", tag_subcycle_current, name(), dt_inner);
       S_->set_time(tag_subcycle_next, t_inner + dt_inner);
       bool fail_inner = sub_pks_[i]->AdvanceStep(t_inner, t_inner + dt_inner, false);
 
       if (vo_->os_OK(Teuchos::VERB_EXTREME))
         *vo_->os() << "  step failed? " << fail_inner << std::endl;
-      bool valid_inner = sub_pks_[i]->ValidStep();
-      if (vo_->os_OK(Teuchos::VERB_EXTREME)) {
-        *vo_->os() << "  step valid? " << valid_inner << std::endl;
-      }
 
-      if (fail_inner || !valid_inner) {
+      if (fail_inner) {
         sub_pks_[i]->FailStep(t_old, t_new, tag_subcycle_next);
 
         dt_inner = sub_pks_[i]->get_dt();

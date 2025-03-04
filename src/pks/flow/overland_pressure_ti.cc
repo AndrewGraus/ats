@@ -22,7 +22,7 @@ namespace Flow {
 void
 OverlandPressureFlow::FunctionalResidual(double t_old,
                                          double t_new,
-                                         Teuchos::RCP<TreeVector> u_old,
+                                         Teuchos::RCP<const TreeVector> u_old,
                                          Teuchos::RCP<TreeVector> u_new,
                                          Teuchos::RCP<TreeVector> g)
 {
@@ -52,26 +52,8 @@ OverlandPressureFlow::FunctionalResidual(double t_old,
 
   // debugging -- write primary variables to screen
   db_->WriteCellInfo(true);
-  std::vector<std::string> vnames{ "p_old", "p_new", "z", "h_old", "h_new", "h+z" };
-  if (plist_->isSublist("overland conductivity subgrid evaluator")) {
-    vnames.emplace_back("pd - dd");
-    vnames.emplace_back("frac_cond");
-  }
-  std::vector<Teuchos::Ptr<const CompositeVector>> vecs;
-  vecs.emplace_back(S_->GetPtr<CompositeVector>(key_, tag_current_).ptr());
-  vecs.emplace_back(u.ptr());
-  vecs.emplace_back(S_->GetPtr<CompositeVector>(elev_key_, tag_next_).ptr());
-  vecs.emplace_back(S_->GetPtr<CompositeVector>(pd_key_, tag_current_).ptr());
-  vecs.emplace_back(S_->GetPtr<CompositeVector>(pd_key_, tag_next_).ptr());
-  vecs.emplace_back(S_->GetPtr<CompositeVector>(potential_key_, tag_next_).ptr());
-  if (plist_->isSublist("overland conductivity subgrid evaluator")) {
-    // fixme -- add keys!
-    vecs.emplace_back(
-      S_->GetPtr<CompositeVector>(Keys::getKey(domain_, "mobile_depth"), tag_next_).ptr());
-    vecs.emplace_back(
-      S_->GetPtr<CompositeVector>(Keys::getKey(domain_, "fractional_conductance"), tag_next_)
-        .ptr());
-  }
+  std::vector<std::string> vnames{ "p_old", "p_new" };
+  std::vector<Teuchos::Ptr<const CompositeVector>> vecs{ S_->GetPtr<CompositeVector>(key_, tag_current_).ptr(), u.ptr() };
   db_->WriteVectors(vnames, vecs, true);
 
   // update boundary conditions
@@ -83,15 +65,31 @@ OverlandPressureFlow::FunctionalResidual(double t_old,
   ApplyDiffusion_(tag_next_, res.ptr());
 
   // more debugging -- write diffusion/flux variables to screen
-  vnames.clear();
-  vecs.clear();
-  if (S_->HasRecord(Keys::getKey(domain_, "unfrozen_fraction"), tag_next_) &&
-      S_->HasRecord(Keys::getKey(domain_, "unfrozen_fraction"), tag_current_)) {
-    Key uf_key = Keys::getKey(domain_, "unfrozen_fraction");
-    vnames = { "uf_frac_old", "uf_frac_new" };
-    vecs = { S_->GetPtr<CompositeVector>(uf_key, tag_current_).ptr(),
-             S_->GetPtr<CompositeVector>(uf_key, tag_next_).ptr() };
+  vnames = { "z", "h_old", "h_new", "h+z" };
+  vecs = { S_->GetPtr<CompositeVector>(elev_key_, tag_next_).ptr(),
+    S_->GetPtr<CompositeVector>(pd_key_, tag_current_).ptr(),
+    S_->GetPtr<CompositeVector>(pd_key_, tag_next_).ptr(),
+    S_->GetPtr<CompositeVector>(potential_key_, tag_next_).ptr() };
+
+  if (plist_->isSublist("overland conductivity subgrid evaluator")) {
+    vnames.emplace_back("pd - dd");
+    vnames.emplace_back("frac_cond");
+    vecs.emplace_back(S_->GetPtr<CompositeVector>(Keys::getKey(domain_, "mobile_depth"), tag_next_).ptr());
+    vecs.emplace_back(S_->GetPtr<CompositeVector>(Keys::getKey(domain_, "fractional_conductance"), tag_next_).ptr());
   }
+
+
+  if (S_->HasRecord(Keys::getKey(domain_, "unfrozen_fraction"), tag_current_)) {
+    Key uf_key = Keys::getKey(domain_, "unfrozen_fraction");
+    vnames.emplace_back("uf_frac_old");
+    vecs.emplace_back(S_->GetPtr<CompositeVector>(uf_key, tag_current_).ptr());
+  }
+  if (S_->HasRecord(Keys::getKey(domain_, "unfrozen_fraction"), tag_next_)) {
+    Key uf_key = Keys::getKey(domain_, "unfrozen_fraction");
+    vnames.emplace_back("uf_frac_new");
+    vecs.emplace_back(S_->GetPtr<CompositeVector>(uf_key, tag_next_).ptr());
+  }
+
   vnames.emplace_back("uw_dir");
   vecs.emplace_back(S_->GetPtr<CompositeVector>(flux_dir_key_, tag_next_).ptr());
   vnames.emplace_back("k");
@@ -221,6 +219,7 @@ OverlandPressureFlow::UpdatePreconditioner(double t, Teuchos::RCP<const TreeVect
   // -- update the accumulation derivatives
   S_->GetEvaluator(wc_bar_key_, tag_next_).UpdateDerivative(*S_, name_, key_, tag_next_);
   auto dwc_dp = S_->GetDerivativePtr<CompositeVector>(wc_bar_key_, tag_next_, key_, tag_next_);
+  if (dcond != Teuchos::null) db_->WriteVector("    dk_dp", dcond.ptr(), true);
   db_->WriteVector("    dwc_dp", dwc_dp.ptr());
   db_->WriteVector("    dh_dp", dh_dp.ptr());
 
@@ -228,45 +227,8 @@ OverlandPressureFlow::UpdatePreconditioner(double t, Teuchos::RCP<const TreeVect
   dwc_dh.ReciprocalMultiply(1. / h, *dh_dp, *dwc_dp, 0.);
   preconditioner_acc_->AddAccumulationTerm(dwc_dh, "cell");
 
-  // Why is this turned off? #60 --etc
-  // // -- update the source term derivatives
-  // if (S_next_->GetEvaluator(source_key_)->IsDependency(S_next_.ptr(), key_)) {
-  //   S_next_->GetEvaluator(source_key_)
-  //       ->HasFieldDerivativeChanged(S_next_.ptr(), name_, key_);
-  //   Key dkey = Keys::getDerivKey(source_key_,key_);
-  //   const Epetra_MultiVector& dq_dp = *S_next_->GetPtr<CompositeVector>(dkey)
-  //       ->ViewComponent("cell",false);
-
-  //   const Epetra_MultiVector& cv =
-  //       *S_next_->Get<CompositeVector>("surface-cell_volume").ViewComponent("cell",false);
-
-  //   if (source_in_meters_) {
-  //     // External source term is in [m water / s], not in [mols / s], so a
-  //     // density is required.  This density should be upwinded.
-  //     S_next_->GetEvaluator("surface-molar_density_liquid")
-  //         ->HasFieldChanged(S_next_.ptr(), name_);
-  //     S_next_->GetEvaluator("surface-source_molar_density")
-  //         ->HasFieldChanged(S_next_.ptr(), name_);
-  //     const Epetra_MultiVector& nliq1 =
-  //         *S_next_->GetPtr<CompositeVector>("surface-molar_density_liquid")
-  //         ->ViewComponent("cell",false);
-  //     const Epetra_MultiVector& nliq1_s =
-  //       *S_next_->GetPtr<CompositeVector>("surface-source_molar_density")
-  //         ->ViewComponent("cell",false);
-  //     const Epetra_MultiVector& q = *S_next_->GetPtr<CompositeVector>(source_key_)
-  //         ->ViewComponent("cell",false);
-
-  //     for (int c=0; c!=cv.MyLength(); ++c) {
-  //       double s1 = q[0][c] > 0. ? dq_dp[0][c] * nliq1_s[0][c] : dq_dp[0][c] * nliq1[0][c];
-  //       Acc_cells[c] -= cv[0][c] * s1 / dh_dp[0][c];
-  //     }
-  //   } else {
-  //     for (int c=0; c!=cv.MyLength(); ++c) {
-  //       Acc_cells[c] -= cv[0][c] * dq_dp[0][c] / dh_dp[0][c];
-  //     }
-  //   }
-  // }
-
+  // -- update preconditioner with source term derivatives if needed
+  AddSourcesToPrecon_(h);
 
   // 3. Assemble and precompute the Schur complement for inversion.
   // 3.a: Patch up BCs in the case of zero conductivity
