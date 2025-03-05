@@ -66,9 +66,9 @@ subroutine EcoSIM_Setup(properties, state, sizes, num_iterations,&
   !write(*,*) "num_columns: ", num_columns
   !write(*,*) "ncells_per_col_: ", ncells_per_col_
 
-  sizes%num_components = 1
-  sizes%ncells_per_col_ = 100
-  sizes%num_columns = 25
+  !sizes%num_components = 1
+  !sizes%ncells_per_col_ = 100
+  !sizes%num_columns = 25
 
   call ATS2EcoSIMData(num_columns, state, properties, sizes)
 

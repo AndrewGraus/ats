@@ -46,7 +46,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
                const Teuchos::RCP<Teuchos::ParameterList>& global_list,
                const Teuchos::RCP<State>& S,
                const Teuchos::RCP<TreeVector>& solution):
-  PK_Physical(pk_tree, global_list, S, solution),
+  PK_Physical_Default(pk_tree, global_list, S, solution),
   PK(pk_tree, global_list, S, solution),
   ncells_per_col_(-1),
   saved_time_(0.0)
@@ -165,14 +165,16 @@ EcoSIM::~EcoSIM()
 void EcoSIM::Setup() {
   //Need to do some basic setup of the columns:
   mesh_surf_ = S_->GetMesh(domain_surface_);
-  num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  //num_columns_ = mesh_surf_->getNumEntities(AmanziMesh::Parallel_type::OWNED, AmanziMesh::Parallel_kind::OWNED);
+  int num_columns_ =
+    mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
   for (unsigned int column = 0; column != num_columns_; ++column) {
-    int f = mesh_surf_->entity_get_parent(AmanziMesh::CELL, column);
-    auto& col_iter = mesh_->cells_of_column(column);
+    int f = mesh_surf_->getEntityParent(AmanziMesh::Entity_kind::CELL, column);
+    auto col_iter = mesh_->columns.getCells(column);
     std::size_t ncol_cells = col_iter.size();
 
-    double column_area = mesh_->face_area(f);
+    double column_area = mesh_->getFaceArea(f);
 
     if (ncells_per_col_ < 0) {
       ncells_per_col_ = ncol_cells;
@@ -224,7 +226,7 @@ void EcoSIM::Initialize() {
   int tcc_num = tcc.NumVectors();
   Teuchos::OSTab tab = vo_->getOSTab();
 
-  num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  num_columns_ = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
   //Now we call the engine's init state function which allocates the data
   bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num, num_columns_);
@@ -253,12 +255,12 @@ void EcoSIM::Initialize() {
   S_->GetW<CompositeVector>(matric_pressure_key_, Tags::DEFAULT, "matric_pressure").PutScalar(1.0);
   S_->GetRecordW(matric_pressure_key_, Tags::DEFAULT, "matric_pressure").set_initialized();
 
-  int num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  int num_columns_ = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
   //loop over processes instead:
-  num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
-  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+  num_columns_global = mesh_surf_->getMap(AmanziMesh::Entity_kind::CELL, false).NumGlobalElements();
+  num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
+  num_columns_global_ptype = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::ALL);
 
   //Trying to loop over processors now:
   int numProcesses, p_rank;
@@ -267,7 +269,7 @@ void EcoSIM::Initialize() {
   for (int k = 0; k < numProcesses; ++k) {
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank==k) {
-      num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+      num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
       InitializeSingleProcess(p_rank);
     }
@@ -363,7 +365,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   Teuchos::RCP<const CompositeVector> matric_pressure = S_->GetPtr<CompositeVector>(matric_pressure_key_, Tags::DEFAULT);
   S_->GetEvaluator(matric_pressure_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  AmanziMesh::Entity_ID num_columns_ = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  AmanziMesh::Entity_ID num_columns_ = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
   // grab the required fields
   S_->GetEvaluator("porosity", tag_next_).Update(*S_, name_);
@@ -476,9 +478,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
       .ViewComponent("cell",false))(0);
 
   //loop over processes instead:
-  num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
-  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+  num_columns_global = mesh_surf_->getMap(AmanziMesh::Entity_kind::CELL,false).NumGlobalElements();
+  num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
+  num_columns_global_ptype = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::ALL);
 
   //Trying to loop over processors now:
   int numProcesses, p_rank;
@@ -487,7 +489,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   for (int k = 0; k < numProcesses; ++k) {
     MPI_Barrier(MPI_COMM_WORLD);
     if (p_rank==k) {
-      num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+      num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
       AdvanceSingleProcess(dt, p_rank);
     }
@@ -499,7 +501,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_Vector& vec,
        Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
-  auto& col_iter = mesh_->cells_of_column(column);
+  auto col_iter = mesh_->columns.getCells(column);
 
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     std::size_t vec_index = col_iter[i];
@@ -511,7 +513,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_Vector& v
 void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID column, const Teuchos::Ptr<Epetra_SerialDenseVector> vec,
        Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
-  auto& col_iter = mesh_->cells_of_column(column);
+  auto col_iter = mesh_->columns.getCells(column);
 
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     std::size_t vec_index = col_iter[i];
@@ -524,7 +526,7 @@ void EcoSIM::MatrixFieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_Mul
   Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr)
   {
     int n_comp = m_arr.NumVectors();
-    auto& col_iter = mesh_->cells_of_column(column);
+    auto col_iter = mesh_->columns.getCells(column);
 
     for (int j=0; j!=n_comp; ++j){
       for (std::size_t i=0; i!=col_iter.size(); ++i) {
@@ -537,7 +539,7 @@ void EcoSIM::MatrixFieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_Mul
 void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID column, Epetra_Vector& vec,
                                Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
-  auto& col_iter = mesh_->cells_of_column(column);
+  auto col_iter = mesh_->columns.getCells(column);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     vec[col_iter[i]] = (*col_vec)[i];
   }
@@ -546,7 +548,7 @@ void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID column, Epetra_Vector& vec,
 void EcoSIM::ColumnToField_(AmanziMesh::Entity_ID column, Teuchos::Ptr<Epetra_SerialDenseVector> vec,
                                Teuchos::Ptr<Epetra_SerialDenseVector> col_vec)
 {
-  auto& col_iter = mesh_->cells_of_column(column);
+  auto col_iter = mesh_->columns.getCells(column);
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     (*vec)[col_iter[i]] = (*col_vec)[i];
   }
@@ -556,7 +558,7 @@ void EcoSIM::MatrixColumnToField_(AmanziMesh::Entity_ID column, Epetra_MultiVect
   Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr) {
 
     int n_comp = m_arr.NumVectors();
-    auto& col_iter = mesh_->cells_of_column(column);
+    auto col_iter = mesh_->columns.getCells(column);
 
     for (int j=0; j!=n_comp; ++j){
       for (std::size_t i=0; i!=col_iter.size(); ++i) {
@@ -570,11 +572,11 @@ void EcoSIM::MatrixColumnToField_(AmanziMesh::Entity_ID column, Epetra_MultiVect
 void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID column,
                             Teuchos::Ptr<Epetra_SerialDenseVector> depth,
                             Teuchos::Ptr<Epetra_SerialDenseVector> dz) {
-  AmanziMesh::Entity_ID f_above = mesh_surf_->entity_get_parent(AmanziMesh::CELL, column);
-  auto& col_iter = mesh_->cells_of_column(column);
+  AmanziMesh::Entity_ID f_above = mesh_surf_->getEntityParent(AmanziMesh::Entity_kind::CELL, column);
+  auto col_iter = mesh_->columns.getCells(column);
   ncells_per_col_ = col_iter.size();
 
-  AmanziGeometry::Point surf_centroid = mesh_->face_centroid(f_above);
+  AmanziGeometry::Point surf_centroid = mesh_->getFaceCentroid(f_above);
   AmanziGeometry::Point neg_z(3);
   neg_z.set(0.,0.,-1);
 
@@ -582,21 +584,22 @@ void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID column,
 
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     // depth centroid
-    (*depth)[i] = surf_centroid[2] - mesh_->cell_centroid(col_iter[i])[2];
+    (*depth)[i] = surf_centroid[2] - mesh_->getCellCentroid(col_iter[i])[2];
 
     // dz
     // -- find face_below
-    AmanziMesh::Entity_ID_List faces;
-    std::vector<int> dirs;
-    mesh_->cell_get_faces_and_dirs(col_iter[i], &faces, &dirs);
+    //AmanziMesh::Entity_ID_List faces;
+    //std::vector<int> dirs;
+    //mesh_->cell_get_faces_and_dirs(col_iter[i], &faces, &dirs);
+    ///double vol = mesh_->cell_volume(col_iter[i]);
 
-    double vol = mesh_->cell_volume(col_iter[i]);
+    const auto& [faces, dirs] = mesh_->getCellFacesAndDirections(col_iter[i]);
 
     // -- mimics implementation of build_columns() in Mesh
     double mindp = 999.0;
     AmanziMesh::Entity_ID f_below = -1;
     for (std::size_t j=0; j!=faces.size(); ++j) {
-      AmanziGeometry::Point normal = mesh_->face_normal(faces[j]);
+      AmanziGeometry::Point normal = mesh_->getFaceNormal(faces[j]);
       if (dirs[j] == -1) normal *= -1;
       normal /= AmanziGeometry::norm(normal);
 
@@ -608,7 +611,7 @@ void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID column,
     }
 
     // -- fill the val
-    (*dz)[i] = mesh_->face_centroid(f_above)[2] - mesh_->face_centroid(f_below)[2];
+    (*dz)[i] = mesh_->getFaceCentroid(f_above)[2] - mesh_->getFaceCentroid(f_below)[2];
     AMANZI_ASSERT( (*dz)[i] > 0. );
     f_above = f_below;
   }
@@ -619,32 +622,34 @@ void EcoSIM::VolDepthDz_(AmanziMesh::Entity_ID column,
                             Teuchos::Ptr<Epetra_SerialDenseVector> depth,
                             Teuchos::Ptr<Epetra_SerialDenseVector> dz,
 			    Teuchos::Ptr<Epetra_SerialDenseVector> volume) {
-  AmanziMesh::Entity_ID f_above = mesh_surf_->entity_get_parent(AmanziMesh::CELL, column);
-  auto& col_iter = mesh_->cells_of_column(column);
+  AmanziMesh::Entity_ID f_above = mesh_surf_->getEntityParent(AmanziMesh::Entity_kind::CELL, column);
+  auto col_iter = mesh_->columns.getCells(column);
   ncells_per_col_ = col_iter.size();
 
-  AmanziGeometry::Point surf_centroid = mesh_->face_centroid(f_above);
+  AmanziGeometry::Point surf_centroid = mesh_->getFaceCentroid(f_above);
   AmanziGeometry::Point neg_z(3);
   neg_z.set(0.,0.,-1);
 
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     // depth centroid
-    (*depth)[i] = surf_centroid[2] - mesh_->cell_centroid(col_iter[i])[2];
+    (*depth)[i] = surf_centroid[2] - mesh_->getCellCentroid(col_iter[i])[2];
 
     // dz
     // -- find face_below
-    AmanziMesh::Entity_ID_List faces;
-    std::vector<int> dirs;
-    mesh_->cell_get_faces_and_dirs(col_iter[i], &faces, &dirs);
+    //AmanziMesh::Entity_ID_List faces;
+    //std::vector<int> dirs;
+    //mesh_->cell_get_faces_and_dirs(col_iter[i], &faces, &dirs);
+
+    const auto& [faces, dirs] = mesh_->getCellFacesAndDirections(col_iter[i]);
 
     //double vol = mesh_->cell_volume(col_iter[i]);
-    (*volume)[i] = mesh_->cell_volume(col_iter[i]);
+    (*volume)[i] = mesh_->getCellVolume(col_iter[i]);
 
     // -- mimics implementation of build_columns() in Mesh
     double mindp = 999.0;
     AmanziMesh::Entity_ID f_below = -1;
     for (std::size_t j=0; j!=faces.size(); ++j) {
-      AmanziGeometry::Point normal = mesh_->face_normal(faces[j]);
+      AmanziGeometry::Point normal = mesh_->getFaceNormal(faces[j]);
       if (dirs[j] == -1) normal *= -1;
       normal /= AmanziGeometry::norm(normal);
 
@@ -656,7 +661,7 @@ void EcoSIM::VolDepthDz_(AmanziMesh::Entity_ID column,
     }
 
     // -- fill the val
-    (*dz)[i] = mesh_->face_centroid(f_above)[2] - mesh_->face_centroid(f_below)[2];
+    (*dz)[i] = mesh_->getFaceCentroid(f_above)[2] - mesh_->getFaceCentroid(f_below)[2];
     AMANZI_ASSERT( (*dz)[i] > 0. );
     f_above = f_below;
   }
@@ -734,16 +739,16 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
   //Gather columns on this process:
-  num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
-  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+  num_columns_global = mesh_surf_->getMap(AmanziMesh::Entity_kind::CELL,false).NumGlobalElements();
+  num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
+  num_columns_global_ptype = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::ALL);
 
   //Trying to loop over processors now:
   int p_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
   MPI_Barrier(MPI_COMM_WORLD);
 
-  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
   //Now that the arrays are flat we need to be a little more careful about how we load an unload the data
   /*const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
@@ -925,16 +930,16 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
   //Gather columns on this process:
-  num_columns_global = mesh_surf_->cell_map(AmanziMesh::Entity_kind::CELL).NumGlobalElements();
-  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
-  num_columns_global_ptype = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::ALL);
+  num_columns_global = mesh_surf_->getMap(AmanziMesh::Entity_kind::CELL, false).NumGlobalElements();
+  num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
+  num_columns_global_ptype = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::ALL);
 
   //Trying to loop over processors now:
   int p_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
   MPI_Barrier(MPI_COMM_WORLD);
 
-  num_columns_local = mesh_surf_->num_entities(AmanziMesh::CELL, AmanziMesh::Parallel_type::OWNED);
+  num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
   double energy_source_tot = state.surface_energy_source.data[0];
   double water_source_tot = state.surface_water_source.data[0];
   double snow_depth_cell = state.snow_depth.data[0];
@@ -1021,6 +1026,10 @@ int EcoSIM::InitializeSingleProcess(int proc)
   //Teuchos::OSTab tab = vo_->getOSTab();
   //*vo_->os() << "num_columns: " << num_columns << std::endl;
   //*vo_->os() << "ncells_per_col_: " << ncells_per_col_ << std::endl;
+
+  bgc_sizes_.num_columns = num_columns;
+  bgc_sizes_.ncells_per_col_ = ncells_per_col_;
+  bgc_sizes_.num_components = 1;
 
   bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, num_columns,ncells_per_col_);
   CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);

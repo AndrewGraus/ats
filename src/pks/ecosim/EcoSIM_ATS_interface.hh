@@ -47,7 +47,7 @@
 namespace Amanzi {
 namespace EcoSIM {
 
-class EcoSIM : public PK_Physical {
+class EcoSIM : public PK_Physical_Default {
 
  public:
 
