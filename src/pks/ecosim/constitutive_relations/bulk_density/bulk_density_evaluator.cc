@@ -69,7 +69,7 @@ BulkDensityEvaluator::InitializeFromPlist_()
   dependencies_.insert(KeyTag{ sl_key_, tag});
 
   // dependency: molar_density_liquid
-  nl_key_ = Keys::readKey(plist_, domain_name, "molar density liquid", "molar_density_liquid");
+  nl_key_ = Keys::readKey(plist_, domain_name, "molar density", "molar_density_liquid");
   dependencies_.insert(KeyTag{ nl_key_,tag});
 
   // dependency: saturation_ice
@@ -77,7 +77,7 @@ BulkDensityEvaluator::InitializeFromPlist_()
   dependencies_.insert(KeyTag{ si_key_, tag});
 
   // dependency: molar_density_ice
-  ni_key_ = Keys::readKey(plist_, domain_name, "molar density ice", "molar_density_ice");
+  ni_key_ = Keys::readKey(plist_, domain_name, "molar density", "molar_density_ice");
   dependencies_.insert(KeyTag{ ni_key_, tag});
 
   // dependency: saturation_gas
@@ -85,7 +85,7 @@ BulkDensityEvaluator::InitializeFromPlist_()
   dependencies_.insert(KeyTag{ sg_key_, tag});
 
   // dependency: molar_density_gas
-  ng_key_ = Keys::readKey(plist_, domain_name, "molar density gas", "molar_density_gas");
+  ng_key_ = Keys::readKey(plist_, domain_name, "molar density", "molar_density_gas");
   dependencies_.insert(KeyTag{ ng_key_, tag});
 }
 
