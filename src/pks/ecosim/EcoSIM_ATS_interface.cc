@@ -192,6 +192,24 @@ void EcoSIM::Setup() {
           ->SetGhosted(false)
           ->SetComponent("cell", AmanziMesh::CELL, 1);
   }  
+  //surface_energy_source_ecosim_key_ 
+  //surface_water_source_ecosim_key_
+  S_->Require<CompositeVector, CompositeVectorSpace>(surface_energy_source_ecosim_key_ , tag_next_, name_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);  
+
+  S_->Require<CompositeVector, CompositeVectorSpace>(surface_water_source_ecosim_key_ , tag_next_, name_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);  
+
+  //May need to setup surface evaluators as they are now owned by surface_balance PK insteady of surface energy??
+  //
+
+  S_->RequireEvaluator(sw_key_, tag_next_);
+  S_->Require<CompositeVector, CompositeVectorSpace>(sw_key_, tag_next_).SetMesh(mesh_surf_)
+    ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
   //Setup Evaluators
   /*requireAtNext(hydraulic_conductivity_key_, tag_next_, *S_)
@@ -247,6 +265,13 @@ void EcoSIM::Initialize() {
     *vo_->os() << "Did not find ice key" << std::endl;
     has_ice = false;
   }
+  S_->GetW<CompositeVector>(snow_depth_key_, Tags::DEFAULT, "surface-snow_depth").PutScalar(0.0);
+  S_->GetRecordW(snow_depth_key_, Tags::DEFAULT, "surface-snow_depth").set_initialized();
+  //surface_energy_source_ecosim_key_ 
+  //surface_water_source_ecosim_key_
+  
+  S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, name_).PutScalar(0.0);
+  S_->GetRecordW(surface_water_source_ecosim_key_, Tags::DEFAULT, name_).set_initialized();
 
   //Initialize owned evaluators
   /*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
@@ -689,14 +714,15 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& liquid_density = *(*S_->Get<CompositeVector>(liquid_density_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& rock_density = *(*S_->Get<CompositeVector>(rock_density_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cell_volume_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& hydraulic_conductivity = *(*S_->Get<CompositeVector>(hydraulic_conductivity_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& matric_pressure = *(*S_->Get<CompositeVector>(matric_pressure_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_density_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& hydraulic_conductivity = *(*S_->Get<CompositeVector>(hydraulic_conductivity_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& matric_pressure = *(*S_->Get<CompositeVector>(matric_pressure_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& bulk_density = *(*S_->Get<CompositeVector>(bulk_density_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& rooting_depth_fraction = *(*S_->Get<CompositeVector>(f_root_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(thermal_conductivity_key_, water_tag).ViewComponent("cell", false))(0);
-
+  
+  //const auto& shortwave_radiation = *S_.Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false);
   const Epetra_Vector& shortwave_radiation = *(*S_->Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& longwave_radiation = *(*S_->Get<CompositeVector>(lw_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& air_temperature = *(*S_->Get<CompositeVector>(air_temp_key_, water_tag).ViewComponent("cell", false))(0);
@@ -774,7 +800,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     FieldToColumn_(column,rock_density,col_r_dens.ptr());
     //FieldToColumn_(column,cell_volume,col_vol.ptr());
     //FieldToColumn_(column,hydraulic_conductivity,col_h_cond.ptr());
-    FieldToColumn_(column,bulk_density,col_b_dens.ptr());
+    //FieldToColumn_(column,bulk_density,col_b_dens.ptr());
     FieldToColumn_(column,plant_wilting_factor,col_wp.ptr());
     FieldToColumn_(column,rooting_depth_fraction,col_rf.ptr());
     FieldToColumn_(column,subsurface_water_source,col_ss_water_source.ptr());
@@ -802,7 +828,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       state.porosity.data[column * ncells_per_col_ + i] = (*col_porosity)[i];
       state.water_content.data[column * ncells_per_col_ + i] = (*col_wc)[i];
       //state.hydraulic_conductivity.data[column * ncells_per_col_ + i] = (*col_h_cond)[i];
-      state.bulk_density.data[column * ncells_per_col_ + i] = (*col_b_dens)[i];
+      //state.bulk_density.data[column * ncells_per_col_ + i] = (*col_b_dens)[i];
       state.subsurface_water_source.data[column * ncells_per_col_ + i] = (*col_ss_water_source)[i];
       state.subsurface_energy_source.data[column * ncells_per_col_ + i] = (*col_ss_energy_source)[i];
       //state.matric_pressure.data[column * ncells_per_col_ + i] = (*col_mat_p)[i];
@@ -895,15 +921,17 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_density_key_, Tags::DEFAULT, liquid_density_key_).ViewComponent("cell",false))(0);
   auto& rock_density = *(*S_->GetW<CompositeVector>(rock_density_key_, Tags::DEFAULT, rock_density_key_).ViewComponent("cell",false))(0);
   auto& cell_volume = *(*S_->GetW<CompositeVector>(cell_volume_key_, Tags::DEFAULT, cell_volume_key_).ViewComponent("cell",false))(0);
-  auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, hydraulic_conductivity_key_).ViewComponent("cell",false))(0);
-  auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_density_key_, Tags::DEFAULT, bulk_density_key_).ViewComponent("cell",false))(0);
+  //auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, hydraulic_conductivity_key_).ViewComponent("cell",false))(0);
+  //auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_density_key_, Tags::DEFAULT, bulk_density_key_).ViewComponent("cell",false))(0);
 
   //auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
-  auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, Tags::DEFAULT, surface_energy_source_ecosim_key_).ViewComponent("cell", false))(0);
+  auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, Tags::DEFAULT, name_).ViewComponent("cell", false))(0);
+  //Epetra_MultiVector& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, tag_next_, name_).ViewComponent("cell", false))(0);
+  //Epetra_MultiVector& surface_energy_source = *(S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, tag_next_, name_).ViewComponent("cell", false));
   auto& subsurface_energy_source = *(*S_->GetW<CompositeVector>(subsurface_energy_source_key_, Tags::DEFAULT, subsurface_energy_source_key_).ViewComponent("cell", false))(0);
 
   //auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_key_, Tags::DEFAULT, surface_water_source_key_).ViewComponent("cell", false))(0);
-  auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).ViewComponent("cell", false))(0);
+  auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, name_).ViewComponent("cell", false))(0);
   auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_key_, Tags::DEFAULT, subsurface_water_source_key_).ViewComponent("cell", false))(0);
   auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
   auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Tags::DEFAULT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
