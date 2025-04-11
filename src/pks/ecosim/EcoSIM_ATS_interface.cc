@@ -199,7 +199,7 @@ void EcoSIM::Setup() {
           ->SetGhosted(false)
           ->SetComponent("cell", AmanziMesh::CELL, 1);  
 
-  S_->Require<CompositeVector, CompositeVectorSpace>(surface_water_source_ecosim_key_ , tag_next_, name_)
+  S_->Require<CompositeVector, CompositeVectorSpace>(surface_water_source_ecosim_key_ , tag_next_, surface_water_source_ecosim_key_)
           .SetMesh(mesh_surf_)
           ->SetGhosted(false)
           ->SetComponent("cell", AmanziMesh::CELL, 1);  
@@ -270,8 +270,8 @@ void EcoSIM::Initialize() {
   //surface_energy_source_ecosim_key_ 
   //surface_water_source_ecosim_key_
   
-  S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, name_).PutScalar(0.0);
-  S_->GetRecordW(surface_water_source_ecosim_key_, Tags::DEFAULT, name_).set_initialized();
+  S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).PutScalar(0.0);
+  S_->GetRecordW(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).set_initialized();
 
   //Initialize owned evaluators
   /*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
@@ -931,7 +931,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& subsurface_energy_source = *(*S_->GetW<CompositeVector>(subsurface_energy_source_key_, Tags::DEFAULT, subsurface_energy_source_key_).ViewComponent("cell", false))(0);
 
   //auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_key_, Tags::DEFAULT, surface_water_source_key_).ViewComponent("cell", false))(0);
-  auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, name_).ViewComponent("cell", false))(0);
+  auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).ViewComponent("cell", false))(0);
   auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_key_, Tags::DEFAULT, subsurface_water_source_key_).ViewComponent("cell", false))(0);
   auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
   auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Tags::DEFAULT, thermal_conductivity_key_).ViewComponent("cell",false))(0);

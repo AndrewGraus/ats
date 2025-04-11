@@ -138,7 +138,7 @@ find_package(NetCDF REQUIRED)
   ats_operators
   ats_ecosim_data
   ats_ecosim_relations
-  /global2/packages/software/gcc/12.3.0/lib64/libgfortran.so.5  
+  gfortran
   )
 
   message(STATUS "ats_ecosim_link_libs: ${ats_ecosim_link_libs}") 

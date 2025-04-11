@@ -105,7 +105,7 @@ set(ats_ecosim_data_link_libs
   ${NETCDF_LIB}/libnetcdff.so
   ${NETCDF_LIB}/libnetcdff.so.7
   ${NETCDF_LIB}/libnetcdff.so.7.1.0
-  /global2/packages/software/gcc/12.3.0/lib64/libgfortran.so.5
+  gfortran
 )
 
 message(STATUS "ats_ecosim_data_link_libs: ${ats_ecosim_data_link_libs}")
