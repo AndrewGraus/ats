@@ -19,9 +19,9 @@ class MatricPressureModel {
  public:
   explicit MatricPressureModel(Teuchos::ParameterList& plist);
 
-  double MatricPressure(double phi, double theta, double rho, double cv) const;
+  double MatricPressure(double phi, double theta, double rho, double cv, double sl) const;
 
-  double DMatricPressureDPorosity(double phi, double theta, double rho, double cv) const;
+  double DMatricPressureDPorosity(double phi, double theta, double rho, double cv, double sl) const;
 
  protected:
   void InitializeFromPlist_(Teuchos::ParameterList& plist);

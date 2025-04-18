@@ -41,6 +41,7 @@ class MatricPressureEvaluator : public EvaluatorSecondaryMonotypeCV {
   Key water_content_key_;
   Key mdens_liquid_key_;
   Key cv_key_;
+  Key sl_key_;
 
   Teuchos::RCP<MatricPressureModel> model_;
 

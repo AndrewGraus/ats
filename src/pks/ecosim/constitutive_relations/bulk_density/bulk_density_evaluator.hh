@@ -40,12 +40,6 @@ class BulkDensityEvaluator : public EvaluatorSecondaryMonotypeCV {
  protected:
   Key phi_key_;
   Key nr_key_;
-  Key sl_key_;
-  Key nl_key_;
-  Key si_key_;
-  Key ni_key_;
-  Key sg_key_;
-  Key ng_key_;
 
   Teuchos::RCP<BulkDensityModel> model_;
 

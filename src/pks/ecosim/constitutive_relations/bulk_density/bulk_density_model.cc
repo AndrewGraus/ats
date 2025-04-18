@@ -32,57 +32,21 @@ BulkDensityModel::InitializeFromPlist_(Teuchos::ParameterList& plist)
 
 // main method
 double
-BulkDensityModel::BulkDensity(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const
+BulkDensityModel::BulkDensity(double phi, double nr) const
 {
-  return nr*(1 - phi) + phi*(ng*sg + ni*si + nl*sl);
+  return nr*(1 - phi);
 }
 
 double
-BulkDensityModel::DBulkDensityDPorosity(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const
+BulkDensityModel::DBulkDensityDPorosity(double phi, double nr) const
 {
-  return ng*sg + ni*si + nl*sl - nr;
+  return -1.0*nr;
 }
 
 double
-BulkDensityModel::DBulkDensityDDensityRock(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const
+BulkDensityModel::DBulkDensityDDensityRock(double phi, double nr) const
 {
   return 1 - phi;
-}
-
-double
-BulkDensityModel::DBulkDensityDSaturationLiquid(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const
-{
-  return nl*phi;
-}
-
-double
-BulkDensityModel::DBulkDensityDMolarDensityLiquid(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const
-{
-  return phi*sl;
-}
-
-double
-BulkDensityModel::DBulkDensityDSaturationIce(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const
-{
-  return ni*phi;
-}
-
-double
-BulkDensityModel::DBulkDensityDMolarDensityIce(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const
-{
-  return phi*si;
-}
-
-double
-BulkDensityModel::DBulkDensityDSaturationGas(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const
-{
-  return ng*phi;
-}
-
-double
-BulkDensityModel::DBulkDensityDMolarDensityGas(double phi, double nr, double sl, double nl, double si, double ni, double sg, double ng) const
-{
-  return phi*sg;
 }
 
 } //namespace

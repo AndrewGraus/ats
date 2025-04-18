@@ -65,6 +65,9 @@ MatricPressureEvaluator::InitializeFromPlist_()
   // dependency: cell volume
   cv_key_ = Keys::readKey(plist_, domain_name, "cell volume", "cell_volume");
   dependencies_.insert(KeyTag{ cv_key_, tag});
+
+  sl_key_ = Keys::readKey(plist_, domain_name, "liquid saturation", "saturation_liquid");
+  dependencies_.insert(KeyTag{ sl_key_, tag});
 }
 
 
@@ -77,6 +80,7 @@ MatricPressureEvaluator::Evaluate_(const State& S,
   Teuchos::RCP<const CompositeVector> theta = S.GetPtr<CompositeVector>(water_content_key_, tag);
   Teuchos::RCP<const CompositeVector> rho = S.GetPtr<CompositeVector>(mdens_liquid_key_, tag);
   Teuchos::RCP<const CompositeVector> cv = S.GetPtr<CompositeVector>(cv_key_, tag);
+  Teuchos::RCP<const CompositeVector> sl = S.GetPtr<CompositeVector>(sl_key_, tag);
 
   for (CompositeVector::name_iterator comp=result[0]->begin();
        comp!=result[0]->end(); ++comp) {
@@ -84,11 +88,12 @@ MatricPressureEvaluator::Evaluate_(const State& S,
     const Epetra_MultiVector& theta_v = *theta->ViewComponent(*comp, false);
     const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
     const Epetra_MultiVector& cv_v = *cv->ViewComponent(*comp, false);
+    const Epetra_MultiVector& sl_v = *sl->ViewComponent(*comp, false);
     Epetra_MultiVector& result_v = *result[0]->ViewComponent(*comp,false);
 
     int ncomp = result[0]->size(*comp, false);
     for (int i=0; i!=ncomp; ++i) {
-      result_v[0][i] = model_->MatricPressure(phi_v[0][i], theta_v[0][i], rho_v[0][i], cv_v[0][i]);
+      result_v[0][i] = model_->MatricPressure(phi_v[0][i], theta_v[0][i], rho_v[0][i], cv_v[0][i], sl_v[0][i]);
     }
   }
 }
@@ -103,19 +108,22 @@ MatricPressureEvaluator::EvaluatePartialDerivative_(const State& S,
   Teuchos::RCP<const CompositeVector> theta = S.GetPtr<CompositeVector>(water_content_key_, tag);
   Teuchos::RCP<const CompositeVector> rho = S.GetPtr<CompositeVector>(mdens_liquid_key_, tag);
   Teuchos::RCP<const CompositeVector> cv = S.GetPtr<CompositeVector>(cv_key_, tag);
+  Teuchos::RCP<const CompositeVector> sl = S.GetPtr<CompositeVector>(sl_key_, tag);
 
   if (wrt_key == porosity_key_) {
     for (CompositeVector::name_iterator comp=result[0]->begin();
          comp!=result[0]->end(); ++comp) {
-    const Epetra_MultiVector& phi_v = *phi->ViewComponent(*comp, false);
-    const Epetra_MultiVector& theta_v = *theta->ViewComponent(*comp, false);
-    const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
-    const Epetra_MultiVector& cv_v = *cv->ViewComponent(*comp, false);
+      const Epetra_MultiVector& phi_v = *phi->ViewComponent(*comp, false);
+      const Epetra_MultiVector& theta_v = *theta->ViewComponent(*comp, false);
+      const Epetra_MultiVector& rho_v = *rho->ViewComponent(*comp, false);
+      const Epetra_MultiVector& cv_v = *cv->ViewComponent(*comp, false);
+      const Epetra_MultiVector& sl_v = *sl->ViewComponent(*comp, false);
+
       Epetra_MultiVector& result_v = *result[0]->ViewComponent(*comp,false);
 
       int ncomp = result[0]->size(*comp, false);
       for (int i=0; i!=ncomp; ++i) {
-        result_v[0][i] = model_->DMatricPressureDPorosity(phi_v[0][i], theta_v[0][i], rho_v[0][i], cv_v[0][i]);
+        result_v[0][i] = model_->DMatricPressureDPorosity(phi_v[0][i], theta_v[0][i], rho_v[0][i], cv_v[0][i], sl_v[0][i]);
       }
     }
 
