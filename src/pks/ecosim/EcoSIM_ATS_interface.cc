@@ -777,7 +777,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   MPI_Barrier(MPI_COMM_WORLD);
 
   num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
-  std::cout << "MP: " << matric_pressure << std::endl;
   //Now that the arrays are flat we need to be a little more careful about how we load an unload the data
   /*const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
   for (int column=0; column!=num_columns_local; ++column) {
@@ -842,8 +841,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       props.depth_c.data[column * ncells_per_col_ + i] = (*col_depth_c)[i];
       props.dz.data[column * ncells_per_col_ + i] = (*col_dz)[i];
 
-      Teuchos::OSTab tab = vo_->getOSTab();
-      *vo_->os() << "(Copy loop) i = " << i << " matric pressure = " << (*col_mat_p)[i]  << std::endl;
       if (has_gas) {
         props.gas_saturation.data[column * ncells_per_col_ + i] = (*col_g_sat)[i];
         //state.gas_density.data[column][i] = (*col_g_dens)[i];
