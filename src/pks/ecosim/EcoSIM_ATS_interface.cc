@@ -119,6 +119,11 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     slope_key_ = Keys::readKey(*plist_, domain_surface_, "slope", "slope_magnitude");
     snow_depth_key_ = Keys::readKey(*plist_, domain_surface_, "snow depth", "snow_depth");
 
+    //Plant Phenology Datasets
+    lai_key_ = Keys::readKey(*plist_, domain_surface_, "LAI", "LAI");
+    sai_key_ = Keys::readKey(*plist_, domain_surface_, "SAI", "SAI");
+    v_type_key_ = Keys::readKey(*plist_, domain_surface_, "vegetation type", "vegetation_type");
+
     //Atmospheric abundance keys
     atm_n2_ = plist_->get<double>("atmospheric N2");
     atm_o2_ = plist_->get<double>("atmospheric O2");
@@ -358,7 +363,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(subsurface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(matric_pressure_key_, Tags::DEFAULT).Update(*S_, name_);
 
-  //Surface data from met data
+  //Surface data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -368,6 +373,11 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
+  
+  S_->GetEvaluator(lai_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(sai_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(v_type_key_, Tags::DEFAULT).Update(*S_, name_);
+
   S_->GetEvaluator(surface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(surface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
 
@@ -484,6 +494,18 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
   S_->GetEvaluator("surface-slope_magnitude", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& slope = *S_->Get<CompositeVector>("surface-slope_magnitude", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("surface-LAI", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& LAI = *S_->Get<CompositeVector>("surface-LAI", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("surface-SAI", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& SAI = *S_->Get<CompositeVector>("surface-SAI", tag_next_)
+          .ViewComponent("cell",false);
+
+  S_->GetEvaluator("surface-vegetation_type", tag_next_).Update(*S_, name_);
+  const Epetra_MultiVector& v_type = *S_->Get<CompositeVector>("surface-vegetation_type", tag_next_)
           .ViewComponent("cell",false);
 
   if (has_ice) {
@@ -732,6 +754,10 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& aspect = *(*S_->Get<CompositeVector>(aspect_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key_, water_tag).ViewComponent("cell", false))(0);
 
+  const Epetra_Vector& LAI = *(*S_->Get<CompositeVector>(lai_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& SAI = *(*S_->Get<CompositeVector>(sai_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& vegetation_type = *(*S_->Get<CompositeVector>(v_type_key_, water_tag).ViewComponent("cell", false))(0);
+
   const Epetra_Vector& surface_energy_source = *(*S_->Get<CompositeVector>(surface_energy_source_ecosim_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& subsurface_energy_source = *(*S_->Get<CompositeVector>(subsurface_energy_source_key_, water_tag).ViewComponent("cell", false))(0);
 
@@ -760,6 +786,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   auto col_dz = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_wp = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_rf = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_lai = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_sai = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_v_type = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_)); 
   auto col_ss_energy_source = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_ss_water_source = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_depth_c = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -806,8 +835,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     FieldToColumn_(column,matric_pressure,col_mat_p.ptr());
     FieldToColumn_(column,temp, col_temp.ptr());
     FieldToColumn_(column,thermal_conductivity,col_cond.ptr());
-    FieldToColumn_(column,temp, col_temp.ptr());
-    FieldToColumn_(column,thermal_conductivity,col_cond.ptr());
 
     //MatrixFieldToColumn_(column, tcc, col_tcc.ptr());
 
@@ -840,6 +867,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       props.depth.data[column * ncells_per_col_ + i] = (*col_depth)[i];
       props.depth_c.data[column * ncells_per_col_ + i] = (*col_depth_c)[i];
       props.dz.data[column * ncells_per_col_ + i] = (*col_dz)[i];
+      props.LAI.data[column * ncells_per_col_ + i] = (*col_lai)[i];
+      props.SAI.data[column * ncells_per_col_ + i] = (*col_sai)[i];
+      props.vegetation_type.data[column * ncells_per_col_ + i] = (*col_v_type)[i];
 
       if (has_gas) {
         props.gas_saturation.data[column * ncells_per_col_ + i] = (*col_g_sat)[i];
@@ -867,6 +897,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.elevation.data[column] = elevation[column];
     props.aspect.data[column] = aspect[column];
     props.slope.data[column] = slope[column];
+    props.LAI.data[column] = LAI[column];
+    props.SAI.data[column] = SAI[column];
+    props.vegetation_type.data[column] = vegetation_type[column];
 
     for (int i = 0; i < state.total_component_concentration.columns; i++) {
       for (int j = 0; j < state.total_component_concentration.cells; j++) {

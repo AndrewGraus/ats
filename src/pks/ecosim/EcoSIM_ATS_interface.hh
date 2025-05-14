@@ -218,6 +218,9 @@ class EcoSIM : public PK_Physical_Default {
   Key matric_pressure_key_;
   Key aspect_key_;
   Key slope_key_;
+  Key lai_key_;
+  Key sai_key_;
+  Key v_type_key_;
   Key surface_energy_source_key_;
   Key subsurface_energy_source_key_;
   Key surface_water_source_key_;

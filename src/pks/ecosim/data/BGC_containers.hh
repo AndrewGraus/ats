@@ -140,6 +140,9 @@ extern "C" {
     BGCVectorDouble elevation;
     BGCVectorDouble aspect;
     BGCVectorDouble slope;
+    BGCVectorDouble LAI;
+    BGCVectorDouble SAI;
+    BGCVectorDouble vegetation_type;
     double atm_n2;
     double atm_o2;
     double atm_co2;

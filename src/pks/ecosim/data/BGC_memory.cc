@@ -409,6 +409,9 @@ void AllocateBGCState(const BGCSizes* const sizes,
    AllocateBGCVectorDouble(sizes->num_columns, &(properties->elevation));
    AllocateBGCVectorDouble(sizes->num_columns, &(properties->aspect));
    AllocateBGCVectorDouble(sizes->num_columns, &(properties->slope));
+   AllocateBGCVectorDouble(sizes->num_columns, &(properties->LAI));
+   AllocateBGCVectorDouble(sizes->num_columns, &(properties->SAI));
+   AllocateBGCVectorDouble(sizes->num_columns, &(properties->vegetation_type));
  }  /* end AllocateAlquimiaProperties() */
 
  void FreeBGCProperties(BGCProperties* properties) {
@@ -434,6 +437,9 @@ void AllocateBGCState(const BGCSizes* const sizes,
      FreeBGCVectorDouble(&(properties->elevation));
      FreeBGCVectorDouble(&(properties->aspect));
      FreeBGCVectorDouble(&(properties->slope));
+     FreeBGCVectorDouble(&(properties->LAI));
+     FreeBGCVectorDouble(&(properties->SAI));
+     FreeBGCVectorDouble(&(properties->vegetation_type));
    }
  }
 
