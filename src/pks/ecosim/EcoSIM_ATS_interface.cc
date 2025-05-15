@@ -198,6 +198,11 @@ void EcoSIM::Setup() {
           ->SetGhosted(false)
           ->SetComponent("cell", AmanziMesh::CELL, 1);
   }  
+
+  /*S_->Require<CompositeVector, CompositeVectorSpace>(lai_key_, tag_next_, lai_key_)
+     .SetMesh(mesh_surf_)
+     ->SetGhosted(false)
+     ->SetComponent("cell", AmanziMesh::CELL, 1);*/
   //surface_energy_source_ecosim_key_ 
   //surface_water_source_ecosim_key_
   S_->Require<CompositeVector, CompositeVectorSpace>(surface_energy_source_ecosim_key_ , tag_next_, name_)
@@ -215,6 +220,18 @@ void EcoSIM::Setup() {
 
   S_->RequireEvaluator(sw_key_, tag_next_);
   S_->Require<CompositeVector, CompositeVectorSpace>(sw_key_, tag_next_).SetMesh(mesh_surf_)
+    ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
+
+  S_->RequireEvaluator(lai_key_, tag_next_);
+  S_->Require<CompositeVector, CompositeVectorSpace>(lai_key_, tag_next_).SetMesh(mesh_surf_)
+    ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
+ 
+  S_->RequireEvaluator(sai_key_, tag_next_);
+  S_->Require<CompositeVector, CompositeVectorSpace>(sai_key_, tag_next_).SetMesh(mesh_surf_)
+    ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
+
+  S_->RequireEvaluator(v_type_key_, tag_next_);
+  S_->Require<CompositeVector, CompositeVectorSpace>(v_type_key_, tag_next_).SetMesh(mesh_surf_)
     ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
   //Setup Evaluators
@@ -273,6 +290,9 @@ void EcoSIM::Initialize() {
   }
   S_->GetW<CompositeVector>(snow_depth_key_, Tags::DEFAULT, "surface-snow_depth").PutScalar(0.0);
   S_->GetRecordW(snow_depth_key_, Tags::DEFAULT, "surface-snow_depth").set_initialized();
+
+  //S_->GetW<CompositeVector>(lai_key_, Tags::DEFAULT, "surface-LAI").PutScalar(0.0);
+  //S_->GetRecordW(lai_key_, Tags::DEFAULT, "surface-LAI").set_initialized();
   //surface_energy_source_ecosim_key_ 
   //surface_water_source_ecosim_key_
   
@@ -497,16 +517,16 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
           .ViewComponent("cell",false);
 
   S_->GetEvaluator("surface-LAI", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& LAI = *S_->Get<CompositeVector>("surface-LAI", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& LAI = *(*S_->Get<CompositeVector>("surface-LAI", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("surface-SAI", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& SAI = *S_->Get<CompositeVector>("surface-SAI", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& SAI = *(*S_->Get<CompositeVector>("surface-SAI", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("surface-vegetation_type", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& v_type = *S_->Get<CompositeVector>("surface-vegetation_type", tag_next_)
-          .ViewComponent("cell",false);
+  const Epetra_MultiVector& vegetation_type = *(*S_->Get<CompositeVector>("surface-vegetation_type", tag_next_)
+          .ViewComponent("cell",false))(0);
 
   if (has_ice) {
     S_->GetEvaluator("mass_density_ice", tag_next_).Update(*S_, name_);
@@ -867,9 +887,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       props.depth.data[column * ncells_per_col_ + i] = (*col_depth)[i];
       props.depth_c.data[column * ncells_per_col_ + i] = (*col_depth_c)[i];
       props.dz.data[column * ncells_per_col_ + i] = (*col_dz)[i];
-      props.LAI.data[column * ncells_per_col_ + i] = (*col_lai)[i];
-      props.SAI.data[column * ncells_per_col_ + i] = (*col_sai)[i];
-      props.vegetation_type.data[column * ncells_per_col_ + i] = (*col_v_type)[i];
 
       if (has_gas) {
         props.gas_saturation.data[column * ncells_per_col_ + i] = (*col_g_sat)[i];
@@ -923,10 +940,11 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   props.wilting_point = pressure_at_wilting_point;
 
   Teuchos::OSTab tab = vo_->getOSTab();
-  *vo_->os() << "(CopyToEcoSIM) hydraulic conductivity = " << state.hydraulic_conductivity.data[1]  << std::endl;
-  *vo_->os() << "(CopyToEcoSIM) bulk density = " << state.bulk_density.data[1]  << std::endl;
-  *vo_->os() << "(CopyToEcoSIM) matric pressure = " << state.matric_pressure.data[1]  << std::endl;
+  *vo_->os() << "(CopyToEcoSIM) LAI = " << props.LAI.data[1]  << std::endl;
+  *vo_->os() << "(CopyToEcoSIM) SAI = " << props.SAI.data[1]  << std::endl;
+  *vo_->os() << "(CopyToEcoSIM) VEG = " << props.vegetation_type.data[1]  << std::endl;
   *vo_->os() << "(CopyToEcoSIM) precipitation = " << props.precipitation.data[1] << " m/s" << std::endl;   
+
 
   /*for (int column=0; column!=num_columns_local; ++column) {
   	*vo_->os() << "for column: " << column << std::endl;
