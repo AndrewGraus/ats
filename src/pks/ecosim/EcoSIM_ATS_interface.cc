@@ -1027,6 +1027,11 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   double snow_depth_cell = state.snow_depth.data[0];
 
   for (int col=0; col!=num_columns_local; ++col) {
+    for (int i=0; i < ncells_per_col_; ++i) {
+      (*col_ss_water_source)[i] = state.subsurface_water_source.data[column * ncells_per_col_ + i];
+      (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[column * ncells_per_col_ + i];
+    }
+
     surface_energy_source[col] = state.surface_energy_source.data[col]/(3600.0);
     surface_water_source[col] = state.surface_water_source.data[col]/(3600.0);
     snow_depth[0][col] = state.snow_depth.data[col];
@@ -1035,23 +1040,18 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   Teuchos::OSTab tab = vo_->getOSTab();
   *vo_->os() << "(CopyFromEcoSIM) Q_w = " << surface_water_source[1] << " m/s " << "snow_depth = " << snow_depth[0][1] << std::endl;
 
-  /*auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
+  //auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
+  
   for (int column = 0; column != num_columns_local; ++column) {
-    for (int i = 0; i < ncells_per_col_; ++i) {
-        (*col_temp)[i] = state.temperature.data[column * ncells_per_col_ + i];
+    for (int i=0; i < ncells_per_col_; ++i) {
+      (*col_ss_water_source)[i]/(3600.0) = state.subsurface_water_source.data[column * ncells_per_col_ + i];
+      (*col_ss_energy_source)[i]/(3600.0) = state.subsurface_energy_source.data[column * ncells_per_col_ + i];
     }
 
-    ColumnToField_(column, temp, col_temp.ptr());
-  }*/
+    ColumnToField_(column, subsurface_water_source, col_ss_water_source.ptr());
+    ColumnToField_(column, subsurface_energy_source, col_ss_energy_source.ptr());
+  }
     
-
-    //ColumnToField_(column,liquid_saturation,col_l_sat.ptr());
-    //ColumnToField_(column,water_content,col_wc.ptr());
-    //ColumnToField_(column,relative_permeability,col_relative_permeability.ptr());
-    //ColumnToField_(column,hydraulic_conductivity,col_h_cond.ptr());
-    //ColumnToField_(column,bulk_density,col_b_dens.ptr());
-    //ColumnToField_(column,plant_wilting_factor,col_wp.ptr());
-    //ColumnToField_(column,rooting_depth_fraction,col_rf.ptr());
 }
 
 /*
