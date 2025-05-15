@@ -1044,8 +1044,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   
   for (int column = 0; column != num_columns_local; ++column) {
     for (int i=0; i < ncells_per_col_; ++i) {
-      (*col_ss_water_source)[i]/(3600.0) = state.subsurface_water_source.data[column * ncells_per_col_ + i];
-      (*col_ss_energy_source)[i]/(3600.0) = state.subsurface_energy_source.data[column * ncells_per_col_ + i];
+      (*col_ss_water_source)[i] = state.subsurface_water_source.data[column * ncells_per_col_ + i]*3600.0;
+      (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[column * ncells_per_col_ + i]*3600.0;
     }
 
     ColumnToField_(column, subsurface_water_source, col_ss_water_source.ptr());
