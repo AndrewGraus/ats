@@ -213,6 +213,7 @@ class EcoSIM : public PK_Physical_Default {
   Key wind_speed_key_;
   Key p_rain_key_;
   Key p_snow_key_;
+  Key p_total_key;
   Key f_wp_key_;
   Key f_root_key_;
   Key matric_pressure_key_;
@@ -244,7 +245,7 @@ class EcoSIM : public PK_Physical_Default {
   Teuchos::RCP<Epetra_SerialDenseVector> column_wc_save;
 
   bool bgc_initialized_;
-  bool has_energy, has_gas, has_ice;
+  bool has_energy, has_gas, has_ice, p_bool;
   std::vector<std::string> component_names_;
   int num_components;
 

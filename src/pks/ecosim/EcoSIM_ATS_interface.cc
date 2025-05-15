@@ -114,6 +114,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     vp_air_key_ = Keys::readKey(*plist_, domain_surface_, "vapor pressure air", "vapor_pressure_air");
     wind_speed_key_ = Keys::readKey(*plist_, domain_surface_, "wind speed", "wind_speed");
     p_rain_key_ = Keys::readKey(*plist_, domain_surface_, "precipitation rain", "precipitation_rain");
+    p_snow_key_ = Keys::readKey(*plist_, domain_surface_, "precipitation snow", "precipitation_snow");
+    p_total_key_ = Keys::readKey(*plist_, domain_surface_, "precipitation total", "precipitation_total");
     elev_key_ = Keys::readKey(*plist_, domain_surface_, "elevation", "elevation");
     aspect_key_ = Keys::readKey(*plist_, domain_surface_, "aspect", "aspect");
     slope_key_ = Keys::readKey(*plist_, domain_surface_, "slope", "slope_magnitude");
@@ -278,16 +280,24 @@ void EcoSIM::Initialize() {
   int ierr = 0;
 
   if (S_->HasRecord(ice_density_key_, Tags::DEFAULT)) {
-    Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "found ice key" << std::endl;
+    //Teuchos::OSTab tab = vo_->getOSTab();
+    //*vo_->os() << "found ice key" << std::endl;
     S_->GetEvaluator(saturation_ice_key_, Tags::DEFAULT).Update(*S_, name_);
     S_->GetEvaluator(ice_density_key_, Tags::DEFAULT).Update(*S_, name_);
     has_ice = true;
   } else {
     Teuchos::OSTab tab = vo_->getOSTab();
-    *vo_->os() << "Did not find ice key" << std::endl;
+    //*vo_->os() << "Did not find ice key" << std::endl;
     has_ice = false;
   }
+
+  //Check for total precipitation and set the record if it's there
+  if (S_HasRecord(p_total_key_, Tags::DEFAULT)) {
+    S_->GetW<CompositeVector>(p_total_key_, Tags::DEFAULT, "surface-precipitation_total").PutScalar(0.0);
+    S_->GetRecordW(p_total_key_, Tags::DEFAULT, "surface-precipitation_total").set_initialized();
+    p_bool = true; //Use precipitation total instead of snow/rain
+  }
+
   S_->GetW<CompositeVector>(snow_depth_key_, Tags::DEFAULT, "surface-snow_depth").PutScalar(0.0);
   S_->GetRecordW(snow_depth_key_, Tags::DEFAULT, "surface-snow_depth").set_initialized();
 
@@ -389,7 +399,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(p_rain_key_, Tags::DEFAULT).Update(*S_, name_);
+
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -397,6 +407,13 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(lai_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(sai_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(v_type_key_, Tags::DEFAULT).Update(*S_, name_);
+
+  if (p_bool){
+    S_->GetEvaluator(p_total_key_, Tags::DEFAULT).Update(*S_, name_);
+  } else {
+    S_->GetEvaluator(p_rain_key_, Tags::DEFAULT).Update(*S_, name_);
+    S_->GetEvaluator(p_snow_key_, Tags::DEFAULT).Update(*S_, name_);
+  }
 
   S_->GetEvaluator(surface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(surface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -457,19 +474,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& cell_volume = *(*S_->Get<CompositeVector>("cell_volume", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  /*S_->GetEvaluator("plant_wilting_factor", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& plant_wilting_factor = *(*S_->Get<CompositeVector>("plant_wilting_factor", tag_next_)
-          .ViewComponent("cell",false))(0);
-
-  S_->GetEvaluator("rooting_depth_fraction", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& rooting_depth_fraction = *(*S_->Get<CompositeVector>("rooting_depth_fraction", tag_next_)
-          .ViewComponent("cell",false))(0);*/
-
   if (has_gas) {
-    //S_->GetEvaluator("mass_density_gas", tag_next_).Update(*S_, name_);
-    //const Epetra_MultiVector& gas_density = *(*S_->Get<CompositeVector>("mass_density_gas", tag_next_)
-    //        .ViewComponent("cell",false))(0);
-
     S_->GetEvaluator("saturation_gas", tag_next_).Update(*S_, name_);
     const Epetra_MultiVector& gas_saturation = *(*S_->Get<CompositeVector>("saturation_gas", tag_next_)
             .ViewComponent("cell",false))(0);
@@ -496,13 +501,18 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& v_wind = *(*S_->Get<CompositeVector>("surface-wind_speed", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("surface-precipitation_rain", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& p_rain = *(*S_->Get<CompositeVector>("surface-precipitation_rain", tag_next_)
+  if(p_bool){
+    S_->GetEvaluator("surface-precipitation_total", tag_next_).Update(*S_, name_);
+    const Epetra_MultiVector& p_tot = *(*S_->Get<CompositeVector>("surface-precipitation_total", tag_next_)
           .ViewComponent("cell",false))(0);
-
-  //S_->GetEvaluator("surface-precipitation_snow", tag_next_).Update(*S_, name_);
-  //const Epetra_MultiVector& p_snow = *(*S_->Get<CompositeVector>("surface-precipitation_snow", tag_next_)
-  //        .ViewComponent("cell",false))(0);
+  } else {
+    S_->GetEvaluator("surface-precipitation_rain", tag_next_).Update(*S_, name_);
+    const Epetra_MultiVector& p_rain = *(*S_->Get<CompositeVector>("surface-precipitation_rain", tag_next_)
+          .ViewComponent("cell",false))(0);
+    S_->GetEvaluator("surface-precipitation_snow", tag_next_).Update(*S_, name_);
+    const Epetra_MultiVector& p_snow = *(*S_->Get<CompositeVector>("surface-precipitation_snow", tag_next_)
+          .ViewComponent("cell",false))(0);
+  } 
 
   S_->GetEvaluator("surface-elevation", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("surface-elevation", tag_next_)
@@ -550,6 +560,8 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   num_columns_global = mesh_surf_->getMap(AmanziMesh::Entity_kind::CELL,false).NumGlobalElements();
   num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
   num_columns_global_ptype = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::ALL);
+
+  *vo_->os() << "Before Advance, p_rain: " << p_rain[1] << " m/s, p_snow: " << p_snow << "m SWE/s, water_content: " << water_content[1][1] << " mol" << std::endl;
 
   //Trying to loop over processors now:
   int numProcesses, p_rank;
@@ -769,8 +781,14 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& air_temperature = *(*S_->Get<CompositeVector>(air_temp_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& vapor_pressure_air = *(*S_->Get<CompositeVector>(vp_air_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& wind_speed= *(*S_->Get<CompositeVector>(wind_speed_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& precipitation = *(*S_->Get<CompositeVector>(p_rain_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& elevation = *(*S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false))(0);
+
+  if(p_bool){
+    const Epetra_Vector& precipitation = *(*S_->Get<CompositeVector>(p_total_key_, water_tag).ViewComponent("cell", false))(0);
+  } else {
+    const Epetra_Vector& precipitation = *(*S_->Get<CompositeVector>(p_rain_key_, water_tag).ViewComponent("cell", false))(0);
+    const Epetra_Vector& precipitation_snow = *(*S_->Get<CompositeVector>(p_snow_key_, water_tag).ViewComponent("cell", false))(0);
+  } 
+    const Epetra_Vector& elevation = *(*S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& aspect = *(*S_->Get<CompositeVector>(aspect_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key_, water_tag).ViewComponent("cell", false))(0);
 
@@ -911,6 +929,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.vapor_pressure_air.data[column] = vapor_pressure_air[column];
     props.wind_speed.data[column] = wind_speed[column];
     props.precipitation.data[column] = precipitation[column];
+    props.precipitation_snow.data[column] = precipitation_snow[column];
     props.elevation.data[column] = elevation[column];
     props.aspect.data[column] = aspect[column];
     props.slope.data[column] = slope[column];
@@ -938,12 +957,13 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   props.heat_capacity = c_m_;
   props.field_capacity = pressure_at_field_capacity;
   props.wilting_point = pressure_at_wilting_point;
+  props.p_bool = p_bool;
 
-  Teuchos::OSTab tab = vo_->getOSTab();
-  *vo_->os() << "(CopyToEcoSIM) LAI = " << props.LAI.data[1]  << std::endl;
-  *vo_->os() << "(CopyToEcoSIM) SAI = " << props.SAI.data[1]  << std::endl;
-  *vo_->os() << "(CopyToEcoSIM) VEG = " << props.vegetation_type.data[1]  << std::endl;
-  *vo_->os() << "(CopyToEcoSIM) precipitation = " << props.precipitation.data[1] << " m/s" << std::endl;   
+  //Teuchos::OSTab tab = vo_->getOSTab();
+  //*vo_->os() << "(CopyToEcoSIM) LAI = " << props.LAI.data[1]  << std::endl;
+  //*vo_->os() << "(CopyToEcoSIM) SAI = " << props.SAI.data[1]  << std::endl;
+  //*vo_->os() << "(CopyToEcoSIM) VEG = " << props.vegetation_type.data[1]  << std::endl;
+  //*vo_->os() << "(CopyToEcoSIM) precipitation = " << props.precipitation.data[1] << " m/s" << std::endl;   
 
 
   /*for (int column=0; column!=num_columns_local; ++column) {

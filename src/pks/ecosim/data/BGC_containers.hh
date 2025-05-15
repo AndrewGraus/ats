@@ -153,6 +153,7 @@ extern "C" {
     double heat_capacity;
     double field_capacity;
     double wilting_point;
+    bool p_bool;
   } BGCProperties;
 
   /*
