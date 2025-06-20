@@ -213,7 +213,7 @@ class EcoSIM : public PK_Physical_Default {
   Key wind_speed_key_;
   Key p_rain_key_;
   Key p_snow_key_;
-  Key p_total_key;
+  Key p_total_key_;
   Key f_wp_key_;
   Key f_root_key_;
   Key matric_pressure_key_;
