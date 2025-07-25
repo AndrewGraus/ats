@@ -57,6 +57,7 @@ include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SurfPhys/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SnowPhys/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/PhysData/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Ecosim_mods/)
+include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Prescribed_pheno/)
 
 set(ats_ecosim_data_src_files
     BGC_constants.cc

@@ -70,6 +70,7 @@ if(ENABLE_ECOSIM)
   include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/PhysData/)
   include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SnowPhys/)
   include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Ecosim_mods/)
+  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Prescribed_pheno/)
 
 
   include_directories(${ECOSIM_INCLUDE_DIRS})
