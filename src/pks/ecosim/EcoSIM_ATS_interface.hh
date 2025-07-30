@@ -182,6 +182,7 @@ class EcoSIM : public PK_Physical_Default {
   int num_columns_local;
   int num_columns_global;
   int num_columns_global_ptype;
+  int day0_, year0_, curr_day_, curr_year_;
   double saved_time_;
   double current_time_;
   double t_ecosim = 0.0;

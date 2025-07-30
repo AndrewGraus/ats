@@ -115,6 +115,7 @@ extern "C" {
     BGCVectorDouble surface_energy_source;
     BGCVectorDouble surface_water_source;
     BGCVectorDouble snow_depth;
+    BGCVectorDouble canopy_height;
     BGCTensorDouble total_component_concentration;
   } BGCState;
 
@@ -153,6 +154,8 @@ extern "C" {
     double heat_capacity;
     double field_capacity;
     double wilting_point;
+    int current_day;
+    int current_year;
     bool p_bool;
   } BGCProperties;
 

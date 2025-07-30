@@ -145,6 +145,11 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
 
     dt_ = plist_->get<double>("initial time step");
     c_m_ = plist_->get<double>("heat capacity [MJ mol^-1 K^-1]");
+    day0_ = plist_->get<int>("Starting day of year [0-364]");
+    year0_ = plist_->get<int>("Starting year");
+
+    curr_day_ = day0_;
+    curr_year_ = year0_;
 
     //This initialized the engine (found in BGCEngine.cc) This is the code that
     //actually points to the driver
@@ -394,19 +399,13 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   double dt = t_new - t_old;
   current_time_ = saved_time_ + dt;
 
-  // If we are given a dt that is less than the one we wanted, we don't record it.
-  // This is in alquimia but I'm not quite sure why
-  //if (dt < dt_next_) {
-  //  dt_prev_ = dt_next_;
-  //} else {
-  //  dt_prev_ = dt;
-  //}
 
   Teuchos::OSTab out = vo_->getOSTab();
   if (vo_->os_OK(Teuchos::VERB_HIGH))
     *vo_->os() << "----------------------------------------------------------------" << std::endl
                << "Advancing: t0 = " << S_->get_time(tag_current_)
                << " t1 = " << S_->get_time(tag_next_) << " h = " << dt << std::endl
+               << "Current day: " << curr_day_ << "Current year: " << curr_year_ << std::endl
                << "----------------------------------------------------------------" << std::endl;
 
   
@@ -612,6 +611,13 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
       AdvanceSingleProcess(dt, p_rank);
     }
+  }
+  // PLACE TIME AND YEAR ITERATOR HERE 
+  if (curr_day_ != 364) {
+    curr_day_ = curr_day_ + 1;
+  } else {
+    curr_day_ = 0;
+    curr_year_ = curr_year_ + 1;
   }
 
 }
@@ -1242,24 +1248,35 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
   int num_columns = 1;
 
   num_columns = num_columns_local;
+  
+  // Time tracking variables
+  current_time_ = S_->get_time();        //Current time
+  static double last_ecosim_time = 0.0;   
+  int total_days = static_cast<int>(current_time_ / 86400.0);
+  int current_day = (day0_ + total_days) % 365;
+  int current_year = year0_ + ((day0_ + total_days)/365);
+  
+  bgc_props_.current_day = current_day;
+  bgc_props_.current_year = current_year;
 
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (t_ecosim <= 3600.0) {
-  	*vo_->os() << "t_ecosim: " << t_ecosim << ", dt: " << dt << std::endl;
-	t_ecosim = t_ecosim + dt;
-  } else {
-        *vo_->os() << "It has been an hour, running EcoSIM Advance: " << std::endl;
+ 
+  std::cout << "in ASP" << std::endl;
+  std::cout << "t = " << current_time_ << " t_last = " << last_ecosim_time << std::endl;
 
-	CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+  if (current_time_ - last_ecosim_time >= 3600.0) {
+    *vo_->os() << "Hour completed at total_time: " << current_time_
+               << ", Year: " << current_year << ", Day: " << current_day << std::endl;
+    *vo_->os() << "Running EcoSIM Advance: " << std::endl;
 
-	bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
-                                         bgc_sizes_, num_iterations, num_columns);
+	  CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+
+	  bgc_engine_->Advance(dt, bgc_props_, bgc_state_, bgc_sizes_, num_iterations, num_columns);
   
-        CopyFromEcoSIM_process(proc,
-                            bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+    CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-	t_ecosim = 0.0;
-  }	  
+	  last_ecosim_time = current_time_;
+  }
 
   //bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
   //                                       bgc_sizes_, num_iterations, num_columns);

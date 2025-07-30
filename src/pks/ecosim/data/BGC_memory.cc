@@ -327,6 +327,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
    AllocateBGCVectorDouble(sizes->num_columns, &(state->surface_water_source));
    AllocateBGCVectorDouble(sizes->num_columns, &(state->surface_energy_source));
    AllocateBGCVectorDouble(sizes->num_columns, &(state->snow_depth));
+   AllocateBGCVectorDouble(sizes->num_columns, &(state->canopy_height));
    AllocateBGCTensorDouble(sizes->ncells_per_col_, sizes->num_columns, sizes->num_components, &(state->total_component_concentration));
    //ALQUIMIA_ASSERT(state->total_mobile.data != NULL);
  }  /* end AllocateBGCState() */
@@ -347,6 +348,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
      FreeBGCVectorDouble(&(state->surface_energy_source));
      FreeBGCVectorDouble(&(state->surface_water_source));
      FreeBGCVectorDouble(&(state->snow_depth));
+     FreeBGCVectorDouble(&(state->canopy_height));
      FreeBGCTensorDouble(&(state->total_component_concentration));
    }
  }  /* end FreeAlquimiaState() */
