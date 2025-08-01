@@ -71,6 +71,7 @@ set(ats_ecosim_data_src_files
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/SharedDataMod.F90
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/c_f_interface_module.F90
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/ATSEcoSIMAdvanceMod.F90
+    ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/ATSUtilsMod.F90
 )
 
 set(ats_ecosim_data_inc_files
