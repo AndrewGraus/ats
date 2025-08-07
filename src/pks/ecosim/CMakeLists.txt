@@ -3,96 +3,97 @@
 #so we put everything in an if statement
 
 if(ENABLE_ECOSIM)
-  add_subdirectory(constitutive_relations)
-  add_subdirectory(data)
+    add_subdirectory(constitutive_relations)
+    add_subdirectory(data)
 
-  get_property(AMANZI_TPLS_DIR GLOBAL PROPERTY AMANZI_TPLS_DIR)
+    get_property(AMANZI_TPLS_DIR GLOBAL PROPERTY AMANZI_TPLS_DIR)
 
-  #set(ECOSIM_INSTALL_PREFIX "/global2/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim")
-  #set(ECOSIM_LIB_LOCATION "/global2/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/local/lib")
-  #set(ECOSIM_CMAKE_BINARY_DIR "/global2/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release")
-  #set(NETCDF_LIB "/global2/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/lib")
+    #set(ECOSIM_INSTALL_PREFIX "/global2/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim")
+    #set(ECOSIM_LIB_LOCATION "/global2/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/local/lib")
+    #set(ECOSIM_CMAKE_BINARY_DIR "/global2/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release")
+    #set(NETCDF_LIB "/global2/agraus/code/ats_dev_dir/amanzi_tpls-install-master-Debug/lib")
 
-  set(ECOSIM_INSTALL_PREFIX ${ECOSIM_DIR}/ecosim)
-  set(ECOSIM_LIB_LOCATION ${ECOSIM_DIR}/ecosim/local/lib)
-  set(ECOSIM_BUILD_PREFIX ${ECOSIM_DIR}/ecosim/build)
-  #set(ECOSIM_CMAKE_BINARY_DIR ${ECOSIM_DIR}/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release)
-  set(NETCDF_LIB ${ECOSIM_DIR}/lib)
+    set(ECOSIM_INSTALL_PREFIX ${ECOSIM_DIR}/ecosim)
+    set(ECOSIM_LIB_LOCATION ${ECOSIM_DIR}/ecosim/local/lib)
+    set(ECOSIM_BUILD_PREFIX ${ECOSIM_DIR}/ecosim/build)
+    #set(ECOSIM_CMAKE_BINARY_DIR ${ECOSIM_DIR}/ecosim/build/Linux-x86_64-static-not-set-mpicc-Release)
+    set(NETCDF_LIB ${ECOSIM_DIR}/lib)
 
-  message("In ATS-EcoSIM CMakeLists:")
-  message("ECOSIM_DIR:" ${ECOSIM_DIR})
-  message("ECOSIM_INSTALL_PREFIX:" ${ECOSIM_INSTALL_PREFIX})
-  message("ECOSIM_LIB_LOCATION:" ${ECOSIM_LIB_LOCATION})
-  message("ECOSIM_BUILD_PREFIX:" ${ECOSIM_BUILD_PREFIX})
+    message("In ATS-EcoSIM CMakeLists:")
+    message("ECOSIM_DIR:" ${ECOSIM_DIR})
+    message("ECOSIM_INSTALL_PREFIX:" ${ECOSIM_INSTALL_PREFIX})
+    message("ECOSIM_LIB_LOCATION:" ${ECOSIM_LIB_LOCATION})
+    message("ECOSIM_BUILD_PREFIX:" ${ECOSIM_BUILD_PREFIX})
 
-  include_directories(${ATS_SOURCE_DIR}/src/pks)
-  include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim)
-  include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/data)
-  include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/bulk_density)
-  include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/hydraulic_conductivity)
-  include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/matric_pressure)
-  
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/ATSUtils/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/utils/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/minimath/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/modelconfig/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/mesh/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/modelpars/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_datatype/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SoilPhys/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SurfPhys/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/PhysData/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/balances/)
-  #include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_mods/)
+    include_directories(${ATS_SOURCE_DIR}/src/pks)
+    include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim)
+    include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/data)
+    include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/bulk_density)
+    include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/hydraulic_conductivity)
+    include_directories(${ATS_SOURCE_DIR}/src/pks/ecosim/constitutive_relations/matric_pressure)
 
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/utils/)
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/minimath/)
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/modelconfig/)
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/mesh/)
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/modelpars/)
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/balances/)
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_datatype/)
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SoilPhys/)
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SurfPhys/)
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/PhysData/)
-  #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_mods/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/ATSUtils/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/utils/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/minimath/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/modelconfig/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/mesh/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/modelpars/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_datatype/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SoilPhys/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/SurfPhys/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/HydroTherm/PhysData/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/balances/)
+    #include_directories(${TPL_INSTALL_PREFIX}/f90src/ecosim_mods/)
 
-  message("At include_directories")
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Utils/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Minimath/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Modelconfig/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Mesh/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Modelpars/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Balances/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Ecosim_datatype/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SoilPhys/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SurfPhys/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/PhysData/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SnowPhys/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Ecosim_mods/)
-  include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Prescribed_pheno/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/utils/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/minimath/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/modelconfig/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/mesh/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/modelpars/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/balances/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_datatype/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SoilPhys/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/SurfPhys/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/HydroTherm/PhysData/)
+    #include_directories(${ECOSIM_CMAKE_BINARY_DIR}/f90src/ecosim_mods/)
 
+    message("At include_directories")
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Utils/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Minimath/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Modelconfig/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Mesh/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Modelpars/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Balances/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Ecosim_datatype/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SoilPhys/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SurfPhys/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/PhysData/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SnowPhys/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Ecosim_mods/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Prescribed_pheno/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Plant_bgc/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/APIs/)
 
-  include_directories(${ECOSIM_INCLUDE_DIRS})
-  
-  message("EcoSIM inc dirs: ")
-  message(eco_inc_file="${ECOSIM_INCLUDE_DIRS}")
+    include_directories(${ECOSIM_INCLUDE_DIRS})
 
-  # ATS EcoSIM pk
-  # For adding F90 files add the F90 file to the ecosim source files and
-  # inc files. The inc file also needs a header
+    message("EcoSIM inc dirs: ")
+    message(eco_inc_file="${ECOSIM_INCLUDE_DIRS}")
 
-  #set(ats_ecosim_src_files
-  #    EcoSIM_ATS_interface.cc
-  #    BGCEngine.cc
-  #    ecosim_wrappers.F90
-  #    data/bgc_fortran_memory_mod.F90
-  #)
+    # ATS EcoSIM pk
+    # For adding F90 files add the F90 file to the ecosim source files and
+    # inc files. The inc file also needs a header
 
-  #testing using link libs:
-  #file(GLOB ECOLIBS ${ECOSIM_LIB_LOCATION}/*.a)
+    #set(ats_ecosim_src_files
+    #    EcoSIM_ATS_interface.cc
+    #    BGCEngine.cc
+    #    ecosim_wrappers.F90
+    #    data/bgc_fortran_memory_mod.F90
+    #)
 
-  set(ats_ecosim_src_files
+    #testing using link libs:
+    #file(GLOB ECOLIBS ${ECOSIM_LIB_LOCATION}/*.a)
+
+    set(ats_ecosim_src_files
     EcoSIM_ATS_interface.cc
     BGCEngine.cc
     ecosim_wrappers.F90
@@ -106,21 +107,21 @@ if(ENABLE_ECOSIM)
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/c_f_interface_module.F90
     )
 
-  set(ats_ecosim_inc_files
+    set(ats_ecosim_inc_files
     ecosim_mod_test_wrapper.h
     EcoSIM_ATS_interface.hh
     BGCEngine.hh
     ecosim_interface.h
   )
 
-  file(GLOB ECOSIM_LIBRARIES
+    file(GLOB ECOSIM_LIBRARIES
   ${ECOSIM_LIB_LOCATION}/*.a
   )
-  
-  
-find_package(NetCDF REQUIRED)
 
-  set(ats_ecosim_link_libs
+
+    find_package(NetCDF REQUIRED)
+
+    set(ats_ecosim_link_libs
   ${Teuchos_LIBRARIES}
   ${Epetra_LIBRARIES}
   ${ECOSIM_LIBRARIES}
@@ -143,24 +144,24 @@ find_package(NetCDF REQUIRED)
   gfortran
   )
 
-  message(STATUS "ats_ecosim_link_libs: ${ats_ecosim_link_libs}") 
+    message(STATUS "ats_ecosim_link_libs: ${ats_ecosim_link_libs}")
 
-  message(inc_files="${ats_ecosim_inc_files}")
+    message(inc_files="${ats_ecosim_inc_files}")
 
-  add_amanzi_library(ats_ecosim
+    add_amanzi_library(ats_ecosim
                     SOURCE ${ats_ecosim_src_files}
                     HEADERS ${ats_ecosim_inc_files}
         LINK_LIBS ${ats_ecosim_link_libs})
 
-  #================================================
-  # register evaluators/factories/pks
+    #================================================
+    # register evaluators/factories/pks
 
-  register_evaluator_with_factory(
+    register_evaluator_with_factory(
   HEADERFILE EcoSIM_ATS_interface_reg.hh
   LISTNAME ATS_ECOSIM_REG
   )
 
-  generate_evaluators_registration_header(
+    generate_evaluators_registration_header(
   HEADERFILE ats_ecosim_registration.hh
   LISTNAME   ATS_ECOSIM_REG
   INSTALL    True

@@ -58,6 +58,8 @@ include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/SnowPhys/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/HydroTherm/PhysData/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Ecosim_mods/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Prescribed_pheno/)
+include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Plant_bgc/)
+include_directories(${ECOSIM_BUILD_PREFIX}/f90src/APIs/)
 
 set(ats_ecosim_data_src_files
     BGC_constants.cc
@@ -102,8 +104,8 @@ set(ats_ecosim_data_link_libs
   ats_pks
   ats_eos
   ats_operators
-  ${NETCDF_LIB}/libnetcdf.so  
-  ${NETCDF_LIB}/libnetcdf.so.19	
+  ${NETCDF_LIB}/libnetcdf.so
+  ${NETCDF_LIB}/libnetcdf.so.19
   ${NETCDF_LIB}/libnetcdff.so
   ${NETCDF_LIB}/libnetcdff.so.7
   ${NETCDF_LIB}/libnetcdff.so.7.1.0
@@ -116,7 +118,7 @@ message(STATUS "ats_ecosim_data_link_libs: ${ats_ecosim_data_link_libs}")
 add_amanzi_library(ats_ecosim_data
                    SOURCE ${ats_ecosim_data_src_files}
                    HEADERS ${ats_ecosim_data_inc_files}
-		   LINK_LIBS ${ats_ecosim_data_link_libs})
+     LINK_LIBS ${ats_ecosim_data_link_libs})
 
 generate_evaluators_registration_header(
     HEADERFILE ats_ecosim_data_registration.hh
