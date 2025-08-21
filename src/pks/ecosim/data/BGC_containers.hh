@@ -144,6 +144,7 @@ extern "C" {
     BGCVectorDouble LAI;
     BGCVectorDouble SAI;
     BGCVectorDouble vegetation_type;
+    BGCVectorDouble snow_albedo;
     double atm_n2;
     double atm_o2;
     double atm_co2;

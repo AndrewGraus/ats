@@ -232,6 +232,7 @@ class EcoSIM : public PK_Physical_Default {
   Key subsurface_energy_source_ecosim_key_;
   Key subsurface_water_source_ecosim_key_;
   Key snow_depth_key_;
+  Key snow_albedo_key_;
 
   Teuchos::RCP<BGCEngine> bgc_engine_;
 

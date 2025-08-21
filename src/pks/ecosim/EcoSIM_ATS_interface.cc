@@ -125,6 +125,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     aspect_key_ = Keys::readKey(*plist_, domain_surface_, "aspect", "aspect");
     slope_key_ = Keys::readKey(*plist_, domain_surface_, "slope", "slope_magnitude");
     snow_depth_key_ = Keys::readKey(*plist_, domain_surface_, "snow depth", "snow_depth");
+    snow_albedo_key_ = Keys::readKey(*plist_, domain_surface_, "snow_albedo", "snow_albedo");
 
     //Plant Phenology Datasets
     lai_key_ = Keys::readKey(*plist_, domain_surface_, "LAI", "LAI");
@@ -235,6 +236,9 @@ void EcoSIM::Setup() {
 
   //May need to setup surface evaluators as they are now owned by surface_balance PK insteady of surface energy??
   //
+  S_->RequireEvaluator(snow_albedo_key_, tag_next_);
+  S_->Require<CompositeVector, CompositeVectorSpace>(snow_albedo_key_, tag_next_).SetMesh(mesh_surf_)
+	        ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
   S_->RequireEvaluator(sw_key_, tag_next_);
   S_->Require<CompositeVector, CompositeVectorSpace>(sw_key_, tag_next_).SetMesh(mesh_surf_)
@@ -435,7 +439,8 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(elev_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
-  
+  S_->GetEvaluator(snow_albedo_key_, Tags::DEFAULT).Update(*S_, name_);
+
   S_->GetEvaluator(lai_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(sai_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(v_type_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -841,7 +846,8 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     const Epetra_Vector& elevation = *(*S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& aspect = *(*S_->Get<CompositeVector>(aspect_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key_, water_tag).ViewComponent("cell", false))(0);
-
+  const Epetra_Vector& snow_albedo = *(*S_->Get<CompositeVector>(snow_albedo_key_, water_tag).ViewComponent("cell", false))(0);
+  
   const Epetra_Vector& LAI = *(*S_->Get<CompositeVector>(lai_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& SAI = *(*S_->Get<CompositeVector>(sai_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& vegetation_type = *(*S_->Get<CompositeVector>(v_type_key_, water_tag).ViewComponent("cell", false))(0);
@@ -984,8 +990,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.slope.data[column] = slope[column];
     props.LAI.data[column] = LAI[column];
     props.SAI.data[column] = SAI[column];
+    props.snow_albedo.data[column] = snow_albedo[column];
     props.vegetation_type.data[column] = vegetation_type[column];
-
+    
     if(p_bool){
        props.precipitation.data[column] = (*precipitation)[column];
    } else {
@@ -1014,18 +1021,16 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   props.field_capacity = pressure_at_field_capacity;
   props.wilting_point = pressure_at_wilting_point;
   props.p_bool = p_bool;
-
-  std::cout << "(CopyToEcoSIM) subsurface energy flux: " << std::endl;
   
   for (int col=0; col!=num_columns_local; ++col) {
     for (int i=0; i < ncells_per_col_; ++i) {
-      std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_energy_source[col*ncells_per_col_+i] << std::endl;
+      //std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_energy_source[col*ncells_per_col_+i] << std::endl;
     }
   }
 
   for (int col=0; col!=num_columns_local; ++col) {
     for (int i=0; i < ncells_per_col_; ++i) {
-      std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_water_source[col*ncells_per_col_+i] << std::endl;
+      //std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_water_source[col*ncells_per_col_+i] << std::endl;
     }
   }
    
