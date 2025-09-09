@@ -73,6 +73,7 @@ if(ENABLE_ECOSIM)
     include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Prescribed_pheno/)
     include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Plant_bgc/)
     include_directories(${ECOSIM_BUILD_PREFIX}/f90src/APIs/)
+    include_directories(${ECOSIM_BUILD_PREFIX}/f90src/APIData/)    
 
     include_directories(${ECOSIM_INCLUDE_DIRS})
 

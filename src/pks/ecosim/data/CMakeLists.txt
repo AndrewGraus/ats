@@ -60,6 +60,7 @@ include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Ecosim_mods/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Prescribed_pheno/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/Plant_bgc/)
 include_directories(${ECOSIM_BUILD_PREFIX}/f90src/APIs/)
+include_directories(${ECOSIM_BUILD_PREFIX}/f90src/APIData/)
 
 set(ats_ecosim_data_src_files
     BGC_constants.cc
