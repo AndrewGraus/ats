@@ -143,6 +143,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     pressure_at_field_capacity = plist_->get<double>("Field Capacity [Mpa]");
     pressure_at_wilting_point = plist_->get<double>("Wilting Point [Mpa]");
     p_bool = plist_->get<bool>("EcoSIM Precipitation");
+    a_bool = plist_->get<bool>("Prescribe Albedo");
+    pheno_bool = plist_->get<bool>("Prescribe Phenology");
 
     dt_ = plist_->get<double>("initial time step");
     c_m_ = plist_->get<double>("heat capacity [MJ mol^-1 K^-1]");
@@ -185,7 +187,7 @@ EcoSIM::~EcoSIM()
 
 // -- Setup step
 void EcoSIM::Setup() {
-  PK_Physical_Default::Setup();	
+  PK_Physical_Default::Setup();
   //Need to do some basic setup of the columns:
   mesh_surf_ = S_->GetMesh(domain_surface_);
   mesh_ = S_->GetMesh(domain_);
@@ -212,27 +214,27 @@ void EcoSIM::Setup() {
           .SetMesh(mesh_surf_)
           ->SetGhosted(false)
           ->SetComponent("cell", AmanziMesh::CELL, 1);
-  }  
+  }
 
   S_->Require<CompositeVector, CompositeVectorSpace>(surface_energy_source_ecosim_key_ , tag_next_, name_)
           .SetMesh(mesh_surf_)
           ->SetGhosted(false)
-          ->SetComponent("cell", AmanziMesh::CELL, 1);  
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
 
   S_->Require<CompositeVector, CompositeVectorSpace>(surface_water_source_ecosim_key_ , tag_next_, surface_water_source_ecosim_key_)
           .SetMesh(mesh_surf_)
           ->SetGhosted(false)
-          ->SetComponent("cell", AmanziMesh::CELL, 1);  
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
 
   S_->Require<CompositeVector, CompositeVectorSpace>(subsurface_energy_source_ecosim_key_ , tag_next_, subsurface_energy_source_ecosim_key_)
           .SetMesh(mesh_)
           ->SetGhosted(false)
-          ->SetComponent("cell", AmanziMesh::CELL, 1);  
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
 
   S_->Require<CompositeVector, CompositeVectorSpace>(subsurface_water_source_ecosim_key_ , tag_next_, subsurface_water_source_ecosim_key_)
           .SetMesh(mesh_)
           ->SetGhosted(false)
-          ->SetComponent("cell", AmanziMesh::CELL, 1);  
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
 
   //May need to setup surface evaluators as they are now owned by surface_balance PK insteady of surface energy??
   //
@@ -247,7 +249,7 @@ void EcoSIM::Setup() {
   S_->RequireEvaluator(lai_key_, tag_next_);
   S_->Require<CompositeVector, CompositeVectorSpace>(lai_key_, tag_next_).SetMesh(mesh_surf_)
     ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
- 
+
   S_->RequireEvaluator(sai_key_, tag_next_);
   S_->Require<CompositeVector, CompositeVectorSpace>(sai_key_, tag_next_).SetMesh(mesh_surf_)
     ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
@@ -262,7 +264,7 @@ void EcoSIM::Setup() {
   if (p_bool) {
      S_->RequireEvaluator(p_total_key_, tag_next_);
      S_->Require<CompositeVector, CompositeVectorSpace>(p_total_key_, tag_next_).SetMesh(mesh_surf_)
-       ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);       
+       ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
   } else {
      S_->RequireEvaluator(p_snow_key_, tag_next_);
      S_->Require<CompositeVector, CompositeVectorSpace>(p_snow_key_, tag_next_).SetMesh(mesh_surf_)
@@ -289,7 +291,7 @@ void EcoSIM::Setup() {
     ->AddComponent("cell", AmanziMesh::CELL, 1);
 
   requireAtCurrent(matric_pressure_key_, tag_current_, *S_, name_);
-  
+
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << vo_->color("green") << "Setup of PK was successful"
@@ -331,7 +333,7 @@ void EcoSIM::Initialize() {
     S_->GetRecordW(p_total_key_, Tags::DEFAULT, "surface-precipitation_total").set_initialized();
   } else {
     S_->GetW<CompositeVector>(p_snow_key_, Tags::DEFAULT, "surface-precipitation_snow").PutScalar(0.0);
-    S_->GetRecordW(p_snow_key_, Tags::DEFAULT, "surface-precipitation_snow").set_initialized();  	  
+    S_->GetRecordW(p_snow_key_, Tags::DEFAULT, "surface-precipitation_snow").set_initialized();
   }
 
   S_->GetW<CompositeVector>(snow_depth_key_, Tags::DEFAULT, "surface-snow_depth").PutScalar(0.0);
@@ -339,9 +341,9 @@ void EcoSIM::Initialize() {
 
   //S_->GetW<CompositeVector>(lai_key_, Tags::DEFAULT, "surface-LAI").PutScalar(0.0);
   //S_->GetRecordW(lai_key_, Tags::DEFAULT, "surface-LAI").set_initialized();
-  //surface_energy_source_ecosim_key_ 
+  //surface_energy_source_ecosim_key_
   //surface_water_source_ecosim_key_
-  
+
   S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).PutScalar(0.0);
   S_->GetRecordW(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).set_initialized();
 
@@ -360,7 +362,7 @@ void EcoSIM::Initialize() {
 
   S_->GetW<CompositeVector>(matric_pressure_key_, Tags::DEFAULT, "matric_pressure").PutScalar(1.0);
   S_->GetRecordW(matric_pressure_key_, Tags::DEFAULT, "matric_pressure").set_initialized();
-  
+
   int num_columns_ = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
   //loop over processes instead:
@@ -412,7 +414,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
                << "Current day: " << curr_day_ << "Current year: " << curr_year_ << std::endl
                << "----------------------------------------------------------------" << std::endl;
 
-  
+
   // Ensure dependencies are filled
   S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(porosity_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -541,7 +543,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   //Define before loop to prevent scope issues:
   const Epetra_MultiVector* p_tot = nullptr;
   const Epetra_MultiVector* p_rain = nullptr;
-  const Epetra_MultiVector* p_snow = nullptr; 
+  const Epetra_MultiVector* p_snow = nullptr;
 
   if(p_bool){
     S_->GetEvaluator("surface-precipitation_total", tag_next_).Update(*S_, name_);
@@ -554,7 +556,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
     S_->GetEvaluator("surface-precipitation_snow", tag_next_).Update(*S_, name_);
     p_snow = &(*(*S_->Get<CompositeVector>("surface-precipitation_snow", tag_next_)
           .ViewComponent("cell",false))(0));
-  } 
+  }
 
   S_->GetEvaluator("surface-elevation", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& elevation = *S_->Get<CompositeVector>("surface-elevation", tag_next_)
@@ -617,7 +619,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
       AdvanceSingleProcess(dt, p_rank);
     }
   }
-  // PLACE TIME AND YEAR ITERATOR HERE 
+  // PLACE TIME AND YEAR ITERATOR HERE
   if (curr_day_ != 364) {
     curr_day_ = curr_day_ + 1;
   } else {
@@ -823,7 +825,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& plant_wilting_factor = *(*S_->Get<CompositeVector>(f_wp_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& thermal_conductivity = *(*S_->Get<CompositeVector>(thermal_conductivity_key_, water_tag).ViewComponent("cell", false))(0);
-  
+
   //const auto& shortwave_radiation = *S_.Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false);
   const Epetra_Vector& shortwave_radiation = *(*S_->Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& longwave_radiation = *(*S_->Get<CompositeVector>(lw_key_, water_tag).ViewComponent("cell", false))(0);
@@ -842,12 +844,12 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     //const Epetra_Vector& precipitation_snow = *(*S_->Get<CompositeVector>(p_snow_key_, water_tag).ViewComponent("cell", false))(0);
     precipitation = &(*(*S_->Get<CompositeVector>(p_rain_key_, water_tag).ViewComponent("cell", false))(0));
     precipitation_snow = &(*(*S_->Get<CompositeVector>(p_snow_key_, water_tag).ViewComponent("cell", false))(0));
-  } 
+  }
     const Epetra_Vector& elevation = *(*S_->Get<CompositeVector>(elev_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& aspect = *(*S_->Get<CompositeVector>(aspect_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& slope = *(*S_->Get<CompositeVector>(slope_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& snow_albedo = *(*S_->Get<CompositeVector>(snow_albedo_key_, water_tag).ViewComponent("cell", false))(0);
-  
+
   const Epetra_Vector& LAI = *(*S_->Get<CompositeVector>(lai_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& SAI = *(*S_->Get<CompositeVector>(sai_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& vegetation_type = *(*S_->Get<CompositeVector>(v_type_key_, water_tag).ViewComponent("cell", false))(0);
@@ -882,7 +884,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   auto col_rf = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_lai = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_sai = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
-  auto col_v_type = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_)); 
+  auto col_v_type = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_ss_energy_source = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_ss_water_source = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_depth_c = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -905,13 +907,13 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   /*const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
   for (int column=0; column!=num_columns_local; ++column) {
     FieldToColumn_(column, temp, col_temp.ptr());
-    
+
     for (int i=0; i < ncells_per_col_; ++i) {
     	state.temperature.data[column * ncells_per_col_ + i] = (*col_temp)[i];
         state.temperature.data[column * ncells_per_col_ + i] = 222.0;
     }
-  }*/  
-  
+  }*/
+
   //Loop over columns on this process
   for (int column=0; column!=num_columns_local; ++column) {
     FieldToColumn_(column,porosity,col_porosity.ptr());
@@ -992,12 +994,12 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     props.SAI.data[column] = SAI[column];
     props.snow_albedo.data[column] = snow_albedo[column];
     props.vegetation_type.data[column] = vegetation_type[column];
-    
+
     if(p_bool){
        props.precipitation.data[column] = (*precipitation)[column];
    } else {
        props.precipitation.data[column] = (*precipitation)[column];
-       props.precipitation_snow.data[column] = (*precipitation_snow)[column];        
+       props.precipitation_snow.data[column] = (*precipitation_snow)[column];
    }
 
     for (int i = 0; i < state.total_component_concentration.columns; i++) {
@@ -1007,7 +1009,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       }
     }
   }
- 
+
   //Fill the atmospheric abundances
   //NOTE: probably want to add an if statement here to only do this only once
   props.atm_n2 = atm_n2_;
@@ -1021,7 +1023,9 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   props.field_capacity = pressure_at_field_capacity;
   props.wilting_point = pressure_at_wilting_point;
   props.p_bool = p_bool;
-  
+  props.a_bool = a_bool;
+  props.pheno_bool = pheno_bool;
+
   for (int col=0; col!=num_columns_local; ++col) {
     for (int i=0; i < ncells_per_col_; ++i) {
       //std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_energy_source[col*ncells_per_col_+i] << std::endl;
@@ -1033,7 +1037,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       //std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_water_source[col*ncells_per_col_+i] << std::endl;
     }
   }
-   
+
   std::cout << "Data from state after setting struct: " << std::endl;
   for (int col=0; col!=num_columns_local; ++col) {
     if (std::isnan(surface_water_source[col]) ||
@@ -1078,7 +1082,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
   auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Tags::DEFAULT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
 
-  
+
   auto& snow_depth = *S_->GetW<CompositeVector>(snow_depth_key_,tag_next_,snow_depth_key_).ViewComponent("cell");
 
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -1141,7 +1145,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   }
 
   std::cout << "(CopyFromEcoSIM) subsurface energy flux: " << std::endl;
-  
+
   for (int col=0; col!=num_columns_local; ++col) {
     for (int i=0; i < ncells_per_col_; ++i) {
       std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_energy_source[col*ncells_per_col_+i] << std::endl;
@@ -1167,7 +1171,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   //*vo_->os() << "(CopyFromEcoSIM) Q_w = " << surface_water_source[1] << " m/s " << "snow_depth = " << snow_depth[0][1] << std::endl;
 
   //auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
-  
+
   /*for (int column = 0; column != num_columns_local; ++column) {
     for (int i=0; i < ncells_per_col_; ++i) {
       (*col_ss_water_source)[i] = state.subsurface_water_source.data[column * ncells_per_col_ + i]*3600.0;
@@ -1177,7 +1181,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     ColumnToField_(column, subsurface_water_source, col_ss_water_source.ptr());
     ColumnToField_(column, subsurface_energy_source, col_ss_energy_source.ptr());
   }*/
-    
+
 }
 
 /*
@@ -1218,7 +1222,7 @@ int EcoSIM::InitializeSingleProcess(int proc)
 {
   int num_iterations = 1;
   int num_columns = 1;
-  
+
   num_columns = num_columns_local;
 
   Teuchos::OSTab tab = vo_->getOSTab();
@@ -1253,19 +1257,19 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
   int num_columns = 1;
 
   num_columns = num_columns_local;
-  
+
   // Time tracking variables
   current_time_ = S_->get_time();        //Current time
-  static double last_ecosim_time = 0.0;   
+  static double last_ecosim_time = 0.0;
   int total_days = static_cast<int>(current_time_ / 86400.0);
   int current_day = (day0_ + total_days) % 365;
   int current_year = year0_ + ((day0_ + total_days)/365);
-  
+
   bgc_props_.current_day = current_day;
   bgc_props_.current_year = current_year;
 
   Teuchos::OSTab tab = vo_->getOSTab();
- 
+
   std::cout << "in ASP" << std::endl;
   std::cout << "t = " << current_time_ << " t_last = " << last_ecosim_time << std::endl;
 
@@ -1277,7 +1281,7 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
 	  CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
 	  bgc_engine_->Advance(dt, bgc_props_, bgc_state_, bgc_sizes_, num_iterations, num_columns);
-  
+
     CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
 	  last_ecosim_time = current_time_;

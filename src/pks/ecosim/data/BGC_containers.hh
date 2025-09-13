@@ -158,6 +158,8 @@ extern "C" {
     int current_day;
     int current_year;
     bool p_bool;
+    bool a_bool;
+    bool pheno_bool;
   } BGCProperties;
 
   /*

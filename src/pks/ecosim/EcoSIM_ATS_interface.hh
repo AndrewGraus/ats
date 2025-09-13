@@ -249,7 +249,7 @@ class EcoSIM : public PK_Physical_Default {
   Teuchos::RCP<Epetra_SerialDenseVector> column_wc_save;
 
   bool bgc_initialized_;
-  bool has_energy, has_gas, has_ice, p_bool;
+  bool has_energy, has_gas, has_ice, p_bool, a_bool, pheno_bool;
   std::vector<std::string> component_names_;
   int num_components;
 
