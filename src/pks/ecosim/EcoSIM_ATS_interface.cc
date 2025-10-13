@@ -53,8 +53,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
   saved_time_(0.0)
   {
     //grab the surface and subsurface domains
-    //May need to edit this as well
-    //domain_ = plist_->get<std::string>("domain name", "domain");
     domain_ = Keys::readDomain(*plist_, "domain", "domain");
     domain_surface_ = Keys::readDomainHint(*plist_, domain_, "subsurface", "surface");
 
@@ -98,8 +96,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     subsurface_water_source_ecosim_key_ =
       Keys::readKey(*plist_, domain_, "subsurface water source ecosim", "subsurface_ecosim_water_source");
 
-    //Snow
-
     //Other
     cell_volume_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
     //ecosim_aux_data_key_ = Keys::readKey(*plist_, domain_, "ecosim aux data", "ecosim_aux_data");
@@ -140,12 +136,16 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     atm_n2o_ = plist_->get<double>("atmospheric N2O");
     atm_h2_ = plist_->get<double>("atmospheric H2");
     atm_nh3_ = plist_->get<double>("atmospheric NH3");
+
+    //Starting values and parameters for precribed phenology / albedo
+
     pressure_at_field_capacity = plist_->get<double>("Field Capacity [Mpa]");
     pressure_at_wilting_point = plist_->get<double>("Wilting Point [Mpa]");
     p_bool = plist_->get<bool>("EcoSIM Precipitation");
     a_bool = plist_->get<bool>("Prescribe Albedo");
     pheno_bool = plist_->get<bool>("Prescribe Phenology");
 
+    //Parameters for times and time of year
     dt_ = plist_->get<double>("initial time step");
     c_m_ = plist_->get<double>("heat capacity [MJ mol^-1 K^-1]");
     day0_ = plist_->get<int>("Starting day of year [0-364]");
@@ -154,7 +154,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     curr_day_ = day0_;
     curr_year_ = year0_;
 
-    //This initialized the engine (found in BGCEngine.cc) This is the code that
+    //This initializes the engine (found in BGCEngine.cc) This is the code that
     //actually points to the driver
     if (!plist_->isParameter("engine")) {
       Errors::Message msg;
@@ -370,7 +370,7 @@ void EcoSIM::Initialize() {
   num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
   num_columns_global_ptype = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::ALL);
 
-  //Trying to loop over processors now:
+  //Loop over processes and Initalize EcoSIM on that process
   int numProcesses, p_rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
   MPI_Comm_rank(MPI_COMM_WORLD, &p_rank);
@@ -654,6 +654,7 @@ void EcoSIM::FieldToColumn_(AmanziMesh::Entity_ID column, const Teuchos::Ptr<Epe
   }
 }
 
+//Helper function but for datasets that are multivalued in every cell (concentrations)
 void EcoSIM::MatrixFieldToColumn_(AmanziMesh::Entity_ID column, const Epetra_MultiVector& m_arr,
   Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr)
   {
@@ -1001,13 +1002,13 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
        props.precipitation.data[column] = (*precipitation)[column];
        props.precipitation_snow.data[column] = (*precipitation_snow)[column];
    }
-
+   /*Don't need this loop until transport is implemented
     for (int i = 0; i < state.total_component_concentration.columns; i++) {
       for (int j = 0; j < state.total_component_concentration.cells; j++) {
         for (int k = 0; k < state.total_component_concentration.components; k++) {
         }
       }
-    }
+    }*/
   }
 
   //Fill the atmospheric abundances
@@ -1025,18 +1026,6 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   props.p_bool = p_bool;
   props.a_bool = a_bool;
   props.pheno_bool = pheno_bool;
-
-  for (int col=0; col!=num_columns_local; ++col) {
-    for (int i=0; i < ncells_per_col_; ++i) {
-      //std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_energy_source[col*ncells_per_col_+i] << std::endl;
-    }
-  }
-
-  for (int col=0; col!=num_columns_local; ++col) {
-    for (int i=0; i < ncells_per_col_; ++i) {
-      //std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_water_source[col*ncells_per_col_+i] << std::endl;
-    }
-  }
 
   std::cout << "Data from state after setting struct: " << std::endl;
   for (int col=0; col!=num_columns_local; ++col) {
@@ -1067,16 +1056,10 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_density_key_, Tags::DEFAULT, liquid_density_key_).ViewComponent("cell",false))(0);
   auto& rock_density = *(*S_->GetW<CompositeVector>(rock_density_key_, Tags::DEFAULT, rock_density_key_).ViewComponent("cell",false))(0);
   auto& cell_volume = *(*S_->GetW<CompositeVector>(cell_volume_key_, Tags::DEFAULT, cell_volume_key_).ViewComponent("cell",false))(0);
-  //auto& hydraulic_conductivity = *(*S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, hydraulic_conductivity_key_).ViewComponent("cell",false))(0);
-  //auto& bulk_density = *(*S_->GetW<CompositeVector>(bulk_density_key_, Tags::DEFAULT, bulk_density_key_).ViewComponent("cell",false))(0);
 
-  //auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_key_, Tags::DEFAULT, surface_energy_source_key_).ViewComponent("cell", false))(0);
   auto& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, Tags::DEFAULT, name_).ViewComponent("cell", false))(0);
-  //Epetra_MultiVector& surface_energy_source = *(*S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, tag_next_, name_).ViewComponent("cell", false))(0);
-  //Epetra_MultiVector& surface_energy_source = *(S_->GetW<CompositeVector>(surface_energy_source_ecosim_key_, tag_next_, name_).ViewComponent("cell", false));
   auto& subsurface_energy_source = *(*S_->GetW<CompositeVector>(subsurface_energy_source_ecosim_key_, Tags::DEFAULT, subsurface_energy_source_ecosim_key_).ViewComponent("cell", false))(0);
 
-  //auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_key_, Tags::DEFAULT, surface_water_source_key_).ViewComponent("cell", false))(0);
   auto& surface_water_source = *(*S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).ViewComponent("cell", false))(0);
   auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_ecosim_key_, Tags::DEFAULT, subsurface_water_source_ecosim_key_).ViewComponent("cell", false))(0);
   auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
@@ -1157,66 +1140,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
       std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_water_source[col*ncells_per_col_+i] << std::endl;
     }
   }
-
-  /*std::cout << "Data from state after pass back: " << std::endl;
-  for (int col=0; col!=num_columns_local; ++col) {
-    if (std::isnan(surface_water_source[col]) ||
-        std::isinf(surface_water_source[col])) {
-        std::cout << "Process " << p_rank << " found bad value at column "
-                  << col << ": " << surface_water_source[col] << std::endl;
-    }
-  }*/
-
-  //Teuchos::OSTab tab = vo_->getOSTab();
-  //*vo_->os() << "(CopyFromEcoSIM) Q_w = " << surface_water_source[1] << " m/s " << "snow_depth = " << snow_depth[0][1] << std::endl;
-
-  //auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
-
-  /*for (int column = 0; column != num_columns_local; ++column) {
-    for (int i=0; i < ncells_per_col_; ++i) {
-      (*col_ss_water_source)[i] = state.subsurface_water_source.data[column * ncells_per_col_ + i]*3600.0;
-      (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[column * ncells_per_col_ + i]*3600.0;
-    }
-
-    ColumnToField_(column, subsurface_water_source, col_ss_water_source.ptr());
-    ColumnToField_(column, subsurface_energy_source, col_ss_energy_source.ptr());
-  }*/
-
 }
-
-/*
-int EcoSIM::InitializeSingleColumn(int col)
-{
-  CopyToEcoSIM(column, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
-
-  //ecosim_datatest_wrapper(column, &bgc_props_, &bgc_sizes_);
-  bgc_engine_->DataTest();
-
-  int num_iterations = 1;
-
-  bgc_engine_->Setup(bgc_props_, bgc_state_, bgc_sizes_, num_iterations, col);
-  CopyEcoSIMStateToAmanzi(column, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
-
-}
-
-int EcoSIM::AdvanceSingleColumn(double dt, int col)
-{
-  // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
-  // should use the same tag as transport.  See #673
-  CopyToEcoSIM(column, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
-
-  int num_iterations = 1;
-
- bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
-                                         bgc_sizes_, num_iterations, col);
-
-  // Move the information back into Amanzi's state, updating the given total concentration vector.
-  CopyEcoSIMStateToAmanzi(column,
-                            bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
-
-  return num_iterations;
- }
-*/
 
 int EcoSIM::InitializeSingleProcess(int proc)
 {
@@ -1229,16 +1153,6 @@ int EcoSIM::InitializeSingleProcess(int proc)
 
   CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-  //ecosim_datatest_wrapper(column, &bgc_props_, &bgc_sizes_);
-  //bgc_engine_->DataTest();
-
-  /*need some sort of assertions here to double check that the data is actually
-  What I want it to be*/
-
-  //Teuchos::OSTab tab = vo_->getOSTab();
-  //*vo_->os() << "num_columns: " << num_columns << std::endl;
-  //*vo_->os() << "ncells_per_col_: " << ncells_per_col_ << std::endl;
-
   bgc_sizes_.num_columns = num_columns;
   bgc_sizes_.ncells_per_col_ = ncells_per_col_;
   bgc_sizes_.num_components = 1;
@@ -1249,9 +1163,9 @@ int EcoSIM::InitializeSingleProcess(int proc)
 
 int EcoSIM::AdvanceSingleProcess(double dt, int proc)
 {
-  // NOTE: this should get set not to be hard-coded to Tags::DEFAULT, but
-  // should use the same tag as transport.  See #673
-  //CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+  //Function to run EcoSIMs advance function, ecosim is run as an hourly model
+  // Every hour the data is taken from ATS state copied to ecosim
+  // The model is run and passed back to ATS.
 
   int num_iterations = 1;
   int num_columns = 1;
@@ -1270,29 +1184,19 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
 
   Teuchos::OSTab tab = vo_->getOSTab();
 
-  std::cout << "in ASP" << std::endl;
-  std::cout << "t = " << current_time_ << " t_last = " << last_ecosim_time << std::endl;
-
   if (current_time_ - last_ecosim_time >= 3600.0) {
     *vo_->os() << "Hour completed at total_time: " << current_time_
                << ", Year: " << current_year << ", Day: " << current_day << std::endl;
     *vo_->os() << "Running EcoSIM Advance: " << std::endl;
 
-	  CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
+	CopyToEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-	  bgc_engine_->Advance(dt, bgc_props_, bgc_state_, bgc_sizes_, num_iterations, num_columns);
+	bgc_engine_->Advance(dt, bgc_props_, bgc_state_, bgc_sizes_, num_iterations, num_columns);
 
     CopyFromEcoSIM_process(proc, bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
-	  last_ecosim_time = current_time_;
+	last_ecosim_time = current_time_;
   }
-
-  //bgc_engine_->Advance(dt, bgc_props_, bgc_state_,
-  //                                       bgc_sizes_, num_iterations, num_columns);
-
-  // Move the information back into Amanzi's state, updating the given total concentration vector.
-  //CopyFromEcoSIM_process(proc,
-  //                          bgc_props_, bgc_state_, bgc_aux_data_, Tags::DEFAULT);
 
   return num_iterations;
 }

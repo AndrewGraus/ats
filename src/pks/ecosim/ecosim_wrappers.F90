@@ -32,7 +32,7 @@
 
 subroutine EcoSIM_DataTest() bind(c)
     use, intrinsic :: iso_c_binding
-
+    !Simple test for wrapper functionality
     implicit none
 
     write(*,*) "in the data test"
@@ -61,19 +61,9 @@ subroutine EcoSIM_Setup(properties, state, sizes, num_iterations,&
   integer, intent(inout) :: num_iterations
   integer, intent(inout) :: ncells_per_col_
 
-  write(*,*) "starting driver transfer ATS2EcoSIMData"
-
-  !write(*,*) "num_columns: ", num_columns
-  !write(*,*) "ncells_per_col_: ", ncells_per_col_
-
-  !sizes%num_components = 1
-  !sizes%ncells_per_col_ = 100
-  !sizes%num_columns = 25
-
   call ATS2EcoSIMData(num_columns, state, properties, sizes)
 
-  call Init_EcoSIM(sizes)  
-  write(*,*) "starting driver transfer EcoSIM2ATSData"
+  call Init_EcoSIM(sizes)
 
   call EcoSIM2ATSData(num_columns, state, sizes)
 

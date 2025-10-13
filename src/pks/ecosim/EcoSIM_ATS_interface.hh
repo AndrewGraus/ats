@@ -95,11 +95,6 @@ class EcoSIM : public PK_Physical_Default {
   //The Chemistry_PK even though it isn't used there, and then included
   Teuchos::RCP<BGCEngine> bgc_engine() { return bgc_engine_; }
 
-  /*void CopyToEcoSIM(int column,
-          BGCProperties& props,
-          BGCState& state,
-          BGCAuxiliaryData& aux_data);*/
-
  private:
 
    //Helper functions from Alquimia
@@ -172,9 +167,6 @@ class EcoSIM : public PK_Physical_Default {
 
   void MatrixColumnToField_(AmanziMesh::Entity_ID column, Epetra_MultiVector& m_arr,
                                  Teuchos::Ptr<Epetra_SerialDenseMatrix> col_arr);
-  //evaluator for transpiration;
-  //I don't think I need this anymore
-  //Teuchos::RCP<PrimaryVariableFieldEvaluator> p_root_eval_;
 
   int number_aqueous_components_;
   int ncells_per_col_;

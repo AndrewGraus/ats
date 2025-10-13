@@ -1,7 +1,7 @@
 /*
-  Alqumia
+  ATS-EcoSIM, Code Adapted for use from Alquimia
 
-  Copyright 2010-201x held jointly by LANS/LANL, LBNL, and PNNL.
+  Copyright 2010-202x held jointly by LANS/LANL, LBNL, and PNNL.
   Amanzi is released under the three-clause BSD License.
   The terms of use and "as is" disclaimer for this license are
   provided in the top-level COPYRIGHT file.
@@ -25,10 +25,6 @@
 #include "BGC_constants.hh"
 
 #include "VerboseObject.hh"
-/*#include "alquimia/alquimia_util.h"
-#include "alquimia/alquimia_constants.h"
-#include "alquimia/alquimia_containers.h"
-#include "alquimia/alquimia_interface.h"*/
 
 namespace Amanzi {
 namespace EcoSIM {
@@ -64,12 +60,6 @@ class BGCEngine {
   void FreeState(BGCProperties& properties,
                  BGCState& state,
                  BGCAuxiliaryData& aux_data);
-  /* Don't need for now
-  void EnforceCondition(const std::string& condition_name,
-                        const double time,
-                        const AlquimiaProperties& properties,
-                        AlquimiaState& state,
-                        AlquimiaAuxiliaryData& aux_data);*/
 
   void DataTest();
 
@@ -80,10 +70,6 @@ class BGCEngine {
                int num_columns,
                int ncells_per_col_);
 
-  // Advances the species represented by the given array of concentrations, replacing old values
-  // with new values. The order of the concentrations in the array matches that of the species names
-  // returned by GetSpeciesNames. Returns true if the advance is successful,
-  // false if it fails.
   bool Advance(const double delta_time,
                BGCProperties& properties,
                BGCState& state,
@@ -91,38 +77,23 @@ class BGCEngine {
                int num_iterations,
                int num_columns);
 
-  //Functions from the alquimia util section, I don't think I need the full code so I think
-  //I can just copy these functions over
   void CopyBGCState(const BGCState* const source,
                          BGCState* destination);
   void CopyBGCProperties(const BGCProperties* const source,
                               BGCProperties* destination);
-
-  //void CreateBGCInterface(const char* engine_name, BGCInterface* interface);
 
  private:
 
   // bgc data structures.
   bool bgc_initialized_;
   void* engine_state_;
-  //BGCEngineFunctionality functionality_;
   BGCSizes sizes_;
   BGCInterface bgc_;
-  //BGCEngineStatus bgc_status_;
-  //BGCProblemMetaData bgc_metadata_;
-
-  /*AlquimiaEngineFunctionality functionality_;
-  AlquimiaSizes sizes_;
-  AlquimiaInterface chem_;
-  AlquimiaEngineStatus chem_status_;
-  AlquimiaProblemMetaData chem_metadata_;*/
 
   Teuchos::RCP<VerboseObject> vo_;
   // Back-end engine name and input file.
   std::string bgc_engine_name_;
   std::string bgc_engine_inputfile_;
-
-  //Teuchos::RCP<EcoSIM::BGCEngine> bgc_engine_;
 
   // forbidden.
   BGCEngine();
