@@ -22,7 +22,6 @@
 
 #include "BGC_memory.hh"
 #include "BGC_containers.hh"
-#include "BGC_constants.hh"
 
 #include "VerboseObject.hh"
 

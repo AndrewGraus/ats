@@ -31,6 +31,10 @@
 
 #include "../ecosim_interface.h"
 
+//String lengths
+const int kBGCMaxStringLength = 512;
+const int kBGCMaxWordLength = 32;
+
 /* Its kind of silly to have this as a separate code at this point, but this
 will in theory become the switching code if we add other bgc
 codes, in alquimia this switches between CrunchFlow and PFloTran*/
@@ -38,13 +42,9 @@ codes, in alquimia this switches between CrunchFlow and PFloTran*/
 void CreateBGCInterface(const char* const engine_name, BGCInterface* interface)
  {
 
-   //interface->Setup = NULL;
-   //interface->Shutdown = NULL;
-   //interface->Advance = NULL;
-
    interface->DataTest = &ecosim_datatest;
    interface->Setup = &ecosim_setup;
    interface->Shutdown = &ecosim_shutdown;
    interface->Advance = &ecosim_advance;
 
- }  /* end CreateAlquimiaInterface() */
+ }  /* end CreateBGCInterface() */

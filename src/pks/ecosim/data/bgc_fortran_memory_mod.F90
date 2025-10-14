@@ -1,6 +1,4 @@
-!It seems like the memory allocation functions need to know how do define the
-!memory even if you do not do memory allocation in F90, so this code writes
-!versions of the memory allocation functions
+!Memory and interface mangling functions for the ATS-EcoSIM coupler.
 
 module bgc_fortran_memory_mod
 

@@ -48,7 +48,6 @@
 #include <iostream>
 #include "BGC_memory.hh"
 #include "BGC_containers.hh"
-#include "BGC_constants.hh"
 
 // Returns the nearest power of 2 greater than or equal to n, or 0 if n == 0.
 static inline int nearest_power_of_2(int n)
@@ -152,7 +151,7 @@ void AllocateBGCMatrixDouble(const int cells, const int columns, BGCMatrixDouble
     matrix->capacity_cells = nearest_power_of_2(cells);
     matrix->capacity_columns = nearest_power_of_2(columns);
     matrix->data = (double*) calloc((size_t)matrix->capacity_cells * matrix->capacity_columns, sizeof(double));
-    
+
     //for (int i = 0; i < matrix->columns; ++i) {
     //  matrix->data[i] = (double*) calloc((size_t)matrix->capacity_cells, sizeof(double));
     //}
@@ -396,7 +395,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(properties->thermal_conductivity));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(properties->volume));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(properties->depth));
-   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(properties->depth_c));   
+   AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(properties->depth_c));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(properties->dz));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(properties->plant_wilting_factor));
    AllocateBGCMatrixDouble(sizes->ncells_per_col_, sizes->num_columns, &(properties->rooting_depth_fraction));
