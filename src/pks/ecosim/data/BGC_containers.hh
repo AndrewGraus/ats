@@ -117,7 +117,16 @@ extern const int kBGCMaxWordLength;
     BGCVectorDouble surface_energy_source;
     BGCVectorDouble surface_water_source;
     BGCVectorDouble snow_depth;
-    BGCVectorDouble canopy_height;
+    BGCVectorDouble canopy_longwave_radiation;
+    BGCVectorDouble boundary_latent_heat_flux;
+    BGCVectorDouble boundary_sensible_heat_flux;
+    BGCVectorDouble canopy_surface_water;
+    BGCVectorDouble evapotranspiration;
+    BGCVectorDouble evaporation_bare_ground;
+    BGCVectorDouble evaporation_litter;
+    BGCVectorDouble evaporation_snow;
+    BGCVectorDouble sublimation_snow;
+    BGCMatrixDouble snow_temperature;
     BGCTensorDouble total_component_concentration;
   } BGCState;
 
