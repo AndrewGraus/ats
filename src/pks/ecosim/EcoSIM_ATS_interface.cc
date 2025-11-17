@@ -122,6 +122,18 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     slope_key_ = Keys::readKey(*plist_, domain_surface_, "slope", "slope_magnitude");
     snow_depth_key_ = Keys::readKey(*plist_, domain_surface_, "snow depth", "snow_depth");
     snow_albedo_key_ = Keys::readKey(*plist_, domain_surface_, "snow_albedo", "snow_albedo");
+    snow_temperature_key_ = Keys::readKey(*plist_, domain_surface_, "snow temperature", "snow_temperature");
+
+    //Canopy hold over vars for EcoSIM
+    canopy_lw_key_ = Keys::readKey(*plist_, domain_surface_, "canopy longwave radiation", "canopy_longwave_radiation");
+    canopy_latent_heat_key_ = Keys::readKey(*plist_, domain_surface_, "canopy latent heat", "canopy_latent_heat");
+    canopy_sensible_heat_key_ = Keys::readKey(*plist_, domain_surface_, "canopy sensible heat", "canopy_sensible_heat");
+    canopy_surface_water_key_ = Keys::readKey(*plist_, domain_surface_, "canopy surface water", "canopy_surface_water");
+    evapotranspiration_key_ = Keys::readKey(*plist_, domain_surface_, "evapotranspiration", "evapotranspiration");
+    evaporation_ground_key_ = Keys::readKey(*plist_, domain_surface_, "evaporation ground", "evaporation_ground");
+    evaporation_litter_key_ = Keys::readKey(*plist_, domain_surface_, "evaporation litter", "evaporation_litter");
+    evaporation_snow_key_ = Keys::readKey(*plist_, domain_surface_, "evaporation snow", "evaporation_snow");
+    sublimation_snow_key_ = Keys::readKey(*plist_, domain_surface_, "sublimation snow", "sublimation_snow");
 
     //Plant Phenology Datasets
     lai_key_ = Keys::readKey(*plist_, domain_surface_, "LAI", "LAI");
@@ -169,12 +181,6 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     std::string engine_name = plist_->get<std::string>("engine");
     std::string engine_inputfile = plist_->get<std::string>("engine input file");
     bgc_engine_ = Teuchos::rcp(new BGCEngine(engine_name, engine_inputfile));
-
-    /*(AMANZI_ASSERT(plist_.isSublist("WRM parameters"));
-    Teuchos::ParameterList sublist = plist_.sublist("WRM parameters");
-    wrms_ = createWRMPartition(sublist);
-    InitializeFromPlist_();
-    */
   }
 
 
@@ -216,6 +222,51 @@ void EcoSIM::Setup() {
           ->SetComponent("cell", AmanziMesh::CELL, 1);
   }
 
+  S_->Require<CompositeVector, CompositeVectorSpace>(canopy_lw_key_ , tag_next_, canopy_lw_key_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  S_->Require<CompositeVector, CompositeVectorSpace>(canopy_latent_heat_key_ , tag_next_, canopy_latent_heat_key_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  S_->Require<CompositeVector, CompositeVectorSpace>(canopy_sensible_heat_key_, tag_next_, canopy_sensible_heat_key_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  S_->Require<CompositeVector, CompositeVectorSpace>(canopy_surface_water_key_ , tag_next_, canopy_surface_water_key_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  S_->Require<CompositeVector, CompositeVectorSpace>(evapotranspiration_key_ , tag_next_, evapotranspiration_key_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  S_->Require<CompositeVector, CompositeVectorSpace>(evaporation_ground_key_ , tag_next_, evaporation_ground_key_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  S_->Require<CompositeVector, CompositeVectorSpace>(evaporation_litter_key_ , tag_next_, evaporation_litter_key_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  S_->Require<CompositeVector, CompositeVectorSpace>(evaporation_snow_key_ , tag_next_, evaporation_snow_key_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  S_->Require<CompositeVector, CompositeVectorSpace>(sublimation_snow_key_ , tag_next_, sublimation_snow_key_)
+          .SetMesh(mesh_surf_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+
   S_->Require<CompositeVector, CompositeVectorSpace>(surface_energy_source_ecosim_key_ , tag_next_, name_)
           .SetMesh(mesh_surf_)
           ->SetGhosted(false)
@@ -232,6 +283,11 @@ void EcoSIM::Setup() {
           ->SetComponent("cell", AmanziMesh::CELL, 1);
 
   S_->Require<CompositeVector, CompositeVectorSpace>(subsurface_water_source_ecosim_key_ , tag_next_, subsurface_water_source_ecosim_key_)
+          .SetMesh(mesh_)
+          ->SetGhosted(false)
+          ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  S_->Require<CompositeVector, CompositeVectorSpace>(snow_temperature_key_ , tag_next_, snow_temperature_key_)
           .SetMesh(mesh_)
           ->SetGhosted(false)
           ->SetComponent("cell", AmanziMesh::CELL, 1);
@@ -339,6 +395,33 @@ void EcoSIM::Initialize() {
   S_->GetW<CompositeVector>(snow_depth_key_, Tags::DEFAULT, "surface-snow_depth").PutScalar(0.0);
   S_->GetRecordW(snow_depth_key_, Tags::DEFAULT, "surface-snow_depth").set_initialized();
 
+  S_->GetW<CompositeVector>(canopy_lw_key_, Tags::DEFAULT, "surface-canopy_longwave_radiation").PutScalar(0.0);
+  S_->GetRecordW(canopy_lw_key_, Tags::DEFAULT, "surface-canopy_longwave_radiation").set_initialized();
+
+  S_->GetW<CompositeVector>(canopy_latent_heat_key_, Tags::DEFAULT, "surface-canopy_latent_heat").PutScalar(0.0);
+  S_->GetRecordW(canopy_latent_heat_key_, Tags::DEFAULT, "surface-canopy_latent_heat").set_initialized();
+
+  S_->GetW<CompositeVector>(canopy_sensible_heat_key_, Tags::DEFAULT, "surface-canopy_sensible_heat").PutScalar(0.0);
+  S_->GetRecordW(canopy_sensible_heat_key_, Tags::DEFAULT, "surface-canopy_sensible_heat").set_initialized();
+
+  S_->GetW<CompositeVector>(canopy_surface_water_key_, Tags::DEFAULT, "surface-canopy_surface_water").PutScalar(0.0);
+  S_->GetRecordW(canopy_surface_water_key_, Tags::DEFAULT, "surface-canopy_surface_water").set_initialized();
+
+  S_->GetW<CompositeVector>(evapotranspiration_key_, Tags::DEFAULT, "surface-evapotranspiration").PutScalar(0.0);
+  S_->GetRecordW(evapotranspiration_key_, Tags::DEFAULT, "surface-evapotranspiration").set_initialized();
+
+  S_->GetW<CompositeVector>(evaporation_ground_key_, Tags::DEFAULT, "surface-evaporation_ground").PutScalar(0.0);
+  S_->GetRecordW(evaporation_ground_key_, Tags::DEFAULT, "surface-evaporation_ground").set_initialized();
+
+  S_->GetW<CompositeVector>(evaporation_litter_key_, Tags::DEFAULT, "surface-evaporation_litter").PutScalar(0.0);
+  S_->GetRecordW(evaporation_litter_key_, Tags::DEFAULT, "surface-evaporation_litter").set_initialized();
+
+  S_->GetW<CompositeVector>(evaporation_snow_key_, Tags::DEFAULT, "surface-evaporation_snow").PutScalar(0.0);
+  S_->GetRecordW(evaporation_snow_key_, Tags::DEFAULT, "surface-evaporation_snow").set_initialized();
+
+  S_->GetW<CompositeVector>(sublimation_snow_key_, Tags::DEFAULT, "surface-sublimation_snow").PutScalar(0.0);
+  S_->GetRecordW(sublimation_snow_key_, Tags::DEFAULT, "surface-sublimation_snow").set_initialized();
+
   //S_->GetW<CompositeVector>(lai_key_, Tags::DEFAULT, "surface-LAI").PutScalar(0.0);
   //S_->GetRecordW(lai_key_, Tags::DEFAULT, "surface-LAI").set_initialized();
   //surface_energy_source_ecosim_key_
@@ -352,6 +435,9 @@ void EcoSIM::Initialize() {
 
   S_->GetW<CompositeVector>(subsurface_energy_source_ecosim_key_, Tags::DEFAULT, subsurface_energy_source_ecosim_key_).PutScalar(0.0);
   S_->GetRecordW(subsurface_energy_source_ecosim_key_, Tags::DEFAULT, subsurface_energy_source_ecosim_key_).set_initialized();
+
+  S_->GetW<CompositeVector>(snow_temperature_key_, Tags::DEFAULT, snow_temperature_key_).PutScalar(0.0);
+  S_->GetRecordW(snow_temperature_key_, Tags::DEFAULT, snow_temperature_key_).set_initialized();
 
   //Initialize owned evaluators
   S_->GetW<CompositeVector>(hydraulic_conductivity_key_, Tags::DEFAULT, "hydraulic_conductivity").PutScalar(1.0);
@@ -863,6 +949,16 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
   auto& snow_depth = *S_->GetW<CompositeVector>(snow_depth_key_,tag_next_,snow_depth_key_).ViewComponent("cell");
 
+  auto& canopy_longwave_radiation = *S_->GetW<CompositeVector>(canopy_lw_key_, tag_next_, canopy_lw_key_).ViewComponent("cell");
+  auto& canopy_latent_heat = *S_->GetW<CompositeVector>(canopy_latent_heat_key_, tag_next_, canopy_latent_heat_key_).ViewComponent("cell");
+  auto& canopy_sensible_heat = *S_->GetW<CompositeVector>(canopy_sensible_heat_key_, tag_next_, canopy_sensible_heat_key_).ViewComponent("cell");
+  auto& canopy_surface_water = *S_->GetW<CompositeVector>(canopy_surface_water_key_, tag_next_, canopy_surface_water_key_).ViewComponent("cell");
+  auto& evapotranspiration = *S_->GetW<CompositeVector>(evapotranspiration_key_, tag_next_, evapotranspiration_key_).ViewComponent("cell");
+  auto& evaporation_ground = *S_->GetW<CompositeVector>(evaporation_ground_key_, tag_next_, evaporation_ground_key_).ViewComponent("cell");
+  auto& evaporation_litter = *S_->GetW<CompositeVector>(evaporation_litter_key_, tag_next_, evaporation_litter_key_).ViewComponent("cell");
+  auto& evaporation_snow = *S_->GetW<CompositeVector>(evaporation_snow_key_, tag_next_, evaporation_snow_key_).ViewComponent("cell");
+  auto& sublimation_snow = *S_->GetW<CompositeVector>(sublimation_snow_key_, tag_next_, sublimation_snow_key_).ViewComponent("cell");
+
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -982,6 +1078,15 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     state.surface_energy_source.data[column] = surface_energy_source[column];
     state.surface_water_source.data[column] = surface_water_source[column];
     state.snow_depth.data[column] = snow_depth[0][column];
+    state.canopy_longwave_radiation.data[column] = canopy_longwave_radiation[0][column];
+    state.boundary_latent_heat_flux.data[column] = canopy_latent_heat[0][column];
+    state.boundary_sensible_heat_flux.data[column] = canopy_sensible_heat[0][column];
+    state.canopy_surface_water.data[column] = canopy_surface_water[0][column];
+    state.evapotranspiration.data[column] = evapotranspiration[0][column];
+    state.evaporation_bare_ground.data[column] = evaporation_ground[0][column];
+    state.evaporation_litter.data[column] = evaporation_litter[0][column];
+    state.evaporation_snow.data[column] = evaporation_snow[0][column];
+    state.sublimation_snow.data[column] = sublimation_snow[0][column];
 
     props.shortwave_radiation.data[column] = shortwave_radiation[column];
     props.longwave_radiation.data[column] = longwave_radiation[column];
@@ -1064,9 +1169,18 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto& subsurface_water_source = *(*S_->GetW<CompositeVector>(subsurface_water_source_ecosim_key_, Tags::DEFAULT, subsurface_water_source_ecosim_key_).ViewComponent("cell", false))(0);
   auto& temp = *(*S_->GetW<CompositeVector>(T_key_, Tags::DEFAULT, "subsurface energy").ViewComponent("cell",false))(0);
   auto& thermal_conductivity = *(*S_->GetW<CompositeVector>(thermal_conductivity_key_, Tags::DEFAULT, thermal_conductivity_key_).ViewComponent("cell",false))(0);
-
+  auto& snow_temperature = *(*S_->GetW<CompositeVector>(snow_temperature_key_, Tags::DEFAULT, snow_temperature_key_).ViewComponent("cell", false))(0);
 
   auto& snow_depth = *S_->GetW<CompositeVector>(snow_depth_key_,tag_next_,snow_depth_key_).ViewComponent("cell");
+  auto& canopy_longwave_radiation = *S_->GetW<CompositeVector>(canopy_lw_key_, tag_next_, canopy_lw_key_).ViewComponent("cell");
+  auto& canopy_latent_heat = *S_->GetW<CompositeVector>(canopy_latent_heat_key_, tag_next_, canopy_latent_heat_key_).ViewComponent("cell");
+  auto& canopy_sensible_heat = *S_->GetW<CompositeVector>(canopy_sensible_heat_key_, tag_next_, canopy_sensible_heat_key_).ViewComponent("cell");
+  auto& canopy_surface_water = *S_->GetW<CompositeVector>(canopy_surface_water_key_, tag_next_, canopy_surface_water_key_).ViewComponent("cell");
+  auto& evapotranspiration = *S_->GetW<CompositeVector>(evapotranspiration_key_, tag_next_, evapotranspiration_key_).ViewComponent("cell");
+  auto& evaporation_ground = *S_->GetW<CompositeVector>(evaporation_ground_key_, tag_next_, evaporation_ground_key_).ViewComponent("cell");
+  auto& evaporation_litter = *S_->GetW<CompositeVector>(evaporation_litter_key_, tag_next_, evaporation_litter_key_).ViewComponent("cell");
+  auto& evaporation_snow = *S_->GetW<CompositeVector>(evaporation_snow_key_, tag_next_, evaporation_snow_key_).ViewComponent("cell");
+  auto& sublimation_snow = *S_->GetW<CompositeVector>(sublimation_snow_key_, tag_next_, sublimation_snow_key_).ViewComponent("cell");
 
   auto col_porosity = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_l_sat = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
@@ -1086,6 +1200,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto col_b_dens = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_ss_energy_source = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_ss_water_source = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
+  auto col_snow_temperature = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
   auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
 
@@ -1117,14 +1232,25 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     for (int i=0; i < ncells_per_col_; ++i) {
       (*col_ss_water_source)[i] = state.subsurface_water_source.data[col * ncells_per_col_ + i];
       (*col_ss_energy_source)[i] = state.subsurface_energy_source.data[col * ncells_per_col_ + i];
+      (*col_snow_temperature)[i] = state.snow_temperature.data[col * ncells_per_col_ + i];
     }
 
     ColumnToField_(col, subsurface_water_source, col_ss_water_source.ptr());
     ColumnToField_(col, subsurface_energy_source, col_ss_energy_source.ptr());
+    ColumnToField_(col, snow_temperature, col_snow_temperature.ptr());
 
     surface_energy_source[col] = state.surface_energy_source.data[col]/(3600.0);
     surface_water_source[col] = state.surface_water_source.data[col]/(3600.0);
     snow_depth[0][col] = state.snow_depth.data[col];
+    canopy_longwave_radiation[0][col] = state.canopy_longwave_radiation.data[col];
+    canopy_latent_heat[0][col] = state.boundary_latent_heat_flux.data[col];
+    canopy_sensible_heat[0][col] = state.boundary_sensible_heat_flux.data[col];
+    canopy_surface_water[0][col] = state.canopy_surface_water.data[col];
+    evapotranspiration[0][col] = state.evapotranspiration.data[col];
+    evaporation_ground[0][col] = state.evaporation_bare_ground.data[col];
+    evaporation_litter[0][col] = state.evaporation_litter.data[col];
+    evaporation_snow[0][col] = state.evaporation_snow.data[col];
+    sublimation_snow[0][col] = state.sublimation_snow.data[col];
   }
 
   std::cout << "(CopyFromEcoSIM) subsurface energy flux: " << std::endl;

@@ -365,6 +365,7 @@ void AllocateBGCState(const BGCSizes* const sizes,
      FreeBGCVectorDouble(&(state->evaporation_litter));
      FreeBGCVectorDouble(&(state->evaporation_snow));
      FreeBGCVectorDouble(&(state->sublimation_snow));
+     FreeBGCMatrixDouble(&(state->snow_temperature));
      FreeBGCTensorDouble(&(state->total_component_concentration));
    }
  }  /* end FreeAlquimiaState() */

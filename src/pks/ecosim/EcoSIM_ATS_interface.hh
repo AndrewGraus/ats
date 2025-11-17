@@ -42,10 +42,12 @@
 #include "pk_physical_default.hh"
 #include "PK_Physical.hh"
 #include "ecosim_mod_test_wrapper.h"
-
+#include "MeshPartition.hh"
 
 namespace Amanzi {
 namespace EcoSIM {
+
+//using namespace Amanzi::Flow;
 
 class EcoSIM : public PK_Physical_Default {
 
@@ -59,7 +61,6 @@ class EcoSIM : public PK_Physical_Default {
   // Virtual destructor
   ~EcoSIM();
 
-  //Teuchos::RCP<WRMPartition> get_WRMs() { return wrms_; }
   // is a PK
   // -- Setup data
   //virtual void Setup(const Teuchos::Ptr<State>&S);
@@ -130,7 +131,6 @@ class EcoSIM : public PK_Physical_Default {
    void ComputeNextTimeStep();
 
  protected:
-  //Teuchos::RCP<WRMPartition> wrms_;
   double dt_;
   double c_m_;
   Teuchos::RCP<const AmanziMesh::Mesh> mesh_surf_; //might need this?
@@ -225,6 +225,16 @@ class EcoSIM : public PK_Physical_Default {
   Key subsurface_water_source_ecosim_key_;
   Key snow_depth_key_;
   Key snow_albedo_key_;
+  Key canopy_lw_key_;
+  Key canopy_latent_heat_key_;
+  Key canopy_sensible_heat_key_;
+  Key canopy_surface_water_key_;
+  Key evapotranspiration_key_;
+  Key evaporation_ground_key_;
+  Key evaporation_litter_key_;
+  Key evaporation_snow_key_;
+  Key sublimation_snow_key_;
+  Key snow_temperature_key_;
 
   Teuchos::RCP<BGCEngine> bgc_engine_;
 
