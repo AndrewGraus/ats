@@ -19,7 +19,8 @@
 namespace Amanzi {
 namespace Relations {
 
-EOSIdealGas::EOSIdealGas(Teuchos::ParameterList& eos_plist) : eos_plist_(eos_plist)
+EOSIdealGas::EOSIdealGas(Teuchos::ParameterList& eos_plist)
+  : eos_plist_(eos_plist)
 {
   InitializeFromPlist_();
 };
@@ -53,12 +54,12 @@ EOSIdealGas::DMolarDensityDp(std::vector<double>& params)
 void
 EOSIdealGas::InitializeFromPlist_()
 {
-  R_ = eos_plist_.get<double>("Ideal gas constant [J/mol-K]", 8.3144621);
+  R_ = eos_plist_.get<double>("ideal gas constant [J mol^-1 K^-1]", 8.3144621);
 
-  if (eos_plist_.isParameter("Molar mass of gas [kg/mol]")) {
-    M_ = eos_plist_.get<double>("Molar mass of gas [kg/mol]");
+  if (eos_plist_.isParameter("molar mass of gas [kg mol^-1]")) {
+    M_ = eos_plist_.get<double>("molar mass of gas [kg mol^-1]");
   } else {
-    M_ = eos_plist_.get<double>("Molar mass of gas [g/mol]", 28.956) * 1e-3;
+    M_ = eos_plist_.get<double>("molar mass of gas [g mol^-1]", 28.956) * 1e-3;
   }
 };
 

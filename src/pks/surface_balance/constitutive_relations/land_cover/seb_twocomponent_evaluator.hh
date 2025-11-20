@@ -18,8 +18,8 @@ the ground from the atmosphere.
 
 `"evaluator type`" = `"surface energy balance, two components`"
 
-.. _seb-twocomponent-evaluator-spec:
-.. admonition:: seb-twocomponent-evaluator-spec
+.. _evaluator-seb-twocomponent-spec:
+.. admonition:: evaluator-seb-twocomponent-spec
 
    * `"wind speed reference height [m]`" ``[double]`` **2.0** Reference height at which
      wind speed is measured.
@@ -113,6 +113,14 @@ class SEBTwoComponentEvaluator : public EvaluatorSecondaryMonotypeCV {
   virtual Teuchos::RCP<Evaluator> Clone() const override
   {
     return Teuchos::rcp(new SEBTwoComponentEvaluator(*this));
+  }
+
+  virtual bool IsDifferentiableWRT(const State& S,
+                                   const Key& wrt_key,
+                                   const Tag& wrt_tag) const override
+  {
+    // manually turn off derivatives
+    return false;
   }
 
  protected:

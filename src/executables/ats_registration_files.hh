@@ -23,7 +23,7 @@
 //#include "ats_sediment_transport_registration.hh"
 #include "models_transport_reg.hh"
 #ifdef ALQUIMIA_ENABLED
-#  include "pks_chemistry_reg.hh"
+#include "pks_chemistry_reg.hh"
 #endif
 #ifdef ECOSIM_ENABLED
 #  include "ats_ecosim_registration.hh"

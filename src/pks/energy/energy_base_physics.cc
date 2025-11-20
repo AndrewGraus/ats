@@ -19,7 +19,7 @@ de/dt + q dot grad h = div Ke grad T + S?
 #include "Evaluator.hh"
 #include "energy_base.hh"
 #include "Op.hh"
-#include "pk_helpers.hh"
+#include "PK_Helpers.hh"
 #include "MeshAlgorithms.hh"
 
 namespace Amanzi {
@@ -149,10 +149,10 @@ EnergyBase::AddSources_(const Tag& tag, const Teuchos::Ptr<CompositeVector>& g)
     unsigned int ncells = g_c.MyLength();
     for (unsigned int c = 0; c != ncells; ++c) {
       g_c[0][c] -= source1[0][c] * cv[0][c];
-
     }
 
-    if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "Adding external source term" << std::endl;
+    if (vo_->os_OK(Teuchos::VERB_EXTREME)
+      ) *vo_->os() << "Adding external source term" << std::endl;
     db_->WriteVector("  Q_ext", S_->GetPtr<CompositeVector>(source_key_, tag).ptr(), false);
     db_->WriteVector("res (src)", g, false);
   }
@@ -184,8 +184,8 @@ EnergyBase::AddSourcesToPrecon_(double h)
   } else if (is_source_term_differentiable_) {
     // evaluate the derivative through the dag
     S_->GetEvaluator(source_key_, tag_next_).UpdateDerivative(*S_, name_, key_, tag_next_);
-    dsource_dT = S_->GetDerivativePtrW<CompositeVector>(
-      source_key_, tag_next_, key_, tag_next_, source_key_);
+    dsource_dT =
+      S_->GetDerivativePtrW<CompositeVector>(source_key_, tag_next_, key_, tag_next_, source_key_);
   }
 
   if (dsource_dT != Teuchos::null) {

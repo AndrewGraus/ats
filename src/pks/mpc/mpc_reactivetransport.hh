@@ -6,11 +6,27 @@
 
   Authors: Daniil Svyatskiy
 */
+/*!
 
-/*
-  This is the mpc_pk component of the Amanzi code.
+This MPC couples transport and chemistry through an operator split strategy.
 
-  Process kernel for coupling of Transport_PK and Chemistry_PK.
+Note that transport's primary variable is `"mole_fraction`", which is in units
+of [mol C mol liquid^-1].  Chemistry is in "total_component_concentration", which
+is in units of [mol-C L^-1].  Therefore, between steps, we convert between the
+two.
+
+`"PK type`" = `"reactive transport`"
+
+.. _pk-reactive-transport-spec:
+.. admonition:: pk-reactive-transport-spec
+
+   * `"domain name`" ``[string]`` Domain of simulation
+
+   KEYS:
+
+   - `"molar density liquid`"
+
+
 */
 
 
@@ -33,8 +49,8 @@ class MPCReactiveTransport : public WeakMPC {
                        const Teuchos::RCP<State>& S,
                        const Teuchos::RCP<TreeVector>& soln);
 
-  // PK methods
-  virtual double get_dt() override;
+  virtual void parseParameterList() override;
+
   virtual void Setup() override;
   virtual void Initialize() override;
   virtual bool AdvanceStep(double t_old, double t_new, bool reinit = false) override;
@@ -43,17 +59,21 @@ class MPCReactiveTransport : public WeakMPC {
   virtual void cast_sub_pks_();
 
  protected:
-  bool chem_step_succeeded_;
-
   Key domain_;
   Key tcc_key_;
+  Key mol_frac_key_;
   Key mol_dens_key_;
 
   Teuchos::RCP<Teuchos::Time> alquimia_timer_;
 
   // storage for the component concentration intermediate values
   Teuchos::RCP<Transport::Transport_ATS> transport_pk_;
+
+#ifdef ALQUIMIA_ENABLED
+  Teuchos::RCP<AmanziChemistry::Alquimia_PK> chemistry_pk_;
+#else
   Teuchos::RCP<AmanziChemistry::Chemistry_PK> chemistry_pk_;
+#endif
 
   // factory registration
   static RegisteredPKFactory<MPCReactiveTransport> reg_;

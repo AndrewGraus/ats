@@ -10,8 +10,8 @@
 //! Evaluates shortwave as a function of slope/aspect/etc.
 /*!
 
-.. _incident_shortwave_radiation_model-spec:
-.. admonition:: incident_shortwave_radiation_model-spec
+.. _incident-shortwave-radiation-model-spec:
+.. admonition:: incident-shortwave-radiation-model-spec
 
    * `"latitude [degrees]`" ``[double]`` Latitude of the site.  A single
      typical value is fine for most domains, even relatively large ones
@@ -34,22 +34,18 @@ namespace SurfaceBalance {
 namespace Relations {
 
 namespace Impl {
-double
-DeclinationAngle(double doy);
-double
-HourAngle(double hour);
-double
-SolarAltitude(double delta, double phi, double tau);
-double
-SolarAzhimuth(double delta, double phi, double tau);
-double
-FlatGeometry(double alpha, double phi_sun);
-double
-SlopeGeometry(double slope, double aspect, double alpha, double phi_sun);
-std::pair<double, double>
-GeometricRadiationFactors(double slope, double aspect, int doy, double hour, double lat);
-double
-Radiation(double slope, double aspect, int doy, double hr, double lat, double qSWin);
+double DeclinationAngle(double doy);
+double HourAngle(double hour);
+double SolarAltitude(double delta, double phi, double tau);
+double SolarAzhimuth(double delta, double phi, double tau);
+double FlatGeometry(double alpha, double phi_sun);
+double SlopeGeometry(double slope, double aspect, double alpha, double phi_sun);
+std::pair<double, double> GeometricRadiationFactors(double slope,
+                                                    double aspect,
+                                                    int doy,
+                                                    double hour,
+                                                    double lat);
+double Radiation(double slope, double aspect, int doy, double hr, double lat, double qSWin);
 } // namespace Impl
 
 
@@ -59,10 +55,14 @@ class IncidentShortwaveRadiationModel {
 
   double IncidentShortwaveRadiation(double slope, double aspect, double qSWin, double time) const;
 
-  double
-  DIncidentShortwaveRadiationDSlope(double slope, double aspect, double qSWin, double time) const;
-  double
-  DIncidentShortwaveRadiationDAspect(double slope, double aspect, double qSWin, double time) const;
+  double DIncidentShortwaveRadiationDSlope(double slope,
+                                           double aspect,
+                                           double qSWin,
+                                           double time) const;
+  double DIncidentShortwaveRadiationDAspect(double slope,
+                                            double aspect,
+                                            double qSWin,
+                                            double time) const;
   double DIncidentShortwaveRadiationDIncomingShortwaveRadiation(double slope,
                                                                 double aspect,
                                                                 double qSWin,

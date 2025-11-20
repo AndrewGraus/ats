@@ -6,12 +6,6 @@
 
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
-
-/*
-  Interface for a thermal conductivity model with two phases.
-
-*/
-
 /*!
 
 Thermal conductivity based on two-phases (air,liquid) composition of the
@@ -19,10 +13,10 @@ porous media.
 
 `"evaluator type`" = `"two-phase thermal conductivity`"
 
-.. _thermal-conductivity-twophase-evaluator-spec:
-.. admonition:: thermal-conductivity-twophase-evaluator-spec
+.. _evaluator-two-phase-thermal-conductivity-spec:
+.. admonition:: evaluator-two-phase-thermal-conductivity-spec
 
-   * `"thermal conductivity parameters`" ``[thermal-conductivity-twophase-typedinline-spec-list]``
+   * `"thermal conductivity parameters`" ``[thermal-conductivity-twophase-typed-spec-list]``
 
    KEYS:
 

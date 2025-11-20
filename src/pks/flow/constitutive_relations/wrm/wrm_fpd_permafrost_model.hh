@@ -6,12 +6,18 @@
 
   Authors: Ethan Coon
 */
-
-/*
+/*!
 
 Painter's permafrost model with freezing point depression.
 
- */
+`"permafrost wrm type`" = `"fpd permafrost model`"
+
+.. _permafrost-wrm-fpd-permafrost-model-spec:
+.. admonition:: permafrost-wrm-fpd-permafrost-model-spec
+
+    * `"empty`" ``[double]`` **-1** No parameters are required for this model
+
+*/
 
 #ifndef AMANZI_FLOWRELATIONS_WRM_FPD_PERMAFROST_MODEL_
 #define AMANZI_FLOWRELATIONS_WRM_FPD_PERMAFROST_MODEL_
@@ -26,7 +32,9 @@ class WRM;
 
 class WRMFPDPermafrostModel : public WRMPermafrostModel {
  public:
-  explicit WRMFPDPermafrostModel(Teuchos::ParameterList& plist) : WRMPermafrostModel(plist) {}
+  explicit WRMFPDPermafrostModel(Teuchos::ParameterList& plist)
+    : WRMPermafrostModel(plist)
+  {}
 
   // required methods from the base class
   // sats[0] = sg, sats[1] = sl, sats[2] = si

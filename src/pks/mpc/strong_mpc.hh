@@ -7,18 +7,22 @@
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
-//! Multi process coupler for globally implicit (strong) coupling.
 /*!
 
-Globally implicit coupling solves all sub-PKs as a single system of equations.  This can be completely automated when all PKs are also `PK: BDF`_ PKs, using a block-diagonal preconditioner where each diagonal block is provided by its own sub-PK.
+Globally implicit coupling solves all sub-PKs as a single system of equations.
+This can be completely automated when all PKs are also :ref:`PK: BDF` PKs,
+using a block-diagonal preconditioner where each diagonal block is provided by
+its own sub-PK.
 
-.. _strong-mpc-spec:
-.. admonition:: strong-mpc-spec
+`"PK type`" = `"strong MPC`"
 
-    INCLUDES:
+.. _pk-strong-mpc-spec:
+.. admonition:: pk-strong-mpc-spec
 
-    - ``[mpc-spec]`` *Is a* MPC_.
-    - ``[pk-bdf-default-spec]`` *Is a* `PK: BDF`_.
+   INCLUDES:
+
+   - ``[mpc-spec]`` *Is a* :ref:`MPC`.
+   - ``[pk-bdf-default-spec]`` *Is a* :ref:`PK: BDF`.
 
 */
 
@@ -34,8 +38,10 @@ namespace Amanzi {
 // note this looks odd, but StrongMPC is both a MPC within a hierarchy of BDF
 // PKs, but it also IS a BDF PK itself, in that it implements the BDF
 // interface and can be implicitly integrated.
-template <class PK_t>
-class StrongMPC : public MPC<PK_t>, public PK_BDF_Default {
+template<class PK_t>
+class StrongMPC
+  : public MPC<PK_t>
+  , public PK_BDF_Default {
  public:
   StrongMPC(Teuchos::ParameterList& pk_list,
             const Teuchos::RCP<Teuchos::ParameterList>& global_plist,
@@ -67,14 +73,14 @@ class StrongMPC : public MPC<PK_t>, public PK_BDF_Default {
                                   Teuchos::RCP<TreeVector> g) override;
 
   // -- enorm for the coupled system
-  virtual double
-  ErrorNorm(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<const TreeVector> du) override;
+  virtual double ErrorNorm(Teuchos::RCP<const TreeVector> u,
+                           Teuchos::RCP<const TreeVector> du) override;
 
   // StrongMPC's preconditioner is, by default, just the block-diagonal
   // operator formed by placing the sub PK's preconditioners on the diagonal.
   // -- Apply preconditioner to u and returns the result in Pu.
-  virtual int
-  ApplyPreconditioner(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<TreeVector> Pu) override;
+  virtual int ApplyPreconditioner(Teuchos::RCP<const TreeVector> u,
+                                  Teuchos::RCP<TreeVector> Pu) override;
 
   // -- Update the preconditioner.
   virtual void UpdatePreconditioner(double t, Teuchos::RCP<const TreeVector> up, double h) override;
@@ -93,15 +99,16 @@ class StrongMPC : public MPC<PK_t>, public PK_BDF_Default {
   virtual bool IsValid(const Teuchos::RCP<const TreeVector>& u) override;
 
   // -- Modify the predictor.
-  virtual bool
-  ModifyPredictor(double h, Teuchos::RCP<const TreeVector> u0, Teuchos::RCP<TreeVector> u) override;
+  virtual bool ModifyPredictor(double h,
+                               Teuchos::RCP<const TreeVector> u0,
+                               Teuchos::RCP<TreeVector> u) override;
 
   // -- Modify the correction.
-  virtual AmanziSolvers::FnBaseDefs::ModifyCorrectionResult
-  ModifyCorrection(double h,
-                   Teuchos::RCP<const TreeVector> res,
-                   Teuchos::RCP<const TreeVector> u,
-                   Teuchos::RCP<TreeVector> du) override;
+  virtual AmanziSolvers::FnBaseDefs::ModifyCorrectionResult ModifyCorrection(
+    double h,
+    Teuchos::RCP<const TreeVector> res,
+    Teuchos::RCP<const TreeVector> u,
+    Teuchos::RCP<TreeVector> du) override;
 
  protected:
   using MPC<PK_t>::sub_pks_;
@@ -121,7 +128,7 @@ class StrongMPC : public MPC<PK_t>, public PK_BDF_Default {
 // -----------------------------------------------------------------------------
 // Constructor
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 StrongMPC<PK_t>::StrongMPC(Teuchos::ParameterList& pk_tree,
                            const Teuchos::RCP<Teuchos::ParameterList>& global_list,
                            const Teuchos::RCP<State>& S,
@@ -134,8 +141,7 @@ StrongMPC<PK_t>::StrongMPC(Teuchos::ParameterList& pk_tree,
 }
 
 
-
-template <class PK_t>
+template<class PK_t>
 void
 StrongMPC<PK_t>::parseParameterList()
 {
@@ -153,7 +159,7 @@ StrongMPC<PK_t>::parseParameterList()
 // -----------------------------------------------------------------------------
 // Setup
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 StrongMPC<PK_t>::Setup()
 {
@@ -173,7 +179,7 @@ StrongMPC<PK_t>::Setup()
 // Required unique initialize(), just calls both of its base class
 // initialize() methods.
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 StrongMPC<PK_t>::Initialize()
 {
@@ -193,7 +199,7 @@ StrongMPC<PK_t>::Initialize()
 // -----------------------------------------------------------------------------
 // Calls both parts
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 StrongMPC<PK_t>::CommitStep(double t_old, double t_new, const Tag& tag)
 {
@@ -201,7 +207,7 @@ StrongMPC<PK_t>::CommitStep(double t_old, double t_new, const Tag& tag)
   PK_BDF_Default::CommitStep(t_old, t_new, tag);
 }
 
-template <class PK_t>
+template<class PK_t>
 void
 StrongMPC<PK_t>::FailStep(double t_old, double t_new, const Tag& tag)
 {
@@ -213,7 +219,7 @@ StrongMPC<PK_t>::FailStep(double t_old, double t_new, const Tag& tag)
 // -----------------------------------------------------------------------------
 // Compute the non-linear functional g = g(t,u,udot).
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 StrongMPC<PK_t>::FunctionalResidual(double t_old,
                                     double t_new,
@@ -258,7 +264,7 @@ StrongMPC<PK_t>::FunctionalResidual(double t_old,
 // -----------------------------------------------------------------------------
 // Applies preconditioner to u and returns the result in Pu.
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 int
 StrongMPC<PK_t>::ApplyPreconditioner(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<TreeVector> Pu)
 {
@@ -291,7 +297,7 @@ StrongMPC<PK_t>::ApplyPreconditioner(Teuchos::RCP<const TreeVector> u, Teuchos::
 // Compute a norm on u-du and returns the result.
 // For a Strong MPC, the enorm is just the max of the sub PKs enorms.
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 double
 StrongMPC<PK_t>::ErrorNorm(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<const TreeVector> du)
 {
@@ -324,7 +330,7 @@ StrongMPC<PK_t>::ErrorNorm(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<const 
 // -----------------------------------------------------------------------------
 // Update the preconditioner.
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 StrongMPC<PK_t>::UpdatePreconditioner(double t, Teuchos::RCP<const TreeVector> up, double h)
 {
@@ -349,7 +355,7 @@ StrongMPC<PK_t>::UpdatePreconditioner(double t, Teuchos::RCP<const TreeVector> u
 // Experimental approach -- calling this indicates that the time integration
 // scheme is changing the value of the solution in state.
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 StrongMPC<PK_t>::ChangedSolution(const Tag& tag)
 {
@@ -362,7 +368,7 @@ StrongMPC<PK_t>::ChangedSolution(const Tag& tag)
 // Calling this indicates that the time integration scheme is changing
 // the value of the solution in state.
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 StrongMPC<PK_t>::ChangedSolution()
 {
@@ -373,7 +379,7 @@ StrongMPC<PK_t>::ChangedSolution()
 // -----------------------------------------------------------------------------
 // Check admissibility of each sub-pk
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 bool
 StrongMPC<PK_t>::IsAdmissible(Teuchos::RCP<const TreeVector> u)
 {
@@ -398,7 +404,7 @@ StrongMPC<PK_t>::IsAdmissible(Teuchos::RCP<const TreeVector> u)
 // -----------------------------------------------------------------------------
 // Check validity of each sub-pk
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 bool
 StrongMPC<PK_t>::IsValid(const Teuchos::RCP<const TreeVector>& u)
 {
@@ -423,7 +429,7 @@ StrongMPC<PK_t>::IsValid(const Teuchos::RCP<const TreeVector>& u)
 // -----------------------------------------------------------------------------
 // Modify predictor from each sub pk.
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 bool
 StrongMPC<PK_t>::ModifyPredictor(double h,
                                  Teuchos::RCP<const TreeVector> u0,
@@ -449,7 +455,7 @@ StrongMPC<PK_t>::ModifyPredictor(double h,
 // -----------------------------------------------------------------------------
 // Modify correction from each sub pk.
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 AmanziSolvers::FnBaseDefs::ModifyCorrectionResult
 StrongMPC<PK_t>::ModifyCorrection(double h,
                                   Teuchos::RCP<const TreeVector> res,

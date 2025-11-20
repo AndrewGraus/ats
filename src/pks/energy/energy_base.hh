@@ -6,140 +6,148 @@
 
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
-
-//! An advection-diffusion equation for energy.
 /*!
 
-Solves an advection-diffusion equation for energy:
+Solves an advection-diffusion equation for transport of energy:
 
 .. math::
     \frac{\partial E}{\partial t} - \nabla \cdot \kappa \nabla T + \nabla \cdot \mathbf{q} e(T) = Q_w e(T) + Q_e
 
-.. todo:: Document the energy error norm!
+Note that this is implemented rather differently than chemical transport,
+likely for unclear (historical) reasons.  At some point energy and chemical
+transport should probably be merged into a shared PK which supports both
+sequential and globally implicit coupling of flow and transport.
 
-.. _energy-pk-spec:
-.. admonition:: energy-pk-spec
+Note that this is a base class and cannot be directly created.  Instead, use
+two-phase or three-phase energy PKs.
 
-    * `"domain`" ``[string]`` **"domain"**  Defaults to the subsurface mesh.
+.. _pk-energy-base-spec:
+.. admonition:: pk-energy-base-spec
 
-    * `"primary variable`" ``[string]`` The primary variable associated with
-      this PK, typically `"DOMAIN-temperature`" Note there is no default -- this
-      must be provided by the user.
+   * `"domain`" ``[string]`` **"domain"**  Defaults to the subsurface mesh.
 
-    * `"boundary conditions`" ``[list]`` Defaults to 0 diffusive flux
-      boundary condition.  See `Energy-specific Boundary Conditions`_
+   * `"primary variable`" ``[string]`` **DOMAIN-temperature** The primary
+     variable associated with this PK.
 
-    * `"thermal conductivity evaluator`" ``[list]``
-      The thermal conductivity.  This
-      needs to go away, and should get moved to State.
+   * `"boundary conditions`" ``[list]`` Defaults to 0 diffusive flux
+     boundary condition.  See :ref:`Energy-specific Boundary Conditions`
 
-    * `"absolute error tolerance`" ``[double]`` **76.e-6** A small amount of
-      energy, see error norm. `[MJ]`
+   * `"absolute error tolerance`" ``[double]`` **76.e-6** A small amount of
+     energy, see error norm. [MJ]
 
-    * `"upwind conductivity method`" ``[string]`` **arithmetic mean** Method of
-      moving cell-based thermal conductivities onto faces.  One of:
+   * `"upwind conductivity method`" ``[string]`` **arithmetic mean** Method of
+     moving cell-based thermal conductivities onto faces.  One of:
 
-      - `"arithmetic mean`" the default, average of neighboring cells
-      - `"cell centered`" harmonic mean
+     - `"arithmetic mean`" the default, average of neighboring cells
+     - `"cell centered`" harmonic mean
 
-    IF
+   Math and solver algorithm options:
 
-    * `"explicit advection`" ``[bool]`` **false** Treat the advection term implicitly.
+   * `"inverse`" ``[inverse-spec]`` **optional** The inverse used for
+     preconditioning in a non-globally coupled problem.  See :ref:`Inverse`.
 
-    ELSE
+   * `"advection`" ``[advection-upwind-op-spec]`` See :ref:`Advection`.  Only
+     one current implementation, so defaults are typically fine.
 
-    * `"supress advective terms in preconditioner`" ``[bool]`` **false**
-      Typically subsurface energy equations are strongly diffusion dominated,
-      and the advective terms may add little.  With this flag on, we ignore
-      theem in the preconditioner, making an easier linear solve and often not
-      negatively impacting the nonlinear solve.
+   IF
 
-    * `"advection preconditioner`" ``[list]`` **optional**
-      Typically defaults are correct.
+   * `"explicit advection`" ``[bool]`` **false** Treat the advection term explicitly.
 
-    END
+   ELSE
 
-    * `"diffusion`" ``[pde-diffusion-spec]`` See PDE_Diffusion_, the diffusion operator.
+   * `"supress advective terms in preconditioner`" ``[bool]`` **false**
+     Typically subsurface energy equations are strongly diffusion dominated,
+     and the advective terms may add little.  With this flag on, we ignore them
+     in the preconditioner, making an easier linear solve and often not
+     negatively impacting the nonlinear solve.  Note that this does NOT change
+     the answer, just the performance.
 
-    * `"diffusion preconditioner`" ``[pde-diffusion-spec]`` See
-      PDE_Diffusion_, the inverse operator.  Typically only adds Jacobian
-      terms, as all the rest default to those values from `"diffusion`".
+   * `"advection preconditioner`" ``[advection-upwind-op-spec`` **optional**
+     Typically defaults are correct.  See :ref:`Advection`.
 
-    IF
+   END
 
-    * `"source term`" ``[bool]`` **false** Is there a source term?
+   * `"diffusion`" ``[pde-diffusion-typedinline-spec]`` See :ref:`Diffusion`,
+     the diffusion operator.
 
-    THEN
+   * `"diffusion preconditioner`" ``[pde-diffusion-typedinline-spec]`` See
+     :ref:`Diffusion`, the inverse operator.  Typically only adds Jacobian terms,
+     as all the rest default to those values from `"diffusion`".
 
-    * `"source key`" ``[string]`` **DOMAIN-total_energy_source** Typically
-      not set, as the default is good. ``[MJ s^-1]``
+   IF
 
-    * `"source term finite difference`" ``[bool]`` **false** Option to do a
-      finite difference approximation of the source term's derivative with
-      respect to the primary variable.  This is useful for
-      difficult-to-differentiate terms like a surface energy balance, which
-      includes many terms.
+   * `"source term`" ``[bool]`` **false** Is there a source term?
 
-    END
+   THEN
 
-    Globalization:
+   * `"source key`" ``[string]`` **DOMAIN-total_energy_source** Typically
+     not set, as the default is good. [MJ s^-1]
 
-    * `"modify predictor with consistent faces`" ``[bool]`` **false** In a
-      face+cell diffusion discretization, this modifies the predictor to make
-      sure that faces, which are a DAE, are consistent with the predicted cells
-      (i.e. face fluxes from each sides match).
+   * `"source term finite difference`" ``[bool]`` **false** Option to do a
+     finite difference approximation of the source term's derivative with
+     respect to the primary variable.  This is useful for
+     difficult-to-differentiate terms like a surface energy balance, which
+     includes many terms.
 
-    * `"modify predictor for freezing`" ``[bool]`` **false** A simple limiter
-      that keeps temperature corrections from jumping over the phase change.
+   END
 
-    * `"limit correction to temperature change [K]`" ``[double]`` **-1.0** If >
-      0, stops nonlinear updates from being too big through clipping.
+   Globalization:
 
-    The following are rarely set by the user, as the defaults are typically right.
+   * `"modify predictor with consistent faces`" ``[bool]`` **false** In a
+     face+cell diffusion discretization, this modifies the predictor to make
+     sure that faces, which are algebraic relative to cells, are consistent
+     with the predicted cells values (i.e. face fluxes from each side match).
 
-    * `"advection`" ``[list]`` **optional** The PDE_Advection_ spec.  Only one
-      current implementation, so defaults are typically fine.
+   * `"modify predictor for freezing`" ``[bool]`` **false** A simple limiter
+     that keeps temperature corrections from jumping over the phase change.
 
-    * `"accumulation preconditioner`" ``[pde-accumulation-spec]`` **optional**
-      The inverse of the accumulation operator.  See PDE_Accumulation_.
-      Typically not provided by users, as defaults are correct.
+   * `"limit correction to temperature change [K]`" ``[double]`` **-1.0** If >
+     0, stops nonlinear updates from being too big through clipping.
 
-    IF
+   The following are rarely set by the user, as the defaults are typically right.
 
-    * `"coupled to surface via flux`" ``[bool]`` **false** If true, apply
-      surface boundary conditions from an exchange flux.  Note, if this is a
-      coupled problem, it is probably set by the MPC.  No need for a user to
-      set it.
+   * `"accumulation preconditioner`" ``[pde-accumulation-spec]`` **optional**
+     The inverse of the accumulation operator.  See :ref:`Accumulation`.
+     Typically not provided by users, as defaults are correct.
 
-    THEN
+   Algorithmic physics control:
 
-    * `"surface-subsurface energy flux key`" ``[string]`` **DOMAIN-surface_subsurface_energy_flux**
+   IF
 
-    END
+   * `"coupled to surface via flux`" ``[bool]`` **false** If true, apply
+     surface boundary conditions from an exchange flux.  Note, if this is a
+     coupled problem, it is probably set by the MPC.  No need for a user to
+     set it.
 
-    * `"coupled to surface via temperature`" ``[bool]`` **false** If true, apply
-      surface boundary conditions from the surface temperature (Dirichlet).
+   THEN
 
-    KEYS:
+   * `"surface-subsurface energy flux key`" ``[string]`` **DOMAIN-surface_subsurface_energy_flux**
 
-    - `"conserved quantity`" **DOMAIN-energy** The total energy :math:`E` `[MJ]`
-    - `"energy`" **DOMAIN-energy** The total energy :math:`E`, also the conserved quantity. `[MJ]`
-    - `"water content`" **DOMAIN-water_content** The total mass :math:`\Theta`, used in error norm `[mol]`
-    - `"enthalpy`" **DOMAIN-enthalpy** The specific enthalpy :math`e` `[MJ mol^-1]`
-    - `"flux`" **DOMAIN-water_flux** The water flux :math:`\mathbf{q}` used in advection. `[mol s^-1]`
-    - `"diffusive energy`" **DOMAIN-diffusive_energy_flux** :math:`\mathbf{q_e}` `[MJ s^-1]`
-    - `"advected energy`" **DOMAIN-advected_energy_flux** :math:`\mathbf{q_e^{adv}} = q e` `[MJ s^-1]`
-    - `"thermal conductivity`" **DOMAIN-thermal_conductivity** Thermal conductivity on cells `[W m^-1 K^-1]`
-    - `"upwinded thermal conductivity`" **DOMAIN-upwinded_thermal_conductivity** Thermal conductivity on faces `[W m^-1 K^-1]`
+   END
 
-    EVALUATORS:
+   * `"coupled to surface via temperature`" ``[bool]`` **false** If true, apply
+     surface boundary conditions from the surface temperature (Dirichlet).
 
-    - `"source term`" **optional** If source key is provided.
-    - `"enthalpy`"
-    - `"cell volume`"
-    - `"thermal conductivity`"
-    - `"conserved quantity`"
-    - `"energy`"
+   KEYS:
+
+   - `"conserved quantity`" **DOMAIN-energy** The total energy :math:`E` `[MJ]`
+   - `"energy`" **DOMAIN-energy** The total energy :math:`E`, also the conserved quantity. `[MJ]`
+   - `"water content`" **DOMAIN-water_content** The total mass :math:`\Theta`, used in error norm `[mol]`
+   - `"enthalpy`" **DOMAIN-enthalpy** The specific enthalpy :math`e` `[MJ mol^-1]`
+   - `"flux`" **DOMAIN-water_flux** The water flux :math:`\mathbf{q}` used in advection. `[mol s^-1]`
+   - `"diffusive energy`" **DOMAIN-diffusive_energy_flux** :math:`\mathbf{q_e}` `[MJ s^-1]`
+   - `"advected energy`" **DOMAIN-advected_energy_flux** :math:`\mathbf{q_e^{adv}} = q e` `[MJ s^-1]`
+   - `"thermal conductivity`" **DOMAIN-thermal_conductivity** Thermal conductivity on cells `[W m^-1 K^-1]`
+   - `"upwinded thermal conductivity`" **DOMAIN-upwinded_thermal_conductivity** Thermal conductivity on faces `[W m^-1 K^-1]`
+
+   EVALUATORS:
+
+   - `"source term`" **optional** If source key is provided.
+   - `"enthalpy`"
+   - `"cell volume`"
+   - `"thermal conductivity`"
+   - `"conserved quantity`"
+   - `"energy`"
 
 */
 
@@ -154,7 +162,6 @@ Solves an advection-diffusion equation for energy:
 #include "PDE_Accumulation.hh"
 #include "PDE_AdvectionUpwind.hh"
 
-//#include "PK_PhysicalBDF_ATS.hh"
 #include "pk_physical_bdf_default.hh"
 #include "upwinding.hh"
 
@@ -196,8 +203,8 @@ class EnergyBase : public PK_PhysicalBDF_Default {
 
   // Default implementations of BDFFnBase methods.
   // -- Compute a norm on u-du and return the result.
-  virtual double
-  ErrorNorm(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<const TreeVector> du) override;
+  virtual double ErrorNorm(Teuchos::RCP<const TreeVector> u,
+                           Teuchos::RCP<const TreeVector> du) override;
 
   // EnergyBase is a BDFFnBase
   // computes the non-linear functional f = f(t,u,udot)
@@ -209,8 +216,8 @@ class EnergyBase : public PK_PhysicalBDF_Default {
 
 
   // applies preconditioner to u and returns the result in Pu
-  virtual int
-  ApplyPreconditioner(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<TreeVector> Pu) override;
+  virtual int ApplyPreconditioner(Teuchos::RCP<const TreeVector> u,
+                                  Teuchos::RCP<TreeVector> Pu) override;
 
   // updates the preconditioner
   virtual void UpdatePreconditioner(double t, Teuchos::RCP<const TreeVector> up, double h) override;
@@ -218,17 +225,18 @@ class EnergyBase : public PK_PhysicalBDF_Default {
   // problems with temperatures -- setting a range of admissible temps
   virtual bool IsAdmissible(Teuchos::RCP<const TreeVector> up) override;
 
-  virtual bool
-  ModifyPredictor(double h, Teuchos::RCP<const TreeVector> u0, Teuchos::RCP<TreeVector> u) override;
+  virtual bool ModifyPredictor(double h,
+                               Teuchos::RCP<const TreeVector> u0,
+                               Teuchos::RCP<TreeVector> u) override;
 
   // evaluating consistent faces for given BCs and cell values
   virtual void CalculateConsistentFaces(const Teuchos::Ptr<CompositeVector>& u);
 
-  virtual AmanziSolvers::FnBaseDefs::ModifyCorrectionResult
-  ModifyCorrection(double h,
-                   Teuchos::RCP<const TreeVector> res,
-                   Teuchos::RCP<const TreeVector> u,
-                   Teuchos::RCP<TreeVector> du) override;
+  virtual AmanziSolvers::FnBaseDefs::ModifyCorrectionResult ModifyCorrection(
+    double h,
+    Teuchos::RCP<const TreeVector> res,
+    Teuchos::RCP<const TreeVector> u,
+    Teuchos::RCP<TreeVector> du) override;
 
  protected:
   // These must be provided by the deriving PK.

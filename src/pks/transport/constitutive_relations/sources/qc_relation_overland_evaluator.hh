@@ -17,8 +17,8 @@
 
    KEYS:
    - `"cell volume`" **DOMAIN-cell_volume**
-   - `"molar density liquid`" **DOMAIN-molar_density_liquid** 
-   - `"overland source`" **DOMAIN-overland_source** source 
+   - `"molar density liquid`" **DOMAIN-molar_density_liquid**
+   - `"overland source`" **DOMAIN-overland_source** source
 
 Example
 
@@ -30,7 +30,7 @@ Example
     <ParameterList name="function" type="ParameterList">
       <ParameterList name="function-tabular" type="ParameterList">
         <Parameter name="x values" type="Array(double)" value="{0, 0.1, 1, 10}" />
-        <Parameter name="y values" type="Array(double)" value="{0, 0.08, 0.1, 0.2}" /> 
+        <Parameter name="y values" type="Array(double)" value="{0, 0.08, 0.1, 0.2}" />
         <Parameter name="forms" type="Array(string)" value="{linear, linear, linear}" />
       </ParameterList>
     </ParameterList>
@@ -60,8 +60,9 @@ class QCRelationOverlandEvaluator : public EvaluatorSecondaryMonotypeCV {
   }
 
   // virtual void EnsureCompatibility(State& S) override;
-  virtual bool
-  IsDifferentiableWRT(const State& S, const Key& wrt_key, const Tag& wrt_tag) const override
+  virtual bool IsDifferentiableWRT(const State& S,
+                                   const Key& wrt_key,
+                                   const Tag& wrt_tag) const override
   {
     return false;
   }
@@ -77,6 +78,7 @@ class QCRelationOverlandEvaluator : public EvaluatorSecondaryMonotypeCV {
   Key domain_;
   Key cv_key_;
   Key molar_density_key_;
+  Key tcc_key_;
   Key field_src_key_;
   Teuchos::RCP<Function> QC_curve_;
 
@@ -87,4 +89,3 @@ class QCRelationOverlandEvaluator : public EvaluatorSecondaryMonotypeCV {
 } // namespace Relations
 } // namespace Flow
 } // namespace Amanzi
-

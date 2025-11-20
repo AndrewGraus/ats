@@ -22,9 +22,9 @@ OverlandPressureWaterContentEvaluator::OverlandPressureWaterContentEvaluator(
   Teuchos::ParameterList& plist)
   : EvaluatorSecondaryMonotypeCV(plist)
 {
-  M_ = plist_.get<double>("molar mass", 0.0180153);
+  M_ = plist_.get<double>("molar mass [kg mol^-1]", 0.0180153);
   bar_ = plist_.get<bool>("allow negative water content", false);
-  rollover_ = plist_.get<double>("water content rollover", 0.);
+  rollover_ = plist_.get<double>("water content rollover [Pa]", 0.);
 
   Key domain_name = Keys::getDomain(my_keys_.front().first);
   Tag tag = my_keys_.front().second;
@@ -62,7 +62,9 @@ OverlandPressureWaterContentEvaluator::Evaluate_(const State& S,
 
   int ncells = res.MyLength();
   if (bar_) {
-    for (int c = 0; c != ncells; ++c) { res[0][c] = cv[0][c] * (pres[0][c] - p_atm) / (gz * M_); }
+    for (int c = 0; c != ncells; ++c) {
+      res[0][c] = cv[0][c] * (pres[0][c] - p_atm) / (gz * M_);
+    }
   } else if (rollover_ > 0.) {
     for (int c = 0; c != ncells; ++c) {
       double dp = pres[0][c] - p_atm;
@@ -103,7 +105,9 @@ OverlandPressureWaterContentEvaluator::EvaluatePartialDerivative_(
   if (wrt_key == pres_key_) {
     int ncells = res.MyLength();
     if (bar_) {
-      for (int c = 0; c != ncells; ++c) { res[0][c] = cv[0][c] / (gz * M_); }
+      for (int c = 0; c != ncells; ++c) {
+        res[0][c] = cv[0][c] / (gz * M_);
+      }
     } else if (rollover_ > 0.) {
       for (int c = 0; c != ncells; ++c) {
         double dp = pres[0][c] - p_atm;

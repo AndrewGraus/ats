@@ -16,6 +16,7 @@ with freezing.
 ------------------------------------------------------------------------- */
 #include "EpetraExt_RowMatrixOut.h"
 
+#include "TensorVector.hh"
 #include "MultiplicativeEvaluator.hh"
 #include "TreeOperator.hh"
 #include "PDE_DiffusionFactory.hh"
@@ -77,6 +78,8 @@ MPCSubsurface::parseParameterList()
   water_flux_dir_key_ =
     Keys::readKey(*plist_, domain_name_, "water flux direction", "water_flux_direction");
   rho_key_ = Keys::readKey(*plist_, domain_name_, "mass density liquid", "mass_density_liquid");
+
+  perm_key_ = Keys::readKey(*plist_, domain_name_, "permeability", "permeability");
 }
 
 // -- Initialize owned (dependent) variables.
@@ -198,10 +201,8 @@ MPCSubsurface::Setup()
       Teuchos::ParameterList divq_plist(
         pks_list_->sublist(pk_order[0]).sublist("diffusion preconditioner"));
 
-      if (is_fv_)
-        divq_plist.set("Newton correction", "true Jacobian");
-      else
-        divq_plist.set("Newton correction", "approximate Jacobian");
+      if (is_fv_) divq_plist.set("Newton correction", "true Jacobian");
+      else divq_plist.set("Newton correction", "approximate Jacobian");
 
       divq_plist.set("exclude primary terms", true);
 
@@ -214,11 +215,12 @@ MPCSubsurface::Setup()
     // -- derivatives of water content with respect to temperature
     if (S_->GetEvaluator(wc_key_, tag_next_).IsDifferentiableWRT(*S_, temp_key_, tag_next_)) {
       if (dWC_dT_block_ == Teuchos::null) {
-        dWC_dT_ = Teuchos::rcp(new Operators::PDE_Accumulation(AmanziMesh::Entity_kind::CELL, mesh_));
+        dWC_dT_ =
+          Teuchos::rcp(new Operators::PDE_Accumulation(AmanziMesh::Entity_kind::CELL, mesh_));
         dWC_dT_block_ = dWC_dT_->global_operator();
       } else {
-        dWC_dT_ =
-          Teuchos::rcp(new Operators::PDE_Accumulation(AmanziMesh::Entity_kind::CELL, dWC_dT_block_));
+        dWC_dT_ = Teuchos::rcp(
+          new Operators::PDE_Accumulation(AmanziMesh::Entity_kind::CELL, dWC_dT_block_));
       }
     }
 
@@ -246,10 +248,8 @@ MPCSubsurface::Setup()
       // set up the operator
       Teuchos::ParameterList ddivKgT_dp_plist(
         pks_list_->sublist(pk_order[1]).sublist("diffusion preconditioner"));
-      if (is_fv_)
-        ddivKgT_dp_plist.set("Newton correction", "true Jacobian");
-      else
-        ddivKgT_dp_plist.set("Newton correction", "approximate Jacobian");
+      if (is_fv_) ddivKgT_dp_plist.set("Newton correction", "true Jacobian");
+      else ddivKgT_dp_plist.set("Newton correction", "approximate Jacobian");
 
       ddivKgT_dp_plist.set("exclude primary terms", true);
 
@@ -272,10 +272,8 @@ MPCSubsurface::Setup()
       Teuchos::ParameterList divhq_dp_plist(
         pks_list_->sublist(pk_order[0]).sublist("diffusion preconditioner"));
 
-      if (is_fv_)
-        divhq_dp_plist.set("Newton correction", "true Jacobian");
-      else
-        divhq_dp_plist.set("Newton correction", "approximate Jacobian");
+      if (is_fv_) divhq_dp_plist.set("Newton correction", "true Jacobian");
+      else divhq_dp_plist.set("Newton correction", "approximate Jacobian");
 
       Operators::PDE_DiffusionFactory opfactory;
       if (dE_dp_block_ == Teuchos::null) {
@@ -290,10 +288,8 @@ MPCSubsurface::Setup()
         pks_list_->sublist(pk_order[0]).sublist("diffusion preconditioner"));
       divhq_dT_plist.set("exclude primary terms", true);
 
-      if (is_fv_)
-        divhq_dT_plist.set("Newton correction", "true Jacobian");
-      else
-        divhq_dT_plist.set("Newton correction", "approximate Jacobian");
+      if (is_fv_) divhq_dT_plist.set("Newton correction", "true Jacobian");
+      else divhq_dT_plist.set("Newton correction", "approximate Jacobian");
 
       ddivhq_dT_ = opfactory.CreateWithGravity(divhq_dT_plist, pcB);
 
@@ -373,11 +369,12 @@ MPCSubsurface::Setup()
     // -- derivatives of energy with respect to pressure
     if (S_->GetEvaluator(wc_key_, tag_next_).IsDifferentiableWRT(*S_, temp_key_, tag_next_)) {
       if (dE_dp_block_ == Teuchos::null) {
-        dE_dp_ = Teuchos::rcp(new Operators::PDE_Accumulation(AmanziMesh::Entity_kind::CELL, mesh_));
+        dE_dp_ =
+          Teuchos::rcp(new Operators::PDE_Accumulation(AmanziMesh::Entity_kind::CELL, mesh_));
         dE_dp_block_ = dE_dp_->global_operator();
       } else {
-        dE_dp_ =
-          Teuchos::rcp(new Operators::PDE_Accumulation(AmanziMesh::Entity_kind::CELL, dE_dp_block_));
+        dE_dp_ = Teuchos::rcp(
+          new Operators::PDE_Accumulation(AmanziMesh::Entity_kind::CELL, dE_dp_block_));
       }
     }
 
@@ -442,7 +439,8 @@ MPCSubsurface::Initialize()
     const AmanziGeometry::Point& g = S_->Get<AmanziGeometry::Point>("gravity", Tags::DEFAULT);
     ddivq_dT_->SetGravity(g);
     ddivq_dT_->SetBCs(sub_pks_[0]->BCs(), sub_pks_[1]->BCs());
-    ddivq_dT_->SetTensorCoefficient(richards_pk->K_);
+    ddivq_dT_->SetTensorCoefficient(
+      Teuchos::rcpFromRef(S_->Get<TensorVector>(perm_key_, tag_next_).data));
   }
 
   if (ddivKgT_dp_ != Teuchos::null) {
@@ -475,11 +473,13 @@ MPCSubsurface::Initialize()
     const AmanziGeometry::Point& g = S_->Get<AmanziGeometry::Point>("gravity", Tags::DEFAULT);
     ddivhq_dp_->SetGravity(g);
     ddivhq_dp_->SetBCs(sub_pks_[1]->BCs(), sub_pks_[0]->BCs());
-    ddivhq_dp_->SetTensorCoefficient(richards_pk->K_);
+    ddivhq_dp_->SetTensorCoefficient(
+      Teuchos::rcpFromRef(S_->Get<TensorVector>(perm_key_, tag_next_).data));
 
     ddivhq_dT_->SetGravity(g);
     ddivhq_dT_->SetBCs(sub_pks_[1]->BCs(), sub_pks_[1]->BCs());
-    ddivhq_dT_->SetTensorCoefficient(richards_pk->K_);
+    ddivhq_dT_->SetTensorCoefficient(
+      Teuchos::rcpFromRef(S_->Get<TensorVector>(perm_key_, tag_next_).data));
   }
 }
 
@@ -495,7 +495,9 @@ MPCSubsurface::set_tags(const Tag& tag_current, const Tag& tag_next)
 void
 MPCSubsurface::CommitStep(double t_old, double t_new, const Tag& tag)
 {
-  if (ewc_ != Teuchos::null) { ewc_->commit_state(); }
+  if (ewc_ != Teuchos::null) {
+    ewc_->commit_state();
+  }
 
   update_pcs_ = 0;
   StrongMPC<PK_PhysicalBDF_Default>::CommitStep(t_old, t_new, tag);
@@ -685,7 +687,7 @@ MPCSubsurface::UpdatePreconditioner(double t, Teuchos::RCP<const TreeVector> up,
       // -- update the local matrices, div h * kr grad
       ddivhq_dp_->UpdateMatrices(Teuchos::null, Teuchos::null);
       // -- determine the advective fluxes, q_a = h * kr grad p
-      CompositeVector adv_flux(*flux, INIT_MODE_ZERO);
+      CompositeVector adv_flux(flux->Map(), init_mode_default);
       Teuchos::Ptr<CompositeVector> adv_flux_ptr(&adv_flux);
       ddivhq_dp_->UpdateFlux(up->SubVector(0)->Data().ptr(), adv_flux_ptr);
       // -- add in components div (d h*kr / dp) grad q_a / (h*kr)
@@ -723,7 +725,9 @@ MPCSubsurface::UpdatePreconditioner(double t, Teuchos::RCP<const TreeVector> up,
     if (vecs.size() > 0) db_->WriteVectors(vnames, vecs, false);
   }
 
-  if (precon_type_ == PRECON_EWC) { ewc_->UpdatePreconditioner(t, up, h); }
+  if (precon_type_ == PRECON_EWC) {
+    ewc_->UpdatePreconditioner(t, up, h);
+  }
   update_pcs_++;
 }
 
@@ -735,7 +739,7 @@ int
 MPCSubsurface::ApplyPreconditioner(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<TreeVector> Pu)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "Precon application:" << std::endl;
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) *vo_->os() << "Precon application:" << std::endl;
 
   // write residuals
   if (vo_->os_OK(Teuchos::VERB_HIGH)) {

@@ -23,10 +23,10 @@ CompressiblePorosityEvaluator::CompressiblePorosityEvaluator(Teuchos::ParameterL
 {
   std::string domain_name = Keys::getDomain(my_keys_.front().first);
   Tag tag = my_keys_.front().second;
-  pres_key_ = Keys::readKey(plist_, domain_name, "pressure key", "pressure");
+  pres_key_ = Keys::readKey(plist_, domain_name, "pressure", "pressure");
   dependencies_.insert(KeyTag{ pres_key_, tag });
 
-  poro_key_ = Keys::readKey(plist_, domain_name, "base porosity key", "base_porosity");
+  poro_key_ = Keys::readKey(plist_, domain_name, "base porosity", "base_porosity");
   dependencies_.insert(KeyTag{ poro_key_, tag });
 
   AMANZI_ASSERT(plist_.isSublist("compressible porosity model parameters"));
@@ -95,7 +95,7 @@ CompressiblePorosityEvaluator::EvaluatePartialDerivative_(
 
   if (wrt_key == pres_key_) {
     // evaluate the model
-    for (CompositeVector::name_iterator comp = result[0]->begin(); comp != result[0]->end();
+    for (CompositeVector::name_iterator comp = result[0]->begin() ; comp != result[0]->end();
          ++comp) {
       AMANZI_ASSERT(
         *comp ==
@@ -113,7 +113,7 @@ CompressiblePorosityEvaluator::EvaluatePartialDerivative_(
 
   } else if (wrt_key == poro_key_) {
     // evaluate the model
-    for (CompositeVector::name_iterator comp = result[0]->begin(); comp != result[0]->end();
+    for (CompositeVector::name_iterator comp = result[0]->begin() ; comp != result[0]->end();
          ++comp) {
       AMANZI_ASSERT(
         *comp ==

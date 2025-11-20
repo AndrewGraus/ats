@@ -7,8 +7,7 @@
   Authors: Ethan Coon (ecoon@ornl.gov)
 */
 
-#include "energy_bc_factory.hh"
-#include "advection_factory.hh"
+#include "Reductions.hh"
 
 #include "PDE_DiffusionFactory.hh"
 #include "PDE_Diffusion.hh"
@@ -17,12 +16,14 @@
 #include "upwind_cell_centered.hh"
 #include "upwind_arithmetic_mean.hh"
 #include "upwind_total_flux.hh"
+#include "energy_bc_factory.hh"
+#include "advection_factory.hh"
 
 #include "enthalpy_evaluator.hh"
 
 #include "CompositeVectorFunction.hh"
 #include "CompositeVectorFunctionFactory.hh"
-#include "pk_helpers.hh"
+#include "PK_Helpers.hh"
 #include "MeshAlgorithms.hh"
 
 #include "energy_base.hh"
@@ -55,7 +56,6 @@ EnergyBase::EnergyBase(Teuchos::ParameterList& FElist,
 {}
 
 
-
 // call to allow a PK to modify its own list or lists of its children.
 void
 EnergyBase::parseParameterList()
@@ -66,6 +66,8 @@ EnergyBase::parseParameterList()
   }
 
   // set some defaults for inherited PKs
+  if (!plist_->isParameter("primary variable key suffix"))
+    plist_->set<std::string>("primary variable key suffix", "temperature");
   if (!plist_->isParameter("conserved quantity key suffix"))
     plist_->set<std::string>("conserved quantity key suffix", "energy");
 
@@ -94,7 +96,8 @@ EnergyBase::parseParameterList()
   is_source_term_ = plist_->get<bool>("source term", false);
   if (is_source_term_ && source_key_.empty()) {
     source_key_ = Keys::readKey(*plist_, domain_, "source", "total_energy_source");
-    is_source_term_finite_differentiable_ = plist_->get<bool>("source term finite difference", false);
+    is_source_term_finite_differentiable_ =
+      plist_->get<bool>("source term finite difference", false);
   }
 
   // get keys
@@ -132,7 +135,7 @@ EnergyBase::SetupPhysicalEvaluators_()
 {
   // Get data and evaluators needed by the PK
   // -- energy, energy evaluator, and energy derivative
-  requireAtNext(conserved_key_, tag_next_, *S_)
+  requireEvaluatorAtNext(conserved_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
@@ -140,7 +143,7 @@ EnergyBase::SetupPhysicalEvaluators_()
     conserved_key_, tag_next_, key_, tag_next_);
 
   // -- conductivity
-  requireAtNext(conductivity_key_, tag_next_, *S_)
+  requireEvaluatorAtNext(conductivity_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
@@ -154,7 +157,7 @@ void
 EnergyBase::SetupEnergy_()
 {
   // Get data for special-case entities.
-  requireAtNext(cell_vol_key_, tag_next_, *S_)
+  requireEvaluatorAtNext(cell_vol_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
@@ -162,12 +165,12 @@ EnergyBase::SetupEnergy_()
 
   // require data for source terms
   if (is_source_term_) {
-    requireAtNext(source_key_, tag_next_, *S_)
+    requireEvaluatorAtNext(source_key_, tag_next_, *S_)
       .SetMesh(mesh_)
       ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
-    if (!is_source_term_finite_differentiable_
-        && S_->GetEvaluator(source_key_, tag_next_).IsDifferentiableWRT(*S_, key_, tag_next_)) {
+    if (!is_source_term_finite_differentiable_ &&
+        S_->GetEvaluator(source_key_, tag_next_).IsDifferentiableWRT(*S_, key_, tag_next_)) {
       is_source_term_differentiable_ = true;
       // require derivative of source
       S_->RequireDerivative<CompositeVector, CompositeVectorSpace>(
@@ -176,7 +179,7 @@ EnergyBase::SetupEnergy_()
   }
 
   // is dynamic mesh?  If so, get a key for indicating when the mesh has changed.
-  if (!deform_key_.empty()) S_->RequireEvaluator(deform_key_, tag_next_);
+  if (!deform_key_.empty() ) S_->RequireEvaluator(deform_key_, tag_next_);
 
   // Set up Operators
   // -- boundary conditions
@@ -322,7 +325,7 @@ EnergyBase::SetupEnergy_()
       }
 
       // -- enthalpy data, evaluator
-      requireAtNext(enthalpy_key_, tag_next_, *S_)
+      requireEvaluatorAtNext(enthalpy_key_, tag_next_, *S_)
         .SetMesh(mesh_)
         ->SetGhosted()
         ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1)
@@ -332,21 +335,21 @@ EnergyBase::SetupEnergy_()
         .SetGhosted();
 
       // -- diagnostic for advected energy
-      requireAtNext(adv_energy_flux_key_, tag_next_, *S_, name_)
+      requireEvaluatorAtNext(adv_energy_flux_key_, tag_next_, *S_, name_)
         .SetMesh(mesh_)
         ->SetGhosted()
         ->SetComponent("face", AmanziMesh::Entity_kind::FACE, 1);
 
     } else {
       // -- enthalpy data, evaluator
-      requireAtCurrent(enthalpy_key_, tag_current_, *S_)
+      requireEvaluatorAtCurrent(enthalpy_key_, tag_current_, *S_)
         .SetMesh(mesh_)
         ->SetGhosted()
         ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1)
         ->AddComponent("boundary_face", AmanziMesh::Entity_kind::BOUNDARY_FACE, 1);
 
       // -- diagnostic for advected energy
-      requireAtCurrent(adv_energy_flux_key_, tag_current_, *S_, name_)
+      requireEvaluatorAtCurrent(adv_energy_flux_key_, tag_current_, *S_, name_)
         .SetMesh(mesh_)
         ->SetGhosted()
         ->SetComponent("face", AmanziMesh::Entity_kind::FACE, 1);
@@ -403,22 +406,22 @@ EnergyBase::SetupEnergy_()
     ->SetGhosted();
 
   // require a water flux field
-  requireAtNext(flux_key_, tag_next_, *S_)
+  requireEvaluatorAtNext(flux_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("face", AmanziMesh::Entity_kind::FACE, 1);
   //    and at the current time, where it is a copy evaluator
-  requireAtCurrent(flux_key_, tag_current_, *S_, name_);
+  requireEvaluatorAtCurrent(flux_key_, tag_current_, *S_, name_);
 
   // require a water content field -- used for computing energy density in the
   // error norm
-  requireAtNext(wc_key_, tag_next_, *S_)
+  requireEvaluatorAtNext(wc_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
-  requireAtCurrent(wc_key_, tag_current_, *S_, name_);
+  requireEvaluatorAtCurrent(wc_key_, tag_current_, *S_, name_);
 
   // Require fields for the energy fluxes
-  requireAtNext(energy_flux_key_, tag_next_, *S_, name_)
+  requireEvaluatorAtNext(energy_flux_key_, tag_next_, *S_, name_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->SetComponent("face", AmanziMesh::Entity_kind::FACE, 1);
@@ -494,7 +497,7 @@ EnergyBase::UpdateConductivityData_(const Tag& tag)
       S_->GetPtrW<CompositeVector>(uw_conductivity_key_, tag, name_);
     upwinding_->Update(*cond, *uw_cond, *S_);
 
-    if (uw_cond->HasComponent("face")) uw_cond->ScatterMasterToGhosted("face");
+    if (uw_cond->HasComponent("face") ) uw_cond->ScatterMasterToGhosted("face");
   }
   return update;
 }
@@ -504,7 +507,7 @@ bool
 EnergyBase::UpdateConductivityDerivativeData_(const Tag& tag)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "  Updating conductivity derivatives? ";
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) *vo_->os() << "  Updating conductivity derivatives? ";
 
   bool update = S_->GetEvaluator(conductivity_key_, tag).UpdateDerivative(*S_, name_, key_, tag);
 
@@ -517,7 +520,7 @@ EnergyBase::UpdateConductivityDerivativeData_(const Tag& tag)
         S_->GetPtrW<CompositeVector>(duw_conductivity_key_, tag, name_);
       duw_cond->PutScalar(0.);
       upwinding_deriv_->Update(*dcond, *duw_cond, *S_);
-      if (duw_cond->HasComponent("face")) duw_cond->ScatterMasterToGhosted("face");
+      if (duw_cond->HasComponent("face") ) duw_cond->ScatterMasterToGhosted("face");
     } else {
       dcond->ScatterMasterToGhosted("cell");
     }
@@ -543,7 +546,7 @@ void
 EnergyBase::UpdateBoundaryConditions_(const Tag& tag)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "  Updating BCs." << std::endl;
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) *vo_->os() << "  Updating BCs." << std::endl;
 
   auto& markers = bc_markers();
   auto& values = bc_values();
@@ -661,96 +664,35 @@ bool
 EnergyBase::IsAdmissible(Teuchos::RCP<const TreeVector> up)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "  Checking admissibility..." << std::endl;
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) *vo_->os() << "  Checking admissibility..." << std::endl;
 
   // For some reason, wandering PKs break most frequently with an unreasonable
   // temperature.  This simply tries to catch that before it happens.
   Teuchos::RCP<const CompositeVector> temp = up->Data();
-  double minT, maxT;
 
   const Epetra_MultiVector& temp_c = *temp->ViewComponent("cell", false);
-  double minT_c(1.e6), maxT_c(-1.e6);
-  int min_c(-1), max_c(-1);
-  for (int c = 0; c != temp_c.MyLength(); ++c) {
-    if (temp_c[0][c] < minT_c) {
-      minT_c = temp_c[0][c];
-      min_c = c;
-    }
-    if (temp_c[0][c] > maxT_c) {
-      maxT_c = temp_c[0][c];
-      max_c = c;
-    }
-  }
+  Reductions::MinMaxLoc minmaxT_c = Reductions::reduceAllMinMaxLoc(*temp_c(0));
+  Reductions::MinMaxLoc minmaxT_f = Reductions::createEmptyMinMaxLoc();
 
-  double minT_f(1.e6), maxT_f(-1.e6);
-  int min_f(-1), max_f(-1);
   if (temp->HasComponent("face")) {
     const Epetra_MultiVector& temp_f = *temp->ViewComponent("face", false);
-    for (int f = 0; f != temp_f.MyLength(); ++f) {
-      if (temp_f[0][f] < minT_f) {
-        minT_f = temp_f[0][f];
-        min_f = f;
-      }
-      if (temp_f[0][f] > maxT_f) {
-        maxT_f = temp_f[0][f];
-        max_f = f;
-      }
-    }
-    minT = std::min(minT_c, minT_f);
-    maxT = std::max(maxT_c, maxT_f);
-
-  } else {
-    minT = minT_c;
-    maxT = maxT_c;
+    minmaxT_f = Reductions::reduceAllMinMaxLoc(*temp_f(0));
   }
-
-  double minT_l = minT;
-  double maxT_l = maxT;
-  mesh_->getComm()->MaxAll(&maxT_l, &maxT, 1);
-  mesh_->getComm()->MinAll(&minT_l, &minT, 1);
+  double minT = std::min(minmaxT_c[0].value, minmaxT_f[0].value);
+  double maxT = std::max(minmaxT_c[1].value, minmaxT_f[1].value);
 
   if (vo_->os_OK(Teuchos::VERB_HIGH)) {
     *vo_->os() << "    Admissible T? (min/max): " << minT << ",  " << maxT << std::endl;
   }
 
-  Teuchos::RCP<const Comm_type> comm_p = mesh_->getComm();
-  Teuchos::RCP<const MpiComm_type> mpi_comm_p =
-    Teuchos::rcp_dynamic_cast<const MpiComm_type>(comm_p);
-  const MPI_Comm& comm = mpi_comm_p->Comm();
-
   if (minT < 200.0 || maxT > 330.0) {
     if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
       *vo_->os() << " is not admissible, as it is not within bounds of constitutive models:"
                  << std::endl;
-      ENorm_t global_minT_c, local_minT_c;
-      ENorm_t global_maxT_c, local_maxT_c;
-
-      local_minT_c.value = minT_c;
-      local_minT_c.gid = temp_c.Map().GID(min_c);
-      local_maxT_c.value = maxT_c;
-      local_maxT_c.gid = temp_c.Map().GID(max_c);
-
-      MPI_Allreduce(&local_minT_c, &global_minT_c, 1, MPI_DOUBLE_INT, MPI_MINLOC, comm);
-      MPI_Allreduce(&local_maxT_c, &global_maxT_c, 1, MPI_DOUBLE_INT, MPI_MAXLOC, comm);
-
-      *vo_->os() << "   cells (min/max): [" << global_minT_c.gid << "] " << global_minT_c.value
-                 << ", [" << global_maxT_c.gid << "] " << global_maxT_c.value << std::endl;
+      *vo_->os() << "   cells (min/max): " << minmaxT_c << std::endl;
 
       if (temp->HasComponent("face")) {
-        const Epetra_MultiVector& temp_f = *temp->ViewComponent("face", false);
-        ENorm_t global_minT_f, local_minT_f;
-        ENorm_t global_maxT_f, local_maxT_f;
-
-        local_minT_f.value = minT_f;
-        local_minT_f.gid = temp_f.Map().GID(min_f);
-        local_maxT_f.value = maxT_f;
-        local_maxT_f.gid = temp_f.Map().GID(max_f);
-
-
-        MPI_Allreduce(&local_minT_f, &global_minT_f, 1, MPI_DOUBLE_INT, MPI_MINLOC, comm);
-        MPI_Allreduce(&local_maxT_f, &global_maxT_f, 1, MPI_DOUBLE_INT, MPI_MAXLOC, comm);
-        *vo_->os() << "   cells (min/max): [" << global_minT_f.gid << "] " << global_minT_f.value
-                   << ", [" << global_maxT_f.gid << "] " << global_maxT_f.value << std::endl;
+        *vo_->os() << "   faces (min/max): " << minmaxT_f << std::endl;
       }
     }
     return false;
@@ -766,7 +708,7 @@ bool
 EnergyBase::ModifyPredictor(double h, Teuchos::RCP<const TreeVector> u0, Teuchos::RCP<TreeVector> u)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "Modifying predictor:" << std::endl;
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) *vo_->os() << "Modifying predictor:" << std::endl;
 
   // update boundary conditions
   //ComputeBoundaryConditions_(tag_next_);
@@ -824,7 +766,7 @@ EnergyBase::ModifyPredictor(double h, Teuchos::RCP<const TreeVector> u0, Teuchos
 void
 EnergyBase::CalculateConsistentFaces(const Teuchos::Ptr<CompositeVector>& u)
 {
-  if (!u->HasComponent("face")) return;
+  if (!u->HasComponent("face") ) return;
 
   // average cells to faces to give a reasonable initial guess
   u->ScatterMasterToGhosted("cell");
@@ -837,7 +779,9 @@ EnergyBase::CalculateConsistentFaces(const Teuchos::Ptr<CompositeVector>& u)
     int ncells = cells.size();
 
     double face_value = 0.0;
-    for (int n = 0; n != ncells; ++n) { face_value += u_c[0][cells[n]]; }
+    for (int n = 0; n != ncells; ++n) {
+      face_value += u_c[0][cells[n]];
+    }
     u_f[0][f] = face_value / ncells;
   }
   ChangedSolution();
@@ -906,7 +850,7 @@ EnergyBase::ModifyCorrection(double h,
   int my_limited = 0;
   int n_limited = 0;
   if (T_limit_ > 0.) {
-    for (CompositeVector::name_iterator comp = du->Data()->begin(); comp != du->Data()->end();
+    for (CompositeVector::name_iterator comp = du->Data() ->begin(); comp != du->Data()->end();
          ++comp) {
       Epetra_MultiVector& du_c = *du->Data()->ViewComponent(*comp, false);
 
@@ -927,7 +871,9 @@ EnergyBase::ModifyCorrection(double h,
   }
 
   if (n_limited > 0) {
-    if (vo_->os_OK(Teuchos::VERB_HIGH)) { *vo_->os() << "  limited by temperature." << std::endl; }
+    if (vo_->os_OK(Teuchos::VERB_HIGH)) {
+      *vo_->os() << "  limited by temperature." << std::endl;
+    }
     return AmanziSolvers::FnBaseDefs::CORRECTION_MODIFIED;
   }
   return AmanziSolvers::FnBaseDefs::CORRECTION_NOT_MODIFIED;

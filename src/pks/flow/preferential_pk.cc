@@ -12,6 +12,7 @@
 #include "flow_bc_factory.hh"
 
 #include "Point.hh"
+#include "TensorVector.hh"
 
 #include "upwind_cell_centered.hh"
 #include "upwind_arithmetic_mean.hh"
@@ -27,7 +28,7 @@
 #include "richards_water_content_evaluator.hh"
 #include "OperatorDefs.hh"
 #include "BoundaryFlux.hh"
-#include "pk_helpers.hh"
+#include "PK_Helpers.hh"
 
 #include "preferential.hh"
 
@@ -94,7 +95,7 @@ Preferential::SetupPhysicalEvaluators_()
   Richards::SetupPhysicalEvaluators_();
 
   // -- rel perm for gravity term
-  requireAtNext(coef_grav_key_, tag_next_, *S_)
+  requireEvaluatorAtNext(coef_grav_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1)
@@ -111,7 +112,7 @@ bool
 Preferential::UpdatePermeabilityData_(const Tag& tag)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "  Updating permeability?";
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) *vo_->os() << "  Updating permeability?";
 
   Teuchos::RCP<const CompositeVector> rel_perm = S_->GetPtr<CompositeVector>(coef_key_, tag);
   Teuchos::RCP<const CompositeVector> rel_perm_grav =
@@ -131,9 +132,11 @@ Preferential::UpdatePermeabilityData_(const Tag& tag)
         S_->GetPtrW<CompositeVector>(flux_dir_key_, tag, name_);
       Teuchos::RCP<const CompositeVector> pres = S_->GetPtr<CompositeVector>(key_, tag);
 
-      if (!deform_key_.empty() &&
-          S_->GetEvaluator(deform_key_, tag_next_).Update(*S_, name_ + " flux dir"))
-        face_matrix_diff_->SetTensorCoefficient(K_);
+      if ((!deform_key_.empty() &&
+           S_->GetEvaluator(deform_key_, tag_next_).Update(*S_, name_ + " flux dir")) ||
+          S_->GetEvaluator(perm_key_, tag_next_).Update(*S_, name_ + " flux dir"))
+        face_matrix_diff_->SetTensorCoefficient(
+          Teuchos::rcpFromRef(S_->Get<TensorVector>(perm_key_, tag_next_).data));
 
       face_matrix_diff_->SetDensity(rho);
       face_matrix_diff_->UpdateMatrices(Teuchos::null, pres.ptr());
@@ -192,7 +195,9 @@ Preferential::UpdatePermeabilityData_(const Tag& tag)
       const auto& bfmap = mesh_->getMap(AmanziMesh::Entity_kind::BOUNDARY_FACE, true);
       for (int bf = 0; bf != rel_perm_bf.MyLength(); ++bf) {
         auto f = fmap.LID(bfmap.GID(bf));
-        if (rel_perm_bf[0][bf] > uw_rel_perm_f[0][f]) { uw_rel_perm_f[0][f] = rel_perm_bf[0][bf]; }
+        if (rel_perm_bf[0][bf] > uw_rel_perm_f[0][f]) {
+          uw_rel_perm_f[0][f] = rel_perm_bf[0][bf];
+        }
       }
     } else if (clobber_policy_ == "unsaturated") {
       // clobber only when the interior cell is unsaturated
@@ -214,12 +219,14 @@ Preferential::UpdatePermeabilityData_(const Tag& tag)
       }
     }
 
-    if (uw_rel_perm->HasComponent("face")) uw_rel_perm->ScatterMasterToGhosted("face");
-    if (uw_rel_perm->HasComponent("grav")) uw_rel_perm->ScatterMasterToGhosted("grav");
+    if (uw_rel_perm->HasComponent("face") ) uw_rel_perm->ScatterMasterToGhosted("face");
+    if (uw_rel_perm->HasComponent("grav") ) uw_rel_perm->ScatterMasterToGhosted("grav");
   }
 
   // debugging
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) { *vo_->os() << " " << update_perm << std::endl; }
+  if (vo_->os_OK(Teuchos::VERB_EXTREME)) {
+    *vo_->os() << " " << update_perm << std::endl;
+  }
 
   return update_perm;
 };
@@ -229,7 +236,7 @@ bool
 Preferential::UpdatePermeabilityDerivativeData_(const Tag& tag)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "  Updating permeability derivatives?";
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) *vo_->os() << "  Updating permeability derivatives?";
 
   bool update_perm = S_->GetEvaluator(coef_key_, tag).UpdateDerivative(*S_, name_, key_, tag);
   update_perm |= S_->GetEvaluator(coef_grav_key_, tag).UpdateDerivative(*S_, name_, key_, tag);
@@ -258,7 +265,9 @@ Preferential::UpdatePermeabilityDerivativeData_(const Tag& tag)
   }
 
   // debugging
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) { *vo_->os() << " " << update_perm << std::endl; }
+  if (vo_->os_OK(Teuchos::VERB_EXTREME)) {
+    *vo_->os() << " " << update_perm << std::endl;
+  }
   return update_perm;
 };
 

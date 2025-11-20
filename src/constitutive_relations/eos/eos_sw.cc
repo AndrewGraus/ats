@@ -22,7 +22,8 @@
 namespace Amanzi {
 namespace Relations {
 
-EOS_SW::EOS_SW(Teuchos::ParameterList& eos_plist) : eos_plist_(eos_plist)
+EOS_SW::EOS_SW(Teuchos::ParameterList& eos_plist)
+  : eos_plist_(eos_plist)
 {
   InitializeFromPlist_();
 }
@@ -35,7 +36,7 @@ EOS_SW::MassDensity(std::vector<double>& params)
 };
 
 double
-EOS_SW::DMassDensityDC(std::vector<double>& params)
+EOS_SW::DMassDensityDMoleFraction(std::vector<double>& params)
 {
   return E_;
 };
@@ -48,11 +49,12 @@ EOS_SW::MolarDensity(std::vector<double>& params)
 };
 
 double
-EOS_SW::DMolarDensityDC(std::vector<double>& params)
+EOS_SW::DMolarDensityDMoleFraction(std::vector<double>& params)
 {
   double C = params[0];
   double b = (M_water_ * (1 - C) + M_salt_ * C);
-  return (DMassDensityDC(params) * b - MassDensity(params) * (M_salt_ - M_water_)) / (b * b);
+  return (DMassDensityDMoleFraction(params) * b - MassDensity(params) * (M_salt_ - M_water_)) /
+         (b * b);
 };
 
 

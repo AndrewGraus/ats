@@ -11,7 +11,7 @@
 #include "Teuchos_XMLParameterListHelpers.hpp"
 #include "EpetraExt_RowMatrixOut.h"
 
-#include "pk_helpers.hh"
+#include "PK_Helpers.hh"
 #include "mpc_surface_subsurface_helpers.hh"
 #include "mpc_coupled_water.hh"
 
@@ -64,10 +64,9 @@ MPCCoupledWater::Setup()
   StrongMPC<PK_PhysicalBDF_Default>::Setup();
 
   // require the coupling fields, claim ownership
-  S_->Require<CompositeVector, CompositeVectorSpace>(exfilt_key_, tag_next_, exfilt_key_)
+  requireEvaluatorAtNext(exfilt_key_, tag_next_, *S_, name_)
     .SetMesh(surf_mesh_)
     ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
-  requireEvaluatorPrimary(exfilt_key_, tag_next_, *S_);
 
   // Create the preconditioner.
   // -- collect the preconditioners
@@ -81,7 +80,7 @@ MPCCoupledWater::Setup()
   precon_->set_inverse_parameters(inv_list);
 
   // -- push the surface local ops into the subsurface global operator
-  for (Operators::Operator::op_iterator op = precon_surf_->begin(); op != precon_surf_->end();
+  for (Operators::Operator::op_iterator op = precon_surf_->begin() ; op != precon_surf_->end();
        ++op) {
     precon_->OpPushBack(*op);
   }
@@ -129,8 +128,8 @@ void
 MPCCoupledWater::Initialize()
 {
   // initialize coupling terms
-  S_->GetPtrW<CompositeVector>(exfilt_key_, tag_next_, exfilt_key_)->PutScalar(0.);
-  S_->GetRecordW(exfilt_key_, tag_next_, exfilt_key_).set_initialized();
+  S_->GetPtrW<CompositeVector>(exfilt_key_, tag_next_, name_)->PutScalar(0.);
+  S_->GetRecordW(exfilt_key_, tag_next_, name_).set_initialized();
   changedEvaluatorPrimary(exfilt_key_, tag_next_, *S_);
 
   // Initialize all sub PKs.
@@ -166,7 +165,7 @@ MPCCoupledWater::FunctionalResidual(double t_old,
   // The residual of the surface flow equation provides the water flux from
   // subsurface to surface.
   Epetra_MultiVector& source =
-    *S_->GetW<CompositeVector>(exfilt_key_, tag_next_, exfilt_key_).ViewComponent("cell", false);
+    *S_->GetW<CompositeVector>(exfilt_key_, tag_next_, name_).ViewComponent("cell", false);
   source = *g->SubVector(1)->Data()->ViewComponent("cell", false);
   changedEvaluatorPrimary(exfilt_key_, tag_next_, *S_);
 
@@ -184,7 +183,7 @@ int
 MPCCoupledWater::ApplyPreconditioner(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<TreeVector> Pu)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "Precon application:" << std::endl;
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) *vo_->os() << "Precon application:" << std::endl;
 
   // call the precon's inverse
   if (vo_->os_OK(Teuchos::VERB_EXTREME))
@@ -379,7 +378,7 @@ double
 MPCCoupledWater::ErrorNorm(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<const TreeVector> res)
 {
   // move the surface face residual onto the surface cell.
-  auto res2 = Teuchos::rcp(new TreeVector(*res, INIT_MODE_COPY));
+  auto res2 = Teuchos::rcp(new TreeVector(*res));
   auto& res_face = *res2->SubVector(0)->Data()->ViewComponent("face", false);
   auto& res_surf_cell = *res2->SubVector(1)->Data()->ViewComponent("cell", false);
   const auto& u_surf_cell = *u->SubVector(1)->Data()->ViewComponent("cell", false);

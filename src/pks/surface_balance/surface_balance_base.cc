@@ -7,7 +7,7 @@
   Authors: Ethan Coon (coonet@ornl.gov)
 */
 
-#include "pk_helpers.hh"
+#include "PK_Helpers.hh"
 
 #include "surface_balance_base.hh"
 
@@ -41,7 +41,8 @@ SurfaceBalanceBase::parseParameterList()
   if (is_source_term_ && source_key_.empty()) {
     source_key_ = Keys::readKey(*plist_, domain_, "source", "source_sink");
 
-    is_source_term_finite_differentiable_ = plist_->get<bool>("source term finite difference", false);
+    is_source_term_finite_differentiable_ =
+      plist_->get<bool>("source term finite difference", false);
     if (is_source_term_finite_differentiable_) {
       eps_ = plist_->get<double>("source term finite difference epsilon", 1.e-8);
     }
@@ -77,19 +78,19 @@ SurfaceBalanceBase::Setup()
   // requirements: source terms from above
   if (is_source_term_) {
     if (theta_ > 0) {
-      requireAtNext(source_key_, tag_next_, *S_)
+      requireEvaluatorAtNext(source_key_, tag_next_, *S_, true)
         .SetMesh(mesh_)
         ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
 
-      if (!is_source_term_finite_differentiable_
-          && S_->GetEvaluator(source_key_, tag_next_).IsDifferentiableWRT(*S_, key_, tag_next_)) {
+      if (!is_source_term_finite_differentiable_ &&
+          S_->GetEvaluator(source_key_, tag_next_).IsDifferentiableWRT(*S_, key_, tag_next_)) {
         is_source_term_differentiable_ = true;
         S_->RequireDerivative<CompositeVector, CompositeVectorSpace>(
           source_key_, tag_next_, key_, tag_next_);
       }
     }
     if (theta_ < 1) {
-      requireAtCurrent(source_key_, tag_current_, *S_, name_)
+      requireEvaluatorAtCurrent(source_key_, tag_current_, *S_, name_)
         .SetMesh(mesh_)
         ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
     }
@@ -98,14 +99,14 @@ SurfaceBalanceBase::Setup()
   // requirements: conserved quantity at current and new times
   conserved_quantity_ = conserved_key_ != key_;
   if (conserved_quantity_) {
-    requireAtNext(conserved_key_, tag_next_, *S_)
+    requireEvaluatorAtNext(conserved_key_, tag_next_, *S_)
       .SetMesh(mesh_)
       ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
     S_->RequireDerivative<CompositeVector, CompositeVectorSpace>(
       conserved_key_, tag_next_, key_, tag_next_);
 
     //    and at the current time, where it is a copy evaluator
-    requireAtCurrent(conserved_key_, tag_current_, *S_, name_);
+    requireEvaluatorAtCurrent(conserved_key_, tag_current_, *S_, name_);
   }
 
   // operator for inverse
@@ -149,7 +150,7 @@ SurfaceBalanceBase::FunctionalResidual(double t_old,
   Solution_to_State(*u_new, tag_next_);
 
   bool debug = false;
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) debug = true;
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) debug = true;
 
   if (vo_->os_OK(Teuchos::VERB_HIGH)) {
     *vo_->os() << "----------------------------------------------------------------" << std::endl
@@ -271,7 +272,7 @@ SurfaceBalanceBase::ApplyPreconditioner(Teuchos::RCP<const TreeVector> u,
                                         Teuchos::RCP<TreeVector> Pu)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_HIGH)) *vo_->os() << "Precon application:" << std::endl;
+  if (vo_->os_OK(Teuchos::VERB_HIGH) ) *vo_->os() << "Precon application:" << std::endl;
 
   if (conserved_quantity_) {
     db_->WriteVector("seb_res", u->Data().ptr(), true);

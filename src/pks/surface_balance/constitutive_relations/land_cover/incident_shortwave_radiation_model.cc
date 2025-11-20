@@ -74,13 +74,15 @@ IncidentShortwaveRadiationModel::IncidentShortwaveRadiation(double slope,
       int doy_ii = doy_i + 1;
       if (doy_ii > 364) doy_ii = 0;
       double rad_ii = Impl::Radiation(slope, aspect, doy_ii, hour, lat_, qSWin);
-      rad = rad_i + (doy - doy_i) * rad_ii;
+      double ddoy = (doy - doy_i);
+      rad = (1 - ddoy) * rad_i + ddoy * rad_ii;
     } else {
       double rad_i = Impl::Radiation(slope, aspect, doy_i, hour, lat_, qSWin);
       int doy_ii = doy_i - 1;
       if (doy_ii < 0) doy_ii = 364;
       double rad_ii = Impl::Radiation(slope, aspect, doy_ii, hour, lat_, qSWin);
-      rad = rad_i + (doy_i - doy) * rad_ii;
+      double ddoy = (doy - doy_i);
+      rad = (1 - ddoy) * rad_i + ddoy * rad_ii;
     }
   } else {
     double hour = 12.0 + 24 * (doy - doy_i);
@@ -335,10 +337,8 @@ Radiation(double slope, double aspect, int doy, double hour, double lat, double 
 {
   auto facs = GeometricRadiationFactors(slope, aspect, doy, hour, lat);
   double fac = facs.first / facs.second;
-  if (fac > 6.)
-    fac = 6.;
-  else if (fac < 0.)
-    fac = 0.;
+  if (fac > 6.) fac = 6.;
+  else if (fac < 0.) fac = 0.;
   return qSWin * fac;
 }
 

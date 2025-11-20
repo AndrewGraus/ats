@@ -136,7 +136,9 @@ TranspirationDistributionEvaluator::Evaluate_(const State& S,
 
           for (auto c : subsurf_mesh.columns.getCells(sc)) {
             result_v[0][c] *= coef;
-            if (limiter_local_) { result_v[0][c] *= f_wp[0][c]; }
+            if (limiter_local_) {
+              result_v[0][c] *= f_wp[0][c];
+            }
           }
         }
       }
@@ -165,7 +167,7 @@ TranspirationDistributionEvaluator::EnsureCompatibility_ToDeps_(State& S)
   // new state!
   if (land_cover_.size() == 0)
     land_cover_ =
-      getLandCover(S.ICList().sublist("land cover types"), { "leaf_on_doy", "leaf_off_doy" });
+      getLandCover(S.GetModelParameters("land cover types"), { "leaf_on_doy", "leaf_off_doy" });
 
   Key domain = Keys::getDomain(my_keys_.front().first);
 

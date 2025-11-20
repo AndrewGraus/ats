@@ -12,6 +12,8 @@
 
 Distributed, subsurface sources due to tile drains.
 
+`"evaluator type"` = `"distributed tiles"`
+
 .. _distributed-tiles-spec:
 .. admonition:: distributed-tiles-spec
 
@@ -57,14 +59,15 @@ class DistributedTilesRateEvaluator : public EvaluatorSecondary {
   virtual void EnsureCompatibility(State& S) override;
 
   // derivatives aren't implemented here
-  bool IsDifferentiableWRT(const State& S, const Key& wrt_key, const Tag& wrt_tag) const override {
+  bool IsDifferentiableWRT(const State& S, const Key& wrt_key, const Tag& wrt_tag) const override
+  {
     return false;
   }
 
  protected:
   // Required methods from EvaluatorSecondary
   virtual void Update_(State& S) override;
-  virtual void UpdateDerivative_(State& S, const Key& wrt_key, const Tag& wrt_tag) override{};
+  virtual void UpdateDerivative_(State& S, const Key& wrt_key, const Tag& wrt_tag) override {};
 
  protected:
   Key domain_;

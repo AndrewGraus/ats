@@ -9,7 +9,7 @@
 
 #include "mpc_coupled_water_split_flux.hh"
 #include "mpc_surface_subsurface_helpers.hh"
-#include "pk_helpers.hh"
+#include "PK_Helpers.hh"
 
 namespace Amanzi {
 
@@ -33,10 +33,8 @@ MPCCoupledWaterSplitFlux::parseParameterList()
 
   // determine whether we are coupling subdomains or coupling 3D domains
   is_domain_set_ = S_->HasDomainSet(domain_set_);
-  if (is_domain_set_)
-    domain_ = Keys::getDomainInSet(domain_set_, "*");
-  else
-    domain_ = domain_set_;
+  if (is_domain_set_) domain_ = Keys::getDomainInSet(domain_set_, "*");
+  else domain_ = domain_set_;
 
   domain_sub_ = Keys::readDomainHint(*plist_, domain_set_, "surface", "subsurface");
 
@@ -93,27 +91,24 @@ MPCCoupledWaterSplitFlux::Setup()
       for (const auto& domain : *domain_set) {
         auto p_key = Keys::getKey(domain, p_lateral_flow_source_suffix_);
         Tag ds_tag_next = get_ds_tag_next_(domain);
-        S_->Require<CompositeVector, CompositeVectorSpace>(p_key, ds_tag_next, p_key)
+        requireEvaluatorAtNext(p_key, ds_tag_next, *S_, name_)
           .SetMesh(S_->GetMesh(domain))
           ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
-        requireEvaluatorPrimary(p_key, ds_tag_next, *S_);
       }
     } else {
-      S_->Require<CompositeVector, CompositeVectorSpace>(
-          p_lateral_flow_source_, tags_[1].second, p_lateral_flow_source_)
+      requireEvaluatorAtNext(p_lateral_flow_source_, tags_[1].second, *S_, name_)
         .SetMesh(S_->GetMesh(Keys::getDomain(p_lateral_flow_source_)))
         ->SetComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
-      requireEvaluatorPrimary(p_lateral_flow_source_, tags_[1].second, *S_);
     }
 
     // also need conserved quantities at old and new times
-    S_->Require<CompositeVector, CompositeVectorSpace>(p_conserved_variable_star_, tags_[0].second)
+    requireEvaluatorAtNext(p_conserved_variable_star_, tags_[0].second, *S_)
       .SetMesh(S_->GetMesh(domain_star_))
       ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
+
     S_->Require<CompositeVector, CompositeVectorSpace>(p_conserved_variable_star_, tags_[0].first)
       .SetMesh(S_->GetMesh(domain_star_))
       ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
-    S_->RequireEvaluator(p_conserved_variable_star_, tags_[0].second);
     //S_->RequireEvaluator(p_conserved_variable_star_, tags_[0].first);
   }
 }
@@ -155,8 +150,7 @@ MPCCoupledWaterSplitFlux::Initialize()
         S_->GetRecordW(pkey, ds_tag_next, p_owner).set_initialized();
       }
     } else {
-      S_->GetRecordW(p_lateral_flow_source_, tags_[1].second, p_lateral_flow_source_)
-        .set_initialized();
+      S_->GetRecordW(p_lateral_flow_source_, tags_[1].second, name_).set_initialized();
     }
   }
 
@@ -211,23 +205,15 @@ void
 MPCCoupledWaterSplitFlux::CopyStarToPrimary_()
 {
   if (is_domain_set_) {
-    if (coupling_ == "pressure")
-      CopyStarToPrimary_DomainSet_Pressure_();
-    else if (coupling_ == "flux")
-      CopyStarToPrimary_DomainSet_Flux_();
-    else if (coupling_ == "hybrid")
-      CopyStarToPrimary_DomainSet_Hybrid_();
-    else
-      AMANZI_ASSERT(false);
+    if (coupling_ == "pressure") CopyStarToPrimary_DomainSet_Pressure_();
+    else if (coupling_ == "flux") CopyStarToPrimary_DomainSet_Flux_();
+    else if (coupling_ == "hybrid") CopyStarToPrimary_DomainSet_Hybrid_();
+    else AMANZI_ASSERT(false);
   } else {
-    if (coupling_ == "pressure")
-      CopyStarToPrimary_Standard_Pressure_();
-    else if (coupling_ == "flux")
-      CopyStarToPrimary_Standard_Flux_();
-    else if (coupling_ == "hybrid")
-      CopyStarToPrimary_Standard_Hybrid_();
-    else
-      AMANZI_ASSERT(false);
+    if (coupling_ == "pressure") CopyStarToPrimary_Standard_Pressure_();
+    else if (coupling_ == "flux") CopyStarToPrimary_Standard_Flux_();
+    else if (coupling_ == "hybrid") CopyStarToPrimary_Standard_Hybrid_();
+    else AMANZI_ASSERT(false);
   }
 }
 
@@ -299,9 +285,8 @@ MPCCoupledWaterSplitFlux::CopyStarToPrimary_Standard_Pressure_()
   auto p_owner = S_->GetRecord(p_primary_variable_, tags_[1].first).owner();
   auto& p = *S_->GetW<CompositeVector>(p_primary_variable_, tags_[1].first, p_owner)
                .ViewComponent("cell", false);
-  auto& WC =
-    *S_->GetW<CompositeVector>(p_conserved_variable_, tags_[1].first, p_conserved_variable_)
-       .ViewComponent("cell", false);
+  auto& WC = *S_->GetW<CompositeVector>(p_conserved_variable_, tags_[1].first, name_)
+                .ViewComponent("cell", false);
 
   double p_atm_plus_eps = 101325. + 1.e-7;
   for (int c = 0; c != p_star.MyLength(); ++c) {
@@ -336,9 +321,8 @@ MPCCoupledWaterSplitFlux::CopyStarToPrimary_Standard_Flux_()
 
   // mass
   // -- grab the data, difference
-  auto& q_div =
-    *S_->GetW<CompositeVector>(p_lateral_flow_source_, tags_[1].second, p_lateral_flow_source_)
-       .ViewComponent("cell", false);
+  auto& q_div = *S_->GetW<CompositeVector>(p_lateral_flow_source_, tags_[1].second, name_)
+                   .ViewComponent("cell", false);
   q_div.Update(1.0 / dt,
                *S_->Get<CompositeVector>(p_conserved_variable_star_, tags_[0].second)
                   .ViewComponent("cell", false),
@@ -369,9 +353,8 @@ MPCCoupledWaterSplitFlux::CopyStarToPrimary_Standard_Hybrid_()
 
   // mass
   // -- grab the data, difference
-  auto& q_div =
-    *S_->GetW<CompositeVector>(p_lateral_flow_source_, tags_[1].second, p_lateral_flow_source_)
-       .ViewComponent("cell", false);
+  auto& q_div = *S_->GetW<CompositeVector>(p_lateral_flow_source_, tags_[1].second, name_)
+                   .ViewComponent("cell", false);
   q_div.Update(1.0 / dt,
                *S_->Get<CompositeVector>(p_conserved_variable_star_, tags_[0].second)
                   .ViewComponent("cell", false),
@@ -560,7 +543,7 @@ MPCCoupledWaterSplitFlux::CopyStarToPrimary_DomainSet_Hybrid_()
 
       // set the lateral flux to 0
       Key p_lf_key = Keys::getKey(*ds_iter, p_lateral_flow_source_suffix_);
-      (*S_->GetW<CompositeVector>(p_lf_key, ds_tag_next, p_lf_key)
+      (*S_->GetW<CompositeVector>(p_lf_key, ds_tag_next, name_)
           .ViewComponent("cell", false))[0][0] = 0.;
       changedEvaluatorPrimary(p_lf_key, ds_tag_next, *S_);
 

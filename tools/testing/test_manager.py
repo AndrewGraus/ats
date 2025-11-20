@@ -30,7 +30,6 @@ import subprocess
 import textwrap
 import time
 import traceback
-import distutils.spawn
 import numpy
 import collections
 import configparser
@@ -40,6 +39,15 @@ import configparser
 _aliases = {'surface-water_flux':['surface-mass_flux','surface-mass_flux_next'],
             'water_flux':['mass_flux','mass_flux_next'],
             'saturation_liquid':['prev_saturation_liquid'],
+            'free_ion_species':['primary_free_ion_concentration',],
+            'mole_fraction':['molar_ratio','molar_mixing_ratio',],
+            'surface-mole_fraction':['surface-molar_ratio','surface-molar_mixing_ratio',],
+            'subgrid:9-mole_fraction':['subgrid:9-molar_ratio','subgrid:9-molar_mixing_ratio',],
+            'subgrid:0-mole_fraction':['subgrid:0-molar_ratio','subgrid:0-molar_mixing_ratio',],
+            'subgrid_1:9-mole_fraction':['subgrid_1:9-molar_ratio','subgrid_1:9-molar_mixing_ratio',],
+            'subgrid_1:0-mole_fraction':['subgrid_1:0-molar_ratio','subgrid_1:0-molar_mixing_ratio',],
+            'subgrid_2:9-mole_fraction':['subgrid_2:9-molar_ratio','subgrid_2:9-molar_mixing_ratio',],
+            'subgrid_2:0-mole_fraction':['subgrid_2:0-molar_ratio','subgrid_2:0-molar_mixing_ratio',],
             }
 
 
@@ -362,17 +370,14 @@ class RegressionTest(object):
                 message = self._txtwrap.fill(
                     "FAIL : {name} : {execute} return an error "
                     "code ({status}) indicating the simulation may have "
-                    "failed. Please check '{name}.stdout' "
-                    "for error messages (included below).".format(
-                        execute=self._executable, name=test_name, status=ierr_status))
+                    "failed. Please check '{stdout}' "
+                    "for error messages.".format(
+                        execute=self._executable,
+                        name=test_name,
+                        status=ierr_status,
+                        stdout=os.path.join(test_directory, f'{test_name}.stdout')))
 
                 print("".join(['\n', message, '\n']), file=testlog)
-                print("~~~~~ {0}.stdout ~~~~~".format(test_name), file=testlog)
-                try:
-                    with open("{0}.stdout".format(test_name), 'r') as tempfile:
-                        shutil.copyfileobj(tempfile, testlog)
-                except Exception as e:
-                    print("   Error opening file: {0}.stdout\n    {1}".format(test_name, e))
                 print("~~~~~~~~~~", file=testlog)
 
         os.chdir(test_directory)
@@ -1061,7 +1066,7 @@ class RegressionTestManager(object):
 
             test.run(dry_run, status, testlog)
 
-            if not dry_run and status.skipped == 0:
+            if not (status.fail or dry_run or status.skipped):
                 test.check(status, testlog)
 
             self._add_to_file_status(status)
@@ -1489,7 +1494,7 @@ def check_for_executable(options, testlog):
     if options.executable is None:
         # try to detect from env
         try:
-            executable = distutils.spawn.find_executable("ats")
+            executable = shutil.which("ats")
         except Exception:
             executable = None
         finally:
@@ -1533,7 +1538,7 @@ def check_for_mpiexec(options, testlog):
     if options.mpiexec is None:
         # try to detect from env
         try:
-            mpiexec = distutils.spawn.find_executable("mpiexec")
+            mpiexec = shutil.which("mpiexec")
         except IOError:
             mpiexec = None
     else:
@@ -1705,3 +1710,34 @@ def setup_testlog(txtwrap, silence=False):
 
     return testlog
 
+
+def find_last_logfile(entry=-1):
+    """
+    Finds the last-in-time logfile from the LOGS directory.
+    """
+    logfiles = [l for l in os.listdir("LOGS") if l.startswith('ats-tests-') \
+                and l.endswith('.testlog')]
+    all_files = list(sorted(logfiles))
+    return os.path.join('LOGS', all_files[entry])
+
+
+def find_failed(logfile):
+    """
+    Given a logfile, searches for all failed tests.
+
+    Failed tests will include an entry of the form:
+
+    FAIL : TESTNAME : ...
+
+    or
+
+    ERROR : TESTNAME : ...
+    """
+    with open(logfile, 'r') as fid:
+        failed = set(l.split(':')[1].strip() for l in fid \
+                     if l.strip().startswith(('FAIL','ERROR')))
+    return list(failed)
+    
+    
+    
+    

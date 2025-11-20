@@ -82,7 +82,7 @@ void
 RadiationBalanceEvaluator::EnsureCompatibility_ToDeps_(State& S)
 {
   if (!compatible_) {
-    land_cover_ = getLandCover(S.ICList().sublist("land cover types"),
+    land_cover_ = getLandCover(S.GetModelParameters("land cover types"),
                                { "beers_k_lw", "beers_k_sw", "albedo_canopy" });
 
     for (const auto& dep : dependencies_) {
@@ -175,15 +175,6 @@ RadiationBalanceEvaluator::Evaluate_(const State& S, const std::vector<Composite
                           area_frac[1][c] * e_can_lw * lw_up_snow;
     }
   }
-}
-
-void
-RadiationBalanceEvaluator::EvaluatePartialDerivative_(const State& S,
-                                                      const Key& wrt_key,
-                                                      const Tag& wrt_tag,
-                                                      const std::vector<CompositeVector*>& results)
-{
-  for (const auto& res : results) res->PutScalar(0.);
 }
 
 

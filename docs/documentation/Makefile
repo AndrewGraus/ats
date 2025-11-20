@@ -39,7 +39,12 @@ input_spec:
 	$(MAKE) -C source/input_spec clean rst
 
 deploy_master:
+	mkdir -p deploy/html/dev
 	cp -r build/html/* deploy/html/dev/
+
+deploy_stable:
+	mkdir -p deploy/html/stable
+	cp -r build/html/* deploy/html/stable/
 
 deploy:
 	cd deploy/html && \
@@ -52,6 +57,13 @@ clean:
 
 allclean:
 	rm -rf build/*
+
+
+temp: clean
+	rm -f source/input_spec/process_kernels/mpcs/globalization.rst
+	$(MAKE) -C source/input_spec process_kernels/mpcs/globalization.rst
+	$(MAKE) html
+
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

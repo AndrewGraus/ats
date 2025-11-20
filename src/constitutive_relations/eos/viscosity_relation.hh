@@ -8,7 +8,7 @@
 */
 
 /*
-  Basic interface of a Viscosity.
+  Basic interface of a Viscosity Relation.
 
 */
 
@@ -21,7 +21,7 @@ namespace Relations {
 // Equation of State model
 class ViscosityRelation {
  public:
-  virtual ~ViscosityRelation(){};
+  virtual ~ViscosityRelation() {};
 
   // Virtual methods that form the Viscosity
   virtual double Viscosity(double T) = 0;

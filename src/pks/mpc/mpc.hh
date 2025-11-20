@@ -7,30 +7,30 @@
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
-//! Multi process coupler base class.
+// Multi process coupler base class.
 /*!
 
-A multi process coupler is a PK (process kernel) which coordinates and couples
-several PKs.  Each of these coordinated PKs may be MPCs themselves, or physical
-PKs.  Note this does NOT provide a full implementation of PK -- it does not
-supply the AdvanceStep() method.  Therefore this class cannot be instantiated, but
-must be inherited by derived classes which finish supplying the functionality.
+A multi process coupler is a PK which coordinates and couples several PKs.
+Each of these coordinated PKs may be MPCs themselves, or physical PKs.  Note
+this does NOT provide a full implementation of PK -- it does not supply the
+AdvanceStep() method.  Therefore this class cannot be instantiated, but must be
+inherited by derived classes which finish supplying the functionality.
 Instead, this provides the data structures and methods (which may be overridden
 by derived classes) for managing multiple PKs.
 
 Most of these methods simply loop through the coordinated PKs, calling their
 respective methods.
 
-.. _mpc-spec:
-.. admonition:: mpc-spec
+.. _pk-mpc-spec:
+.. admonition:: pk-mpc-spec
 
-    * `"PKs order`" ``[Array(string)]`` Provide a specific order to the
-      sub-PKs; most methods loop over all sub-PKs, and will call the sub-PK
-      method in this order.
+   * `"PKs order`" ``[Array(string)]`` Provide a specific order to the
+     sub-PKs; most methods loop over all sub-PKs, and will call the sub-PK
+     method in this order.
 
-    INCLUDES:
+   INCLUDES:
 
-    - ``[pk-spec]`` *Is a* PK_.
+   - ``[pk-spec]`` *Is a* :ref:`PK`.
 
 */
 
@@ -50,7 +50,7 @@ respective methods.
 
 namespace Amanzi {
 
-template <class PK_t>
+template<class PK_t>
 class MPC : virtual public PK {
  public:
   MPC(Teuchos::ParameterList& pk_tree,
@@ -117,7 +117,7 @@ class MPC : virtual public PK {
 };
 
 
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::parseParameterList()
 {
@@ -128,7 +128,7 @@ MPC<PK_t>::parseParameterList()
 // -----------------------------------------------------------------------------
 // Setup of PK hierarchy from PList
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::Setup()
 {
@@ -139,7 +139,7 @@ MPC<PK_t>::Setup()
 // -----------------------------------------------------------------------------
 // loop over sub-PKs, calling their initialization methods
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::Initialize()
 {
@@ -150,7 +150,7 @@ MPC<PK_t>::Initialize()
 // -----------------------------------------------------------------------------
 // loop over sub-PKs, calling set_tags
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::set_tags(const Tag& current, const Tag& next)
 {
@@ -162,7 +162,7 @@ MPC<PK_t>::set_tags(const Tag& current, const Tag& next)
 // -----------------------------------------------------------------------------
 // loop over sub-PKs, calling their state_to_solution method
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::State_to_Solution(const Tag& tag, TreeVector& soln)
 {
@@ -180,7 +180,7 @@ MPC<PK_t>::State_to_Solution(const Tag& tag, TreeVector& soln)
 // -----------------------------------------------------------------------------
 // loop over sub-PKs, calling their solution_to_state method
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::Solution_to_State(const TreeVector& soln, const Tag& tag)
 {
@@ -198,25 +198,27 @@ MPC<PK_t>::Solution_to_State(const TreeVector& soln, const Tag& tag)
 // -----------------------------------------------------------------------------
 // loop over sub-PKs, calling their commit_state method
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::CommitStep(double t_old, double t_new, const Tag& tag)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "commiting step @ " << tag << std::endl;
-  for (auto& pk : sub_pks_) { pk->CommitStep(t_old, t_new, tag); }
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) *vo_->os() << "commiting step @ " << tag << std::endl;
+  for (auto& pk : sub_pks_) {
+    pk->CommitStep(t_old, t_new, tag);
+  }
 };
 
 
 // -----------------------------------------------------------------------------
 // loop over sub-PKs, calling their fail step method
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::FailStep(double t_old, double t_new, const Tag& tag)
 {
   Teuchos::OSTab tab = vo_->getOSTab();
-  if (vo_->os_OK(Teuchos::VERB_EXTREME)) *vo_->os() << "failing step @ " << tag << std::endl;
+  if (vo_->os_OK(Teuchos::VERB_EXTREME) ) *vo_->os() << "failing step @ " << tag << std::endl;
   for (auto& pk : sub_pks_) pk->FailStep(t_old, t_new, tag);
 };
 
@@ -224,7 +226,7 @@ MPC<PK_t>::FailStep(double t_old, double t_new, const Tag& tag)
 // -----------------------------------------------------------------------------
 // loop over sub-PKs, calling their calculate_diagnostics method
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::CalculateDiagnostics(const Tag& tag)
 {
@@ -238,7 +240,7 @@ MPC<PK_t>::CalculateDiagnostics(const Tag& tag)
 // -----------------------------------------------------------------------------
 // Marks sub-PKs as changed.
 // -----------------------------------------------------------------------------
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::ChangedSolutionPK(const Tag& tag)
 {
@@ -246,7 +248,7 @@ MPC<PK_t>::ChangedSolutionPK(const Tag& tag)
 };
 
 
-template <class PK_t>
+template<class PK_t>
 Teuchos::RCP<PK_t>
 MPC<PK_t>::get_subpk(int i)
 {
@@ -259,7 +261,7 @@ MPC<PK_t>::get_subpk(int i)
 
 
 // protected constructor of subpks
-template <class PK_t>
+template<class PK_t>
 void
 MPC<PK_t>::init_(Comm_ptr_type comm)
 {
@@ -282,7 +284,7 @@ MPC<PK_t>::init_(Comm_ptr_type comm)
 };
 
 
-template <class PK_t>
+template<class PK_t>
 Teuchos::RCP<Teuchos::ParameterList>
 MPC<PK_t>::getSubPKPlist_(int i)
 {
@@ -291,7 +293,7 @@ MPC<PK_t>::getSubPKPlist_(int i)
 }
 
 
-template <class PK_t>
+template<class PK_t>
 Teuchos::RCP<Teuchos::ParameterList>
 MPC<PK_t>::getSubPKPlist_(const std::string& name)
 {

@@ -605,7 +605,7 @@ SEBThreeComponentEvaluator::EvaluatePartialDerivative_(const State& S,
                                                        const Tag& wrt_tag,
                                                        const std::vector<CompositeVector*>& results)
 {
-  //AMANZI_ASSERT(false);
+  AMANZI_ASSERT(false);
 }
 
 void
@@ -632,7 +632,7 @@ SEBThreeComponentEvaluator::EnsureCompatibility_ToDeps_(State& S)
 
     if (land_cover_.size() == 0)
       land_cover_ =
-        getLandCover(S.ICList().sublist("land cover types"),
+        getLandCover(S.GetModelParameters("land cover types"),
                      { "roughness_snow", "roughness_ground", "water_transition_depth" });
 
     // use domain name to set the mesh type

@@ -14,8 +14,8 @@
 
 Evaluates the z-coordinate and the magnitude of the slope :math:``|\nambla_h z|``
 
-.. _meshed-elevation-evaluator-spec:
-.. admonition:: meshed-elevation-evaluator-spec
+.. _evaluator-meshed-elevation-spec:
+.. admonition:: evaluator-meshed-elevation-spec
 
    * `"parent domain name`" ``[string]`` **SUBSURFACE_DOMAIN** Domain name of the parent
      mesh, which is the 3D version of this domain.  Attempts to generate an
@@ -45,8 +45,7 @@ namespace Amanzi {
 namespace Flow {
 
 namespace Impl {
-void
-slope_aspect(const AmanziGeometry::Point& normal, double& slope, double& aspect);
+void slope_aspect(const AmanziGeometry::Point& normal, double& slope, double& aspect);
 }
 
 
@@ -56,8 +55,8 @@ class MeshedElevationEvaluator : public ElevationEvaluator {
   MeshedElevationEvaluator(const MeshedElevationEvaluator& other) = default;
   Teuchos::RCP<Evaluator> Clone() const override;
 
-  virtual void
-  EvaluateElevationAndSlope_(const State& S, const std::vector<CompositeVector*>& results) override;
+  virtual void EvaluateElevationAndSlope_(const State& S,
+                                          const std::vector<CompositeVector*>& results) override;
 
  private:
   static Utils::RegisteredFactory<Evaluator, MeshedElevationEvaluator> reg_;

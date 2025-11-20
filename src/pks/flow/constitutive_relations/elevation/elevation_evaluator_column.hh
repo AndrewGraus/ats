@@ -31,8 +31,8 @@ Instead, it is a mix of:
 
 `"evaluator type`" = `"elevation column`"
 
-.. _column-elevation-evaluator-spec:
-.. admonition:: column-elevation-evaluator-spec
+.. _evaluator-column-elevation-spec:
+.. admonition:: evaluator-column-elevation-spec
 
    * `"elevation key`" ``[string]`` **elevation** Name the elevation variable. [m]
    * `"slope magnitude key`" ``[string]`` **slope_magnitude** Name the elevation
@@ -71,8 +71,8 @@ class ColumnElevationEvaluator : public ElevationEvaluator {
   Teuchos::RCP<Evaluator> Clone() const override;
 
  protected:
-  virtual void
-  EvaluateElevationAndSlope_(const State& S, const std::vector<CompositeVector*>& results) override;
+  virtual void EvaluateElevationAndSlope_(const State& S,
+                                          const std::vector<CompositeVector*>& results) override;
 
   // Custom EnsureCompatibility fills dependencies based on domain set.
   virtual void EnsureEvaluators(State& S) override;

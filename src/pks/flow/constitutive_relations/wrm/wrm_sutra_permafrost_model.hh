@@ -12,8 +12,8 @@
 This model is based on the emperical freezing curve used by Sutra-Ice,
 documented in papers by Voss & Walvoord.
 
-.. _wrm-sutra-permafrost-model-spec:
-.. admonition:: wrm-sutra-permafrost-model-spec
+.. _permafrost-wrm-sutra-permafrost-model-spec:
+.. admonition:: permafrost-wrm-sutra-permafrost-model-spec
 
    * `"temperature transition [K]`" ``[double]`` thickness of the transition from frozen to thawed
    * `"residual saturation [-]`" ``[double]`` Standard residual saturation
@@ -35,7 +35,8 @@ class WRM;
 
 class WRMSutraPermafrostModel : public WRMPermafrostModel {
  public:
-  explicit WRMSutraPermafrostModel(Teuchos::ParameterList& plist) : WRMPermafrostModel(plist)
+  explicit WRMSutraPermafrostModel(Teuchos::ParameterList& plist)
+    : WRMPermafrostModel(plist)
   {
     T0_ = plist.get<double>("freezing point [K]", 273.15);
     dT_ = plist.get<double>("temperature transition [K]");

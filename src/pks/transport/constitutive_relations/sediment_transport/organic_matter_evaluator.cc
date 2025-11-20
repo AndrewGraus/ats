@@ -4,11 +4,11 @@
   The terms of use and "as is" disclaimer for this license are
   provided in the top-level COPYRIGHT file.
 
-  Authors: Ethan Coon (ecoon@lanl.gov)
-*/
+  Authors: Daniil Svyatsky (dasvyat@lanl.gov)
 
 /*
-  Determining the molar fraction of a gas component within a gas mixture.
+
+  Determining input organic matter into sediment transport
 
 */
 
@@ -48,7 +48,9 @@ OrganicMatterRateEvaluator::Evaluate_(const State& S, const std::vector<Composit
 
   result_c.PutScalar(0.);
   for (int c = 0; c < result_c.MyLength(); c++) {
-    for (int j = 0; j < bio.NumVectors(); j++) { result_c[0][c] += Q_on_Bmax_ * bio[j][c]; }
+    for (int j = 0; j < bio.NumVectors(); j++) {
+      result_c[0][c] += Q_on_Bmax_ * bio[j][c];
+    }
   }
 }
 

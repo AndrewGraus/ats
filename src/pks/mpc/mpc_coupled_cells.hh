@@ -7,29 +7,35 @@
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
-//! A coupler which solves two PDEs on the same domain.
 /*!
 
-This is a StrongMPC which uses a preconditioner in which the
+This is a :ref:`Strong MPC` which uses a preconditioner in which the
 block-diagonal cell-local matrix is dense.  If the system looks something
 like:
 
-A( y1, y2, x, t ) = 0
-B( y1, y2, x, t ) = 0
+.. math::
 
-where y1,y2 are spatially varying unknowns that are discretized using the MFD
-method (and therefore have both cell and face unknowns), an approximation to
-the Jacobian is written as
+   A( y_1, y_2, x, t ) = 0
+   B( y_1, y_2, x, t ) = 0
 
-[  dA_c/dy1_c  dA_c/dy1_f   dA_c/dy2_c       0      ]
-[  dA_f/dy1_c  dA_f/dy1_f      0              0      ]
-[  dB_c/dy1_c     0          dB_c/dy2_c  dB_c/dy2_f ]
-[      0           0          dB_f/dy2_c  dB_f/dy2_f ]
+where :math:`y_1, y_2` are spatially varying unknowns that are discretized
+using the MFD method (and therefore have both cell and face unknowns), an
+approximation to the Jacobian is written as
+
+.. math::
+
+   \begin{bmatrix}
+     \frac{dA^c}{dy_1^c}  & \frac{dA^c}{dy_1^f} & \frac{dA^c}{dy_2^c} & 0                   \\
+     \frac{dA^f}{dy_1^c}  & \frac{dA^f}{dy_1^f} & 0                   & 0                   \\
+     \frac{dB^c}{dy_1^c}  & 0                   & \frac{dB^c}{dy_2^c} & \frac{dB^c}{dy_2^f} \\
+     0                    & 0                   & \frac{dB^f}{dy_2^c} & \frac{dB^f}{dy_2^f}
+   \end{bmatrix}
 
 
-Note that the upper left block is the standard preconditioner for the A
-system, and the lower right block is the standard precon for the B system,
-and we have simply added cell-based couplings, dA_c/dy2_c and dB_c/dy1_c.
+Note that the upper left block is the standard preconditioner for the A system,
+and the lower right block is the standard precon for the B system, and we have
+simply added cell-based couplings, :math:`\frac{dA^c}{dy_2^c}` and
+:math:`\frac{dB^c}{dy_1^c}`.
 
 Most commonly this is used to couple flow and energy equations on the same
 mesh.  In the temperature/pressure system, these extra blocks correspond to
@@ -37,20 +43,22 @@ mesh.  In the temperature/pressure system, these extra blocks correspond to
 .. math::
     \frac{\partial \Theta}{\partial T} \; , \; \frac{\partial E}{\partial p}
 
-.. _mpc-coupled-cells-spec:
-.. admonition:: mpc-coupled-cells-spec
+`"PK type`" = `"mpc coupled cells`"
 
-    * `"domain name`" ``[string]`` Domain of simulation
-    * `"conserved quantity A`" ``[string]`` Key of the first sub-PK's conserved quantity.
-    * `"conserved quantity B`" ``[string]`` Key of the second sub-PK's conserved quantity.
-    * `"primary variable A`" ``[string]`` Key of the first sub-PK's primary variable.
-    * `"primary variable B`" ``[string]`` Key of the second sub-PK's primary variable.
-    * `"no dA/dy2 block`" ``[bool]`` **false** Excludes the dA_c/dy2_c block above.
-    * `"no dB/dy1 block`" ``[bool]`` **false** Excludes the dB_c/dy1_c block above.
+.. _pk-mpc-coupled-cells-spec:
+.. admonition:: pk-mpc-coupled-cells-spec
 
-    INCLUDES:
+   * `"domain name`" ``[string]`` Domain of simulation
+   * `"conserved quantity A`" ``[string]`` Key of the first sub-PK's conserved quantity.
+   * `"conserved quantity B`" ``[string]`` Key of the second sub-PK's conserved quantity.
+   * `"primary variable A`" ``[string]`` Key of the first sub-PK's primary variable.
+   * `"primary variable B`" ``[string]`` Key of the second sub-PK's primary variable.
+   * `"no dA/dy2 block`" ``[bool]`` **false** Excludes the dA^c/dy_2^c block above.
+   * `"no dB/dy1 block`" ``[bool]`` **false** Excludes the dB^c/dy1^c block above.
 
-    - ``[strong-mpc-spec]`` *Is a* StrongMPC_.
+   INCLUDES:
+
+   - ``[strong-mpc-spec]`` *Is a* :ref:`Strong MPC`.
 
 */
 
@@ -80,8 +88,8 @@ class MPCCoupledCells : public StrongMPC<PK_PhysicalBDF_Default> {
   virtual void Setup() override;
 
   // applies preconditioner to u and returns the result in Pu
-  virtual int
-  ApplyPreconditioner(Teuchos::RCP<const TreeVector> u, Teuchos::RCP<TreeVector> Pu) override;
+  virtual int ApplyPreconditioner(Teuchos::RCP<const TreeVector> u,
+                                  Teuchos::RCP<TreeVector> Pu) override;
 
   // updates the preconditioner
   virtual void UpdatePreconditioner(double t, Teuchos::RCP<const TreeVector> up, double h) override;

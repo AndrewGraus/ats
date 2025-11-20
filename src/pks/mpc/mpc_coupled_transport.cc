@@ -7,11 +7,6 @@
   Authors:
 */
 
-/*
-  This is the mpc_pk component of the Amanzi code.
-
-*/
-
 #include "mpc_coupled_transport.hh"
 
 namespace Amanzi {
@@ -33,20 +28,36 @@ MPCCoupledTransport::parseParameterList()
   Key domain_ss = pks_list_->sublist(name_ss_).get<std::string>("domain name", "domain");
   Key domain_surf = pks_list_->sublist(name_surf_).get<std::string>("domain name", "surface");
 
+  // first make sure predictor-corrector scheme is turned off -- this isn't valid for coupled transport
+  for (const auto& name : std::vector<std::string>{ name_ss_, name_surf_ }) {
+    if (pks_list_->sublist(name).isParameter("temporal discretization order")) {
+      int order = pks_list_->sublist(name).get<int>("temporal discretization order");
+      if (order != 1) {
+        if (vo_->os_OK(Teuchos::VERB_LOW))
+          *vo_->os() << vo_->color("yellow") << "Transport PK \"" << name
+                     << "\" prescribes \"temporal discretization order\" " << order
+                     << ", but this is not valid for integrated transport.  "
+                     << "Using \"temporal discretization order\" 1 instead." << vo_->reset()
+                     << std::endl;
+      }
+      pks_list_->sublist(name).set<int>("temporal discretization order", 1);
+    }
+  }
+
   Key ss_flux_key =
     Keys::readKey(pks_list_->sublist(name_ss_), domain_ss, "water flux", "water_flux");
   Key surf_flux_key =
     Keys::readKey(pks_list_->sublist(name_surf_), domain_surf, "water flux", "water_flux");
 
-  Key ss_tcc_key = Keys::readKey(
-    pks_list_->sublist(name_ss_), domain_ss, "concentration", "total_component_concentration");
-  Key surf_tcc_key = Keys::readKey(
-    pks_list_->sublist(name_surf_), domain_surf, "concentration", "total_component_concentration");
+  Key ss_tcc_key =
+    Keys::readKey(pks_list_->sublist(name_ss_), domain_ss, "primary variable", "mole_fraction");
+  Key surf_tcc_key =
+    Keys::readKey(pks_list_->sublist(name_surf_), domain_surf, "primary variable", "mole_fraction");
   Key surf_tcq_key = Keys::readKey(
     pks_list_->sublist(name_surf_), domain_surf, "conserved quantity", "total_component_quantity");
 
   auto& bc_list =
-    pks_list_->sublist(name_ss_).sublist("boundary conditions").sublist("concentration");
+    pks_list_->sublist(name_ss_).sublist("boundary conditions").sublist("mole fraction");
   if (!bc_list.isSublist("BC coupling")) {
     Teuchos::ParameterList& bc_coupling = bc_list.sublist("BC coupling");
     bc_coupling.set<std::string>("spatial distribution method", "domain coupling");
@@ -56,9 +67,9 @@ MPCCoupledTransport::parseParameterList()
     bc_coupling.set<Teuchos::Array<std::string>>("regions", regs);
     Teuchos::ParameterList& tmp = bc_coupling.sublist("fields");
     tmp.set<std::string>("conserved quantity key", surf_tcq_key);
-    tmp.set<std::string>("conserved quantity copy key", tag_next_.get());
+    tmp.set<std::string>("conserved quantity tag", tag_next_.get());
     tmp.set<std::string>("external field key", surf_tcc_key);
-    tmp.set<std::string>("external field copy key", tag_next_.get());
+    tmp.set<std::string>("external field tag", tag_next_.get());
   }
 
   auto& src_list =
@@ -74,11 +85,11 @@ MPCCoupledTransport::parseParameterList()
     tmp.set<std::string>("flux key", ss_flux_key);
     // NOTE: FIXME --ETC amanzi/amanzi#646 Currently flux field is hard-coded
     // as NEXT both here and as transport PK's flow_tag
-    tmp.set<std::string>("flux copy key", Tags::NEXT.get());
+    tmp.set<std::string>("flux tag", Tags::NEXT.get());
     tmp.set<std::string>("conserved quantity key", surf_tcc_key);
-    tmp.set<std::string>("conserved quantity copy key", tag_next_.get());
+    tmp.set<std::string>("conserved quantity tag", tag_next_.get());
     tmp.set<std::string>("external field key", ss_tcc_key);
-    tmp.set<std::string>("external field copy key", tag_next_.get());
+    tmp.set<std::string>("external field tag", tag_next_.get());
   }
 
   WeakMPC::parseParameterList();
@@ -126,7 +137,6 @@ MPCCoupledTransport::get_num_aqueous_component()
 
 void
 MPCCoupledTransport::SetupCouplingConditions_()
-{
-}
+{}
 
 } // namespace Amanzi

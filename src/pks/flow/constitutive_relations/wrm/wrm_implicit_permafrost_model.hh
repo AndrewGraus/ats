@@ -7,15 +7,21 @@
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
-//! Painter's original, implicitly defined permafrost model.
 /*!
 
-.. _wrm-implicit-permafrost-spec:
-.. admonition:: wrm-implicit-permafrost-spec
+Painter's original, implicitly defined permafrost model.
 
-    * `"converged tolerance`" ``[double]`` **1.e-12** Convergence tolerance of the implicit solve.
-    * `"max iterations`" ``[int]`` **100** Maximum allowable iterations of the implicit solve.
-    * `"solver algorithm [brent]`" ``[string]`` **brent** Only brent is currently supported.
+`"permafrost wrm type`" = `"permafrost model`"
+
+.. _permafrost-wrm-permafrost-model-spec:
+.. admonition:: permafrost-wrm-permafrost-model-spec
+
+   * `"converged tolerance`" ``[double]`` **1.e-12** Convergence tolerance of
+     the implicit solve.
+   * `"max iterations`" ``[int]`` **100** Maximum allowable iterations of the
+     implicit solve.
+   * `"solver algorithm [brent]`" ``[string]`` **brent** Only brent is
+     currently supported.
 
 */
 
@@ -98,7 +104,9 @@ class WRMImplicitPermafrostModel : public WRMPermafrostModel {
 
   // Convergence criteria for root-finding
   struct Tol_ {
-    Tol_(double eps) : eps_(eps) {}
+    Tol_(double eps)
+      : eps_(eps)
+    {}
     bool operator()(const double& a, const double& b) const { return std::abs(a - b) <= eps_; }
     double eps_;
   };

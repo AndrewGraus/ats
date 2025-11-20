@@ -16,8 +16,8 @@ pages 90-93, Equations 1-57 to 1-60
 
 Requires the following dependencies:
 
-.. _pet-priestley-taylor-evaluator-spec:
-.. admonition:: pet-priestley-taylor-evaluator-spec:
+.. _evaluator-pet-priestley-taylor-spec:
+.. admonition:: evaluator-pet-priestley-taylor-spec:
 
    * `"include limiter`" ``[bool]`` **false** If true, multiply potential ET by
      a limiter to get an actual ET.
@@ -33,15 +33,16 @@ Requires the following dependencies:
    * `"1 - limiter dof`" ``[int]`` **0** Area fractions are often used
      as limiters, and these have multiple dofs.  This provides which one to use.
    * `"sublimate snow`" ``[bool]`` **false** If true, use latent heat of
-      vaporization of snow, not water.
+     vaporization of snow, not water.
 
    KEYS:
 
    - `"air temperature`" **DOMAIN-air_temperature** Air temp, in [K]
-   - `"surface temperature`" **DOMAIN-temperature** Ground or leaf temp, in [K].  Note this may be the
-      same as air temperature.
+   - `"surface temperature`" **DOMAIN-temperature** Ground or leaf temp, in
+     [K].  Note this may be the same as air temperature.
    - `"elevation`" **DOMAIN-elevation** Elevation [m]
-   - `"net radiation`" **DOMAIN-net_radiation** [W m^-2] Net radiation balance, positive to the ground.
+   - `"net radiation`" **DOMAIN-net_radiation** [W m^-2] Net radiation balance,
+     positive to the ground.
    - `"limiter`" [-] See `"include limiter`" above.
    - `"1 - limiter`" [-] See `"include 1 - limiter`" above.
 
@@ -64,38 +65,33 @@ namespace PriestleyTaylor {
 // [MJ m^-2 d^-1] given a daily-averaged ground and air temperature
 // (in C or K).  We convert to W/m^2
 //
-double
-groundHeatFlux(double temp_ground, double temp_air);
+double groundHeatFlux(double temp_ground, double temp_air);
 
 //
 // PRMS-IV eqn 1-58, calculates the slope of vapor pressure as a function of
 // daily averaged air temperature [K], in [KPa C^-1]
 //
-double
-vaporPressureSlope(double temp_air);
+double vaporPressureSlope(double temp_air);
 
 //
 // PRMS-IV eqn 1-57, calculates the psychrometric constant in [KPa C^-1] as a
 // function of an elevation (lapse rate fixed) and a latent heat of
 // vaporization in [cal gm^-1].
 //
-double
-psychrometricConstant(double lh_vap, double evel);
+double psychrometricConstant(double lh_vap, double evel);
 
 //
 // PRMS-IV eqn 1-51, calculates the latent heat of vaporization [cal g^-1] as a
 // function of the daily averaged air temperature [K] for liquid water
 //
-double
-latentHeatVaporization_water(double temp_air);
+double latentHeatVaporization_water(double temp_air);
 
 //
 // PRMS-IV eqn 1-51, calculates the latent heat of vaporization [cal g^-1] as a
 // function of the daily averaged air temperature [K] for snow -- note this is
 // currently the same as the water value, but should get modified for snow!
 //
-double
-latentHeatVaporization_snow(double temp_air);
+double latentHeatVaporization_snow(double temp_air);
 
 
 } // namespace PriestleyTaylor

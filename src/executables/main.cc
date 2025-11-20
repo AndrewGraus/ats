@@ -36,6 +36,8 @@
 
 // registration files
 #include "ats_registration_files.hh"
+#include "PK_Factory.hh"
+#include "Evaluator_Factory.hh"
 
 int
 main(int argc, char* argv[])
@@ -80,6 +82,13 @@ main(int argc, char* argv[])
     std::string writing_rank;
     clp.setOption("write_on_rank", &writing_rank, "Rank on which to write VerboseObjects");
 
+    bool list_evals(false);
+    clp.setOption(
+      "list_evaluators", "no_list_evaluators", &list_evals, "List available evaluators and exit.");
+
+    bool list_pks(false);
+    clp.setOption("list_pks", "no_list_pks", &list_pks, "List available PKs and MPCs and exit.");
+
     clp.throwExceptions(false);
     clp.recogniseAllOptions(true);
 
@@ -97,7 +106,9 @@ main(int argc, char* argv[])
 #define STR(s) #s
     // check for version info request
     if (version) {
-      if (rank == 0) { std::cout << "ATS version " << XSTR(ATS_VERSION) << std::endl; }
+      if (rank == 0) {
+        std::cout << "ATS version " << XSTR(ATS_VERSION) << std::endl;
+      }
       Kokkos::finalize();
       return 0;
     }
@@ -111,6 +122,25 @@ main(int argc, char* argv[])
         std::cout << "GIT branch      " << XSTR(AMANZI_GIT_BRANCH) << std::endl;
         std::cout << "GIT global hash " << XSTR(AMANZI_GIT_GLOBAL_HASH) << std::endl;
         std::cout << std::endl;
+      }
+      Kokkos::finalize();
+      return 0;
+    }
+
+    if (list_evals) {
+      if (rank == 0) {
+        Amanzi::Evaluator_Factory fac;
+        std::cout << "Evaluators: "; // no endline is intentional!
+        fac.WriteChoices(std::cout);
+      }
+      Kokkos::finalize();
+      return 0;
+    }
+    if (list_pks) {
+      if (rank == 0) {
+        Amanzi::PKFactory fac;
+        std::cout << "PKs and MPCs: "; // no endline is intentional!
+        fac.WriteChoices(std::cout);
       }
       Kokkos::finalize();
       return 0;
@@ -188,7 +218,8 @@ main(int argc, char* argv[])
 
     // -- parse input file
     Teuchos::RCP<Teuchos::ParameterList> plist;
-    if (Amanzi::Keys::ends_with(input_filename, ".yaml") || Amanzi::Keys::ends_with(input_filename, ".YAML")) {
+    if (Amanzi::Keys::ends_with(input_filename, ".yaml") ||
+        Amanzi::Keys::ends_with(input_filename, ".YAML")) {
       plist = Teuchos::YAMLParameterList::parseYamlFile(input_filename);
     } else {
       plist = Teuchos::getParametersFromXmlFile(input_filename);
@@ -200,7 +231,7 @@ main(int argc, char* argv[])
     Teuchos::readVerboseObjectSublist(&*plist, &fos, &verbosity_from_list);
     if (verbosity_from_list != Teuchos::VERB_DEFAULT)
       Amanzi::VerboseObject::global_default_level = verbosity_from_list;
-    if (!verbosity.empty()) Amanzi::VerboseObject::global_default_level = opt_level;
+    if (!verbosity.empty() ) Amanzi::VerboseObject::global_default_level = opt_level;
 
     if (Amanzi::VerboseObject::global_default_level != Teuchos::VERB_NONE && (rank == 0)) {
       std::cout
@@ -221,10 +252,14 @@ main(int argc, char* argv[])
       try {
         ret = driver.run();
       } catch (std::string& s) {
-        if (rank == 0) { std::cerr << "ERROR:" << std::endl << s << std::endl; }
+        if (rank == 0) {
+          std::cerr << "ERROR:" << std::endl << s << std::endl;
+        }
         return 1;
       } catch (int& ierr) {
-        if (rank == 0) { std::cerr << "ERROR: unknown error code " << ierr << std::endl; }
+        if (rank == 0) {
+          std::cerr << "ERROR: unknown error code " << ierr << std::endl;
+        }
         return ierr;
       }
     }

@@ -34,8 +34,8 @@ Drainage is given by:
 .. math::
    D = max(0, \frac{(\Theta - \Theta_sat)}{\tau})
 
-.. _drainage-evaluator-spec:
-.. admonition:: drainage-evaluator-spec
+.. _evaluator-drainage-spec:
+.. admonition:: evaluator-drainage-spec
 
    * `"drainage timescale [s]`" ``[double]`` **864** Timescale over which drainage occurs.
    * `"saturated specific water content [m^3 H2O / m^2 leaf area]`" ``[double]`` **1e-4**
@@ -72,7 +72,8 @@ class DrainageEvaluator : public EvaluatorSecondaryMonotypeCV {
                                           const Tag& wrt_tag,
                                           const std::vector<CompositeVector*>& results) override;
 
-  virtual void EnsureCompatibility_Structure_(State& S) override {
+  virtual void EnsureCompatibility_Structure_(State& S) override
+  {
     EnsureCompatibility_StructureSame_(S);
   }
 

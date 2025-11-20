@@ -7,11 +7,6 @@
   Authors: Ethan Coon (ecoon@lanl.gov)
 */
 
-/*
-  Evaluates height(pressure)
-
-*/
-
 #ifndef AMANZI_FLOWRELATIONS_HEIGHT_MODEL_
 #define AMANZI_FLOWRELATIONS_HEIGHT_MODEL_
 
@@ -22,7 +17,9 @@ namespace Flow {
 
 class HeightModel {
  public:
-  explicit HeightModel(Teuchos::ParameterList& plist) : plist_(plist) {}
+  explicit HeightModel(Teuchos::ParameterList& plist)
+    : plist_(plist)
+  {}
 
   double Height(double pres, double rho, double p_atm, double g_z)
   {
