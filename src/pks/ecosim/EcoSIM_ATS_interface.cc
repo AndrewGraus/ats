@@ -37,7 +37,7 @@
 #include "bulk_density_evaluator.hh"
 #include "matric_pressure_evaluator.hh"
 
-#include "pk_helpers.hh"
+#include "PK_Helpers.hh"
 #include "EcoSIM_ATS_interface.hh"
 
 namespace Amanzi {
@@ -328,25 +328,25 @@ void EcoSIM::Setup() {
   }
 
   //Setup Evaluators
-  requireAtNext(hydraulic_conductivity_key_, tag_next_, *S_)
+  requireEvaluatorAtNext(hydraulic_conductivity_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::CELL, 1);
 
-  requireAtCurrent(hydraulic_conductivity_key_, tag_current_, *S_, name_);
+  requireEvaluatorAtCurrent(hydraulic_conductivity_key_, tag_current_, *S_, name_);
 
-  requireAtNext(bulk_density_key_, tag_next_, *S_)
+  requireEvaluatorAtNext(bulk_density_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::CELL, 1);
-  requireAtCurrent(bulk_density_key_, tag_current_, *S_, name_);
+  requireEvaluatorAtCurrent(bulk_density_key_, tag_current_, *S_, name_);
 
-  requireAtNext(matric_pressure_key_, tag_next_, *S_)
+  requireEvaluatorAtNext(matric_pressure_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
     ->AddComponent("cell", AmanziMesh::CELL, 1);
 
-  requireAtCurrent(matric_pressure_key_, tag_current_, *S_, name_);
+  requireEvaluatorAtCurrent(matric_pressure_key_, tag_current_, *S_, name_);
 
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();

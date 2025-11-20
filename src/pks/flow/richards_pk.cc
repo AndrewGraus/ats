@@ -477,15 +477,6 @@ Richards::SetupPhysicalEvaluators_()
   //    and at the current time, where it is a copy evaluator
   requireEvaluatorAtCurrent(sat_key_, tag_current_, *S_, name_);
 
-  /*requireAtNext(matric_pressure_key_, tag_next_, *S_)
-    .SetMesh(mesh_)
-    ->SetGhosted()
-    ->AddComponent("cell", AmanziMesh::CELL, 1);
-  S_->RequireEvaluator(matric_pressure_key_, tag_next_);
-  */
-  //    and at the current time, where it is a copy evaluator
-  requireAtCurrent(sat_key_, tag_current_, *S_, name_);
-
   // -- rel perm
   requireEvaluatorAtNext(coef_key_, tag_next_, *S_)
     .SetMesh(mesh_)

@@ -78,7 +78,7 @@ set(ats_ecosim_data_link_libs
   ats_eos
   ats_operators
   ${NETCDF_LIB}/libnetcdf.so
-  ${NETCDF_LIB}/libnetcdf.so.19
+  ${NETCDF_LIB}/libnetcdf.so.22
   ${NETCDF_LIB}/libnetcdff.so
   ${NETCDF_LIB}/libnetcdff.so.7
   ${NETCDF_LIB}/libnetcdff.so.7.1.0

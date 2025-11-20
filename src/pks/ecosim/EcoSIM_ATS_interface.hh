@@ -39,7 +39,7 @@
 #include "State.hh"
 #include "BGCEngine.hh"
 #include "PK_Factory.hh"
-#include "pk_physical_default.hh"
+#include "PK_Physical_Default.hh"
 #include "PK_Physical.hh"
 #include "ecosim_mod_test_wrapper.h"
 #include "MeshPartition.hh"
