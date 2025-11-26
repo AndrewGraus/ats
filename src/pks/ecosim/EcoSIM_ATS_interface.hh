@@ -180,7 +180,7 @@ class EcoSIM : public PK_Physical_Default {
   double t_ecosim = 0.0;
 
   // keys
-  Key tcc_key_;
+  Key mole_fraction_key_;
   Key porosity_key_;
   Key saturation_liquid_key_;
   Key saturation_gas_key_;

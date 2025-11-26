@@ -57,8 +57,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     domain_surface_ = Keys::readDomainHint(*plist_, domain_, "subsurface", "surface");
 
     // transport
-    tcc_key_ = Keys::readKey(*plist_, domain_, "total component concentration", "total_component_concentration");
-    //Remember tcc components are accessed by tcc[i][c] where i is the component and c is the cell
+    mole_fraction_key_ = Keys::readKey(*plist_, domain_, "mole fraction", "mole_fraction");
+    //mole_fraction components are accessed by mole_fraction[i][c] where i is the component and c is the cell
 
     //Flow
     porosity_key_ = Keys::readKey(*plist_, domain_, "porosity", "porosity");
@@ -66,7 +66,7 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     saturation_gas_key_ = Keys::readKey(*plist_,domain_,"saturation gas", "saturation_gas");
     saturation_ice_key_ = Keys::readKey(*plist_,domain_,"saturation ice", "saturation_ice");
     water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
-    relative_permeability_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
+    //relative_permeability_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
     matric_pressure_key_ = Keys::readKey(*plist_,domain_,"matric pressure","matric_pressure");
     liquid_density_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
     ice_density_key_ = Keys::readKey(*plist_, domain_, "mass density ice", "mass_density_ice");
@@ -359,14 +359,14 @@ void EcoSIM::Setup() {
 void EcoSIM::Initialize() {
   PK_Physical_Default::Initialize();
   //Need to know the number of components to initialize data structures
-  const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, Tags::DEFAULT)->ViewComponent("cell"));
-  int tcc_num = tcc.NumVectors();
+  const Epetra_MultiVector& mole_fraction= *(S_->GetPtr<CompositeVector>(mole_fraction_key_, Tags::DEFAULT)->ViewComponent("cell"));
+  int mole_fraction_num = mole_fraction.NumVectors();
   Teuchos::OSTab tab = vo_->getOSTab();
 
   num_columns_ = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
   //Now we call the engine's init state function which allocates the data
-  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, tcc_num, num_columns_);
+  bgc_engine_->InitState(bgc_props_, bgc_state_, bgc_aux_data_, ncells_per_col_, mole_fraction_num, num_columns_);
 
   int ierr = 0;
 
@@ -502,11 +502,11 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
 
   // Ensure dependencies are filled
-  S_->GetEvaluator(tcc_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(mole_fraction_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(porosity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(relative_permeability_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(relative_permeability_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(liquid_density_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(rock_density_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(T_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -583,9 +583,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>("water_content", tag_next_)
           .ViewComponent("cell",false))(0);
 
-  S_->GetEvaluator("relative_permeability", tag_next_).Update(*S_, name_);
-  const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>("relative_permeability", tag_next_)
-          .ViewComponent("cell",false))(0);
+  //S_->GetEvaluator("relative_permeability", tag_next_).Update(*S_, name_);
+  //const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>("relative_permeability", tag_next_)
+  //         .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("mass_density_liquid", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& liquid_density = *(*S_->Get<CompositeVector>("mass_density_liquid", tag_next_)
@@ -896,12 +896,12 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   //This is the copy function for a loop over a single process instead of a single column
   //Fill state with ATS variables that are going to be changed by EcoSIM
   const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(porosity_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& tcc= *(S_->GetPtr<CompositeVector>(tcc_key_, water_tag)->ViewComponent("cell"));
-  int tcc_num = tcc.NumVectors();
+  const Epetra_MultiVector& mole_fraction= *(S_->GetPtr<CompositeVector>(mole_fraction_key_, water_tag)->ViewComponent("cell"));
+  int mole_fraction_num = mole_fraction.NumVectors();
 
   const Epetra_Vector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& water_content = *(*S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& relative_permeability = *(*S_->Get<CompositeVector>(relative_permeability_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& relative_permeability = *(*S_->Get<CompositeVector>(relative_permeability_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& liquid_density = *(*S_->Get<CompositeVector>(liquid_density_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& rock_density = *(*S_->Get<CompositeVector>(rock_density_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& cell_volume = *(*S_->Get<CompositeVector>(cell_volume_key_, water_tag).ViewComponent("cell", false))(0);
@@ -986,7 +986,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   auto col_ss_water_source = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_depth_c = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
-  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
+  auto col_mole_fraction = Teuchos::rcp(new Epetra_SerialDenseMatrix(mole_fraction_num,ncells_per_col_));
 
   //Gather columns on this process:
   num_columns_global = mesh_surf_->getMap(AmanziMesh::Entity_kind::CELL,false).NumGlobalElements();
@@ -1016,7 +1016,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     FieldToColumn_(column,porosity,col_porosity.ptr());
     FieldToColumn_(column,liquid_saturation,col_l_sat.ptr());
     FieldToColumn_(column,water_content,col_wc.ptr());
-    FieldToColumn_(column,relative_permeability,col_relative_permeability.ptr());
+    //FieldToColumn_(column,relative_permeability,col_relative_permeability.ptr());
     FieldToColumn_(column,liquid_density,col_l_dens.ptr());
     FieldToColumn_(column,rock_density,col_r_dens.ptr());
     FieldToColumn_(column,cell_volume,col_vol.ptr());
@@ -1030,7 +1030,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     FieldToColumn_(column,temp, col_temp.ptr());
     FieldToColumn_(column,thermal_conductivity,col_cond.ptr());
 
-    //MatrixFieldToColumn_(column, tcc, col_tcc.ptr());
+    //MatrixFieldToColumn_(column, mole_fraction, col_mole_fraction.ptr());
 
     // This is for computing depth
     //ColDepthDz_(column, col_depth.ptr(), col_dz.ptr());
@@ -1150,14 +1150,14 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
                                   const Tag& water_tag)
 {
 
-  Epetra_MultiVector& tcc= *(S_->GetPtrW<CompositeVector>(tcc_key_, Tags::DEFAULT, "state")->ViewComponent("cell",false));
-  int tcc_num = tcc.NumVectors();
+  Epetra_MultiVector& mole_fraction= *(S_->GetPtrW<CompositeVector>(mole_fraction_key_, Tags::DEFAULT, "subsurface transport")->ViewComponent("cell",false));
+  int mole_fraction_num = mole_fraction.NumVectors();
 
   auto& porosity = *(*S_->GetW<CompositeVector>(porosity_key_, Tags::DEFAULT, porosity_key_).ViewComponent("cell",false))(0);
   auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Tags::DEFAULT, saturation_liquid_key_).ViewComponent("cell",false))(0);
   auto& water_content = *(*S_->GetW<CompositeVector>(water_content_key_, Tags::DEFAULT, water_content_key_).ViewComponent("cell",false))(0);
   //auto& suction_head = *(*S_->GetW<CompositeVector>(suc_key_, Tags::DEFAULT, suc_key_).ViewComponent("cell",false))(0);
-  auto& relative_permeability = *(*S_->GetW<CompositeVector>(relative_permeability_key_, Tags::DEFAULT, relative_permeability_key_).ViewComponent("cell",false))(0);
+  //auto& relative_permeability = *(*S_->GetW<CompositeVector>(relative_permeability_key_, Tags::DEFAULT, relative_permeability_key_).ViewComponent("cell",false))(0);
   auto& liquid_density = *(*S_->GetW<CompositeVector>(liquid_density_key_, Tags::DEFAULT, liquid_density_key_).ViewComponent("cell",false))(0);
   auto& rock_density = *(*S_->GetW<CompositeVector>(rock_density_key_, Tags::DEFAULT, rock_density_key_).ViewComponent("cell",false))(0);
   auto& cell_volume = *(*S_->GetW<CompositeVector>(cell_volume_key_, Tags::DEFAULT, cell_volume_key_).ViewComponent("cell",false))(0);
@@ -1202,7 +1202,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   auto col_ss_water_source = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
   auto col_snow_temperature = Teuchos::rcp(new Epetra_SerialDenseVector(ncells_per_col_));
 
-  auto col_tcc = Teuchos::rcp(new Epetra_SerialDenseMatrix(tcc_num,ncells_per_col_));
+  auto col_mole_fraction = Teuchos::rcp(new Epetra_SerialDenseMatrix(mole_fraction_num,ncells_per_col_));
 
   //Gather columns on this process:
   num_columns_global = mesh_surf_->getMap(AmanziMesh::Entity_kind::CELL, false).NumGlobalElements();
