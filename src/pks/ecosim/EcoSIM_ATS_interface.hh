@@ -2,21 +2,117 @@
   ATS
 
   License: see $ATS_DIR/COPYRIGHT
-  Author: Andrew Graus
-
-  The idea here is to begin writing the EcoSIM ATS interface with a simple
-  program. To start we are going to try to do a few things:
-
-  1) Initalize a PK called EcoSIM_ATS
-  2) Have that PK take in the water content
-  3) modify the water content in a simple way to mock roots (take away water)
-  4) modify it so it will take in tracers (how roots take in nutrients)
+  Author: Andrew Graus (agraus@lbl.gov)
 
   --------------------------------------------------------------------------*/
-//Eventually add if statement here (probably tied to something at compile time
-//
-//#ifndef PKS_BGC_SIMPLE_HH_
-//#define PKS_BGC_SIMPLE_HH_
+/*!
+
+This PK couples ATS to the BGC code EcoSIM. This PK essentially takes over the
+surface balance aspects of ATS and replaces them with those from EcoSIM.
+
+In addition this code takes data from ATS state and loads it into a struct that
+is fortran readable (BGCContainer). The data structures and methods were adapted
+from those used in the Alquimia code, additionally the general code structure
+Engine code are adapted from Alquimia as well.
+
+Structures for looping over cells of columns were adapted from ATS's simpleBGC code
+
+`"PK type`" = `"EcoSIM for ATS`"
+
+.. _pk-ecosim-spec:
+.. admonition:: pk-ecosim-spec
+
+   * `"engine`" ``[string]`` **EcoSIM**  Engine name - inspired by Alquimias options if this
+     code is adapted to used to drive other BGC codes.
+
+   * `"heat capacity [MJ mol^-1 K^-1]`" ``[double]]`` **0.02** heat capacity of the soil layers
+
+   * `"Field Capacity [MPa]`" ``[double]]`` **-0.033** pressure at field capacity
+
+   * `"Wilting Point [MPa]`" ``[double]]`` **-1.5** pressure at wilting point
+
+   * `"initial time step [s]`" ``[double]]`` **3600.0** EcoSIM is an hourly model so the
+     standard is to run it after the end of hour 1
+
+   * `"EcoSIM Precipitation`" ``[bool]`` This allows EcoSIM to partition the precipitation
+     itself. If false it will expect the precipitation forcing to be already divided into
+     rain and snow as in ATS.
+
+   * `"Prescribe Albedo`" ``[bool]`` determines if the code will use EcoSIM's internal
+     albedo calculation, or if it will be prescirbed from data.
+
+   * `"Prescribe Phenology`" ``[bool]`` Determines if the coupling will use the prescribed
+     phenology methodology where LAI and PFT are input. This will eventually be complemented
+     with a full phenology method, where plant parameters are directly, but will remain in
+     the code as an option.
+
+   * `"starting day of year [0-364]`" ``[int]`` day of the year, needed for EcoSIMs internal
+     radiation and biogeochemical processes.
+
+   * `"Starting year`" ``[int]`` Year also needed for internal EcoSIM computations
+
+    * `"Number of PFTs [1-5] "`" ``[int]`` Number of PFTs allowed in every column. 5
+     is the maximum number allowed
+
+   * `"domain name`" ``[string]`` **domain**
+
+   * `"surface domain name`" ``[string]`` **surface**
+
+   EVALUATORS:
+
+   - `"Bulk Density`" `[ ]`
+   - `"Hydraulic Conductivity `[Pa]`
+   - `"Matric Pressure`" `[Pa]`
+
+   DEPENDENCIES
+   //Sources
+   `"surface water source ecosim`"     **surface-ecosim_water_source**
+   `"surface energy source ecosim`"    **surface-ecosim_source**
+   `"subsurface water source ecosim`"  **ecosim_water_source**
+   `"surface water source ecosim`"     **surface-ecosim_water_source**
+
+   //surface balance variables
+   `"incoming shortwave radiation`"      **surface-incoming_shortwave_radiation**
+   `"incoming longwave radiation`"       **surface-incoming_longwave_radiation**
+   `"air temperature`"                   **surface-air_temperature**
+   `"vapor pressure air`"                **surface-vapor_pressure_air**
+   `"wind speed`"                        **surface-wind_speed**
+   `"precipitation rain`"                **surface-precipitation_rain**
+   `"precipitation snow`"                **surface-precipitation_snow**
+   `"precipitation total`"               **surface-precipitation_total**
+   `"snow depth`"                        **surface-snow_depth**
+   `"snow_albedo`"                       **surface-snow_albedo**
+   `"snow temperature`"                  **surface-snow_temperature**
+   `"canopy longwave radiation`"         **surface-canopy_longwave_radiation**
+   `"canopy latent heat`"                **surface-canopy_latent_heat**
+   `"canopy sensible heat`"              **surface-canopy_sensible_heat**
+   `"canopy surface water`"              **surface-canopy_surface_water**
+   `"evapotranspiration`"                **surface-evapotranspiration**
+   `"evaporation ground`"                **surface-evaporation_ground**
+   `"evaporation litter`"                **surface-evaporation_litter**
+   `"evaporation snow`"                  **surface-evaporation_snow**
+   `"sublimation snow`"                  **surface-sublimation_snow**
+   `"LAI`"                               **surface-LAI**
+   `"SAI`"                               **surface-SAI**
+   `"vegetation type`"                   **surface-vegetation_type**
+
+   //General Flow Transport Energy
+   `"mole fraction`"                     **mole_fraction**
+   `"porosity`"                          **porosity**
+   `"saturation liquid`"                 **saturation_liquid**
+   `"saturation gas`"                    **saturation_gas**
+   `"saturation ice`"                    **saturation_ice**
+   `"water content`"                     **water_content**
+   `"mass density liquid`"               **mass_density_liquid**
+   `"mass density ice`"                  **mass_density_ice**
+   `"mass density gas`"                  **mass_density_gas**
+   `"density rock`"                      **density_rock**
+   `"temperature`"                       **temperature**
+   `"thermal conductivity`"              **thermal_conductivity**
+   `"cell volume`"                       **cell_volume**
+
+ */
+
 
 #ifndef PKS_ECOSIM_HH_
 #define PKS_ECOSIM_HH_

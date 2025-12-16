@@ -141,13 +141,13 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     v_type_key_ = Keys::readKey(*plist_, domain_surface_, "vegetation type", "vegetation_type");
 
     //Atmospheric abundance keys
-    atm_n2_ = plist_->get<double>("atmospheric N2");
+    /*atm_n2_ = plist_->get<double>("atmospheric N2");
     atm_o2_ = plist_->get<double>("atmospheric O2");
     atm_co2_ = plist_->get<double>("atmospheric CO2");
     atm_ch4_ = plist_->get<double>("atmospheric CH4");
     atm_n2o_ = plist_->get<double>("atmospheric N2O");
     atm_h2_ = plist_->get<double>("atmospheric H2");
-    atm_nh3_ = plist_->get<double>("atmospheric NH3");
+    atm_nh3_ = plist_->get<double>("atmospheric NH3");*/
 
     //Starting values and parameters for precribed phenology / albedo
 
@@ -197,7 +197,6 @@ void EcoSIM::Setup() {
   //Need to do some basic setup of the columns:
   mesh_surf_ = S_->GetMesh(domain_surface_);
   mesh_ = S_->GetMesh(domain_);
-  //num_columns_ = mesh_surf_->getNumEntities(AmanziMesh::Parallel_type::OWNED, AmanziMesh::Parallel_kind::OWNED);
   int num_columns_ =
     mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
@@ -371,8 +370,6 @@ void EcoSIM::Initialize() {
   int ierr = 0;
 
   if (S_->HasRecord(ice_density_key_, Tags::DEFAULT)) {
-    //Teuchos::OSTab tab = vo_->getOSTab();
-    //*vo_->os() << "found ice key" << std::endl;
     S_->GetEvaluator(saturation_ice_key_, Tags::DEFAULT).Update(*S_, name_);
     S_->GetEvaluator(ice_density_key_, Tags::DEFAULT).Update(*S_, name_);
     has_ice = true;
@@ -421,11 +418,6 @@ void EcoSIM::Initialize() {
 
   S_->GetW<CompositeVector>(sublimation_snow_key_, Tags::DEFAULT, "surface-sublimation_snow").PutScalar(0.0);
   S_->GetRecordW(sublimation_snow_key_, Tags::DEFAULT, "surface-sublimation_snow").set_initialized();
-
-  //S_->GetW<CompositeVector>(lai_key_, Tags::DEFAULT, "surface-LAI").PutScalar(0.0);
-  //S_->GetRecordW(lai_key_, Tags::DEFAULT, "surface-LAI").set_initialized();
-  //surface_energy_source_ecosim_key_
-  //surface_water_source_ecosim_key_
 
   S_->GetW<CompositeVector>(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).PutScalar(0.0);
   S_->GetRecordW(surface_water_source_ecosim_key_, Tags::DEFAULT, surface_water_source_ecosim_key_).set_initialized();
@@ -691,8 +683,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
   num_columns_global_ptype = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::ALL);
 
-  //*vo_->os() << "Before Advance, p_rain: " << p_rain[1] << " m/s, p_snow: " << p_snow << "m SWE/s, water_content: " << water_content[1][1] << " mol" << std::endl;
-
   //Trying to loop over processors now:
   int numProcesses, p_rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
@@ -804,13 +794,6 @@ void EcoSIM::ColDepthDz_(AmanziMesh::Entity_ID column,
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
     // depth centroid
     (*depth)[i] = surf_centroid[2] - mesh_->getCellCentroid(col_iter[i])[2];
-
-    // dz
-    // -- find face_below
-    //AmanziMesh::Entity_ID_List faces;
-    //std::vector<int> dirs;
-    //mesh_->cell_get_faces_and_dirs(col_iter[i], &faces, &dirs);
-    ///double vol = mesh_->cell_volume(col_iter[i]);
 
     const auto& [faces, dirs] = mesh_->getCellFacesAndDirections(col_iter[i]);
 
@@ -924,11 +907,8 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector* precipitation_snow = nullptr;
 
   if(p_bool){
-    //const Epetra_Vector& precipitation = *(*S_->Get<CompositeVector>(p_total_key_, water_tag).ViewComponent("cell", false))(0);
     precipitation = &(*(*S_->Get<CompositeVector>(p_total_key_, water_tag).ViewComponent("cell", false))(0));
   } else {
-    //const Epetra_Vector& precipitation = *(*S_->Get<CompositeVector>(p_rain_key_, water_tag).ViewComponent("cell", false))(0);
-    //const Epetra_Vector& precipitation_snow = *(*S_->Get<CompositeVector>(p_snow_key_, water_tag).ViewComponent("cell", false))(0);
     precipitation = &(*(*S_->Get<CompositeVector>(p_rain_key_, water_tag).ViewComponent("cell", false))(0));
     precipitation_snow = &(*(*S_->Get<CompositeVector>(p_snow_key_, water_tag).ViewComponent("cell", false))(0));
   }
@@ -1001,8 +981,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   std::cout << "ATS2EcoSIM rank: " << p_rank <<std::endl;
   num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
   //Now that the arrays are flat we need to be a little more careful about how we load an unload the data
-  /*const Epetra_Vector& temp = *(*S_->Get<CompositeVector>(T_key_, water_tag).ViewComponent("cell", false))(0);
-  for (int column=0; column!=num_columns_local; ++column) {
+  /*for (int column=0; column!=num_columns_local; ++column) {
     FieldToColumn_(column, temp, col_temp.ptr());
 
     for (int i=0; i < ncells_per_col_; ++i) {
