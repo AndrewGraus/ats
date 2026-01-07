@@ -1014,6 +1014,15 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     // This is for computing depth
     //ColDepthDz_(column, col_depth.ptr(), col_dz.ptr());
 
+    //Grabbing the cross sectional area in the z direction
+    int f = mesh_surf_->getEntityParent(AmanziMesh::Entity_kind::CELL, column);
+    auto col_iter = mesh_->columns.getCells(column);
+    std::size_t ncol_cells = col_iter.size();
+
+    double column_area = mesh_->getFaceArea(f);
+    std::cout << "column: " << column << " column_area: " << column_area << std::endl;
+    props.column_area.data[column] = column_area;
+
     VolDepthDz_(column, col_depth.ptr(), col_dz.ptr(), col_vol.ptr());
     double sum = 0.0;
     for (int i = ncells_per_col_ - 1; i >= 0; --i) {
@@ -1234,7 +1243,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
   std::cout << "(CopyFromEcoSIM) subsurface energy flux: " << std::endl;
 
-  for (int col=0; col!=num_columns_local; ++col) {
+  /*for (int col=0; col!=num_columns_local; ++col) {
     for (int i=0; i < ncells_per_col_; ++i) {
       std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_energy_source[col*ncells_per_col_+i] << std::endl;
     }
@@ -1244,7 +1253,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     for (int i=0; i < ncells_per_col_; ++i) {
       std::cout << "col: " << col << " cell: " << i << "value: " << subsurface_water_source[col*ncells_per_col_+i] << std::endl;
     }
-  }
+    }*/
 }
 
 int EcoSIM::InitializeSingleProcess(int proc)
