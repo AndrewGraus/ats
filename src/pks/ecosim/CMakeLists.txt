@@ -68,7 +68,6 @@ if(ENABLE_ECOSIM)
     set(ats_ecosim_src_files
     EcoSIM_ATS_interface.cc
     BGCEngine.cc
-    ecosim_wrappers.F90
     data/bgc_fortran_memory_mod.F90
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/BGC_containers.F90
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/ATSCPLMod.F90
@@ -77,10 +76,10 @@ if(ENABLE_ECOSIM)
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/ATSUtilsMod.F90
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/SharedDataMod.F90
     ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/c_f_interface_module.F90
+    ${ECOSIM_INSTALL_PREFIX}/f90src/ATSUtils/ecosim_wrappers.F90
     )
 
     set(ats_ecosim_inc_files
-    ecosim_mod_test_wrapper.h
     EcoSIM_ATS_interface.hh
     BGCEngine.hh
     ecosim_interface.h
