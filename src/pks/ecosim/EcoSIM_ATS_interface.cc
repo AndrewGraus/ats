@@ -68,7 +68,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     water_content_key_ = Keys::readKey(*plist_,domain_,"water content","water_content");
     //relative_permeability_key_ = Keys::readKey(*plist_,domain_,"relative permeability","relative_permeability");
     matric_pressure_key_ = Keys::readKey(*plist_,domain_,"matric pressure","matric_pressure");
-    liquid_density_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
+    //liquid_density_key_ = Keys::readKey(*plist_, domain_, "mass density liquid", "mass_density_liquid");
+    liquid_density_key_ = Keys::readKey(*plist_, domain_, "molar density liquid", "molar_density_liquid");
     ice_density_key_ = Keys::readKey(*plist_, domain_, "mass density ice", "mass_density_ice");
     gas_density_key_ = Keys::readKey(*plist_, domain_,"mass density gas", "mass_density_gas");
     gas_density_key_test_ = Keys::readKey(*plist_, domain_, "mass density gas", "mass_density_gas");
