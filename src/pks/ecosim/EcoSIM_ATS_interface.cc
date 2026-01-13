@@ -215,6 +215,9 @@ void EcoSIM::Setup() {
     }
   }
 
+  //Setting records for variables ONLY used by the EcoSIM PK, this includes, weather forcings,
+  // ecosim surface and subsurface forces, and surface variables from EcoSIM that are saved
+  // over to ATS (evaporation fluxes, snow related variables)
   if (!S_->HasRecord(snow_depth_key_,tag_next_)) {
         S_->Require<CompositeVector, CompositeVectorSpace>(snow_depth_key_, tag_next_, snow_depth_key_)
           .SetMesh(mesh_surf_)
@@ -292,8 +295,6 @@ void EcoSIM::Setup() {
           ->SetGhosted(false)
           ->SetComponent("cell", AmanziMesh::CELL, 1);
 
-  //May need to setup surface evaluators as they are now owned by surface_balance PK insteady of surface energy??
-  //
   S_->RequireEvaluator(snow_albedo_key_, tag_next_);
   S_->Require<CompositeVector, CompositeVectorSpace>(snow_albedo_key_, tag_next_).SetMesh(mesh_surf_)
 	        ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
@@ -316,7 +317,8 @@ void EcoSIM::Setup() {
 
   Teuchos::OSTab tab = vo_->getOSTab();
 
-  //Check for total precipitation and set the record if it's there
+  //EcoSIM can do its own precipitation partitioning so you can put in total precipitation if
+  // you want EcoSIM to do it, or snow/rain if the forcing is already split.
   if (p_bool) {
      S_->RequireEvaluator(p_total_key_, tag_next_);
      S_->Require<CompositeVector, CompositeVectorSpace>(p_total_key_, tag_next_).SetMesh(mesh_surf_)
@@ -327,7 +329,7 @@ void EcoSIM::Setup() {
        ->AddComponent("cell", AmanziMesh::Entity_kind::CELL, 1);
   }
 
-  //Setup Evaluators
+  //Setup custom evaluators for EcoSIM, found in constitutive relations
   requireEvaluatorAtNext(hydraulic_conductivity_key_, tag_next_, *S_)
     .SetMesh(mesh_)
     ->SetGhosted()
@@ -348,6 +350,36 @@ void EcoSIM::Setup() {
 
   requireEvaluatorAtCurrent(matric_pressure_key_, tag_current_, *S_, name_);
 
+//Setup variables that were owned by ATS SEB, but now are controlled by EcoSIM
+// Can remove SEB from the cycle_driver
+  requireEvaluatorAtNext(lw_key_, tag_next_, *S_)
+    .SetMesh(mesh_surf_)
+    ->SetGhosted()
+    ->AddComponent("cell", AmanziMesh::CELL, 1);
+
+  requireEvaluatorAtCurrent(lw_key_, tag_current_, *S_, name_);
+
+  requireEvaluatorAtNext(air_temp_key_, tag_next_, *S_)
+    .SetMesh(mesh_surf_)
+    ->SetGhosted()
+    ->AddComponent("cell", AmanziMesh::CELL, 1);
+
+  requireEvaluatorAtCurrent(air_temp_key_, tag_current_, *S_, name_);
+
+  requireEvaluatorAtNext(vp_air_key_, tag_next_, *S_)
+    .SetMesh(mesh_surf_)
+    ->SetGhosted()
+    ->AddComponent("cell", AmanziMesh::CELL, 1);
+
+  requireEvaluatorAtCurrent(vp_air_key_, tag_current_, *S_, name_);
+
+  requireEvaluatorAtNext(wind_speed_key_, tag_next_, *S_)
+    .SetMesh(mesh_surf_)
+    ->SetGhosted()
+    ->AddComponent("cell", AmanziMesh::CELL, 1);
+
+  requireEvaluatorAtCurrent(wind_speed_key_, tag_current_, *S_, name_);
+
   if (vo_->os_OK(Teuchos::VERB_MEDIUM)) {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << vo_->color("green") << "Setup of PK was successful"
@@ -359,8 +391,11 @@ void EcoSIM::Setup() {
 void EcoSIM::Initialize() {
   PK_Physical_Default::Initialize();
   //Need to know the number of components to initialize data structures
-  const Epetra_MultiVector& mole_fraction= *(S_->GetPtr<CompositeVector>(mole_fraction_key_, Tags::DEFAULT)->ViewComponent("cell"));
-  int mole_fraction_num = mole_fraction.NumVectors();
+
+  //Transport removal:
+  /*const Epetra_MultiVector& mole_fraction= *(S_->GetPtr<CompositeVector>(mole_fraction_key_, Tags::DEFAULT)->ViewComponent("cell"));
+  int mole_fraction_num = mole_fraction.NumVectors();*/
+  int mole_fraction_num = 1;
   Teuchos::OSTab tab = vo_->getOSTab();
 
   num_columns_ = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
@@ -495,7 +530,9 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
 
 
   // Ensure dependencies are filled
-  S_->GetEvaluator(mole_fraction_key_, Tags::DEFAULT).Update(*S_, name_);
+  // Transport removal
+
+  //S_->GetEvaluator(mole_fraction_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(porosity_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(saturation_liquid_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(water_content_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -506,13 +543,14 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator(cell_volume_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(f_wp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(f_root_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(subsurface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(subsurface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(subsurface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(subsurface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
   //S_->GetEvaluator(matric_pressure_key_, Tags::DEFAULT).Update(*S_, name_);
+
 
   //Surface data
   S_->GetEvaluator(sw_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(lw_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(air_temp_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(vp_air_key_, Tags::DEFAULT).Update(*S_, name_);
   S_->GetEvaluator(wind_speed_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -533,8 +571,8 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
     S_->GetEvaluator(p_snow_key_, Tags::DEFAULT).Update(*S_, name_);
   }
 
-  S_->GetEvaluator(surface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
-  S_->GetEvaluator(surface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(surface_energy_source_key_, Tags::DEFAULT).Update(*S_, name_);
+  //S_->GetEvaluator(surface_water_source_key_, Tags::DEFAULT).Update(*S_, name_);
 
   if (has_gas) {
     S_->GetEvaluator(saturation_gas_key_, Tags::DEFAULT).Update(*S_, name_);
@@ -564,6 +602,7 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   AmanziMesh::Entity_ID num_columns_ = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
   // grab the required fields
+
   S_->GetEvaluator("porosity", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& porosity = *(*S_->Get<CompositeVector>("porosity", tag_next_)
       .ViewComponent("cell",false))(0);
@@ -575,10 +614,6 @@ bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   S_->GetEvaluator("water_content", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& water_content = *(*S_->Get<CompositeVector>("water_content", tag_next_)
           .ViewComponent("cell",false))(0);
-
-  //S_->GetEvaluator("relative_permeability", tag_next_).Update(*S_, name_);
-  //const Epetra_MultiVector& relative_permeability = *(*S_->Get<CompositeVector>("relative_permeability", tag_next_)
-  //         .ViewComponent("cell",false))(0);
 
   S_->GetEvaluator("mass_density_liquid", tag_next_).Update(*S_, name_);
   const Epetra_MultiVector& liquid_density = *(*S_->Get<CompositeVector>("mass_density_liquid", tag_next_)
@@ -880,8 +915,11 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   //This is the copy function for a loop over a single process instead of a single column
   //Fill state with ATS variables that are going to be changed by EcoSIM
   const Epetra_Vector& porosity = *(*S_->Get<CompositeVector>(porosity_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_MultiVector& mole_fraction= *(S_->GetPtr<CompositeVector>(mole_fraction_key_, water_tag)->ViewComponent("cell"));
-  int mole_fraction_num = mole_fraction.NumVectors();
+
+  //Transport removal
+  /*const Epetra_MultiVector& mole_fraction= *(S_->GetPtr<CompositeVector>(mole_fraction_key_, water_tag)->ViewComponent("cell"));
+  int mole_fraction_num = mole_fraction.NumVectors();*/
+  int mole_fraction_num = 1;
 
   const Epetra_Vector& liquid_saturation = *(*S_->Get<CompositeVector>(saturation_liquid_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& water_content = *(*S_->Get<CompositeVector>(water_content_key_, water_tag).ViewComponent("cell", false))(0);
@@ -899,7 +937,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
 
   //const auto& shortwave_radiation = *S_.Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false);
   const Epetra_Vector& shortwave_radiation = *(*S_->Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false))(0);
-  const Epetra_Vector& longwave_radiation = *(*S_->Get<CompositeVector>(lw_key_, water_tag).ViewComponent("cell", false))(0);
+  //const Epetra_Vector& longwave_radiation = *(*S_->Get<CompositeVector>(lw_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& air_temperature = *(*S_->Get<CompositeVector>(air_temp_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& vapor_pressure_air = *(*S_->Get<CompositeVector>(vp_air_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& wind_speed= *(*S_->Get<CompositeVector>(wind_speed_key_, water_tag).ViewComponent("cell", false))(0);
@@ -1078,7 +1116,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     state.sublimation_snow.data[column] = sublimation_snow[0][column];
 
     props.shortwave_radiation.data[column] = shortwave_radiation[column];
-    props.longwave_radiation.data[column] = longwave_radiation[column];
+    //props.longwave_radiation.data[column] = longwave_radiation[column];
     props.air_temperature.data[column] = air_temperature[column];
     props.vapor_pressure_air.data[column] = vapor_pressure_air[column];
     props.wind_speed.data[column] = wind_speed[column];
@@ -1139,8 +1177,10 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
                                   const Tag& water_tag)
 {
 
-  Epetra_MultiVector& mole_fraction= *(S_->GetPtrW<CompositeVector>(mole_fraction_key_, Tags::DEFAULT, "subsurface transport")->ViewComponent("cell",false));
-  int mole_fraction_num = mole_fraction.NumVectors();
+  //Transport removal
+  /*Epetra_MultiVector& mole_fraction= *(S_->GetPtrW<CompositeVector>(mole_fraction_key_, Tags::DEFAULT, "subsurface transport")->ViewComponent("cell",false));
+  int mole_fraction_num = mole_fraction.NumVectors();*/
+  int mole_fraction_num = 1;
 
   auto& porosity = *(*S_->GetW<CompositeVector>(porosity_key_, Tags::DEFAULT, porosity_key_).ViewComponent("cell",false))(0);
   auto& liquid_saturation = *(*S_->GetW<CompositeVector>(saturation_liquid_key_, Tags::DEFAULT, saturation_liquid_key_).ViewComponent("cell",false))(0);
