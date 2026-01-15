@@ -152,17 +152,17 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
 
     //Starting values and parameters for precribed phenology / albedo
 
-    pressure_at_field_capacity = plist_->get<double>("Field Capacity [Mpa]");
-    pressure_at_wilting_point = plist_->get<double>("Wilting Point [Mpa]");
-    p_bool = plist_->get<bool>("EcoSIM Precipitation");
-    a_bool = plist_->get<bool>("Prescribe Albedo");
-    pheno_bool = plist_->get<bool>("Prescribe Phenology");
+    pressure_at_field_capacity = plist_->get<double>("field capacity [Mpa]");
+    pressure_at_wilting_point = plist_->get<double>("wilting point [Mpa]");
+    p_bool = plist_->get<bool>("EcoSIM precipitation");
+    a_bool = plist_->get<bool>("prescribe snow albedo");
+    pheno_bool = plist_->get<bool>("prescribe phenology");
 
     //Parameters for times and time of year
     dt_ = plist_->get<double>("initial time step");
     c_m_ = plist_->get<double>("heat capacity [MJ mol^-1 K^-1]");
-    day0_ = plist_->get<int>("Starting day of year [0-364]");
-    year0_ = plist_->get<int>("Starting year");
+    day0_ = plist_->get<int>("starting day of year [0-364]");
+    year0_ = plist_->get<int>("starting year");
 
     curr_day_ = day0_;
     curr_year_ = year0_;
