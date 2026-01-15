@@ -324,7 +324,8 @@ class EcoSIM : public PK_Physical_Default {
   Key canopy_latent_heat_key_;
   Key canopy_sensible_heat_key_;
   Key canopy_surface_water_key_;
-  Key evapotranspiration_key_;
+  Key transpiration_key_;
+  Key evaporation_canopy_key_;
   Key evaporation_ground_key_;
   Key evaporation_litter_key_;
   Key evaporation_snow_key_;

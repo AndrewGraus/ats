@@ -330,7 +330,8 @@ void AllocateBGCState(const BGCSizes* const sizes,
    AllocateBGCVectorDouble(sizes->num_columns, &(state->boundary_latent_heat_flux));
    AllocateBGCVectorDouble(sizes->num_columns, &(state->boundary_sensible_heat_flux));
    AllocateBGCVectorDouble(sizes->num_columns, &(state->canopy_surface_water));
-   AllocateBGCVectorDouble(sizes->num_columns, &(state->evapotranspiration));
+   AllocateBGCVectorDouble(sizes->num_columns, &(state->transpiration));
+   AllocateBGCVectorDouble(sizes->num_columns, &(state->evaporation_canopy));
    AllocateBGCVectorDouble(sizes->num_columns, &(state->evaporation_bare_ground));
    AllocateBGCVectorDouble(sizes->num_columns, &(state->evaporation_litter));
    AllocateBGCVectorDouble(sizes->num_columns, &(state->evaporation_snow));
@@ -360,7 +361,8 @@ void AllocateBGCState(const BGCSizes* const sizes,
      FreeBGCVectorDouble(&(state->boundary_latent_heat_flux));
      FreeBGCVectorDouble(&(state->boundary_sensible_heat_flux));
      FreeBGCVectorDouble(&(state->canopy_surface_water));
-     FreeBGCVectorDouble(&(state->evapotranspiration));
+     FreeBGCVectorDouble(&(state->transpiration));
+     FreeBGCVectorDouble(&(state->evaporation_canopy));
      FreeBGCVectorDouble(&(state->evaporation_bare_ground));
      FreeBGCVectorDouble(&(state->evaporation_litter));
      FreeBGCVectorDouble(&(state->evaporation_snow));
