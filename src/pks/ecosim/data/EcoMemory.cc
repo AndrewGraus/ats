@@ -338,13 +338,14 @@ void FreeEcoEnvironment(EcoEnvironment* env) {
  **  Feedback (EcoSIM -> ATS)
  **
  *******************************************************************************/
-void AllocateEcoFeedback(EcoFeedback* feedback, int ncells_per_col_, int num_columns, int num_pfts) {
+void AllocateEcoFeedback(EcoFeedback* feedback, int ncells_per_col_, int num_columns, int num_pfts, int num_components) {
   AllocateEcoMatrixDouble(ncells_per_col_, num_columns, &(feedback->subsurface_water_source));
   AllocateEcoMatrixDouble(ncells_per_col_, num_columns, &(feedback->subsurface_energy_source));
   AllocateEcoVectorDouble(num_columns, &(feedback->surface_water_source));
   AllocateEcoVectorDouble(num_columns, &(feedback->surface_energy_source));
   AllocateEcoVectorDouble(num_columns, &(feedback->snow_depth));
   AllocateEcoMatrixDouble(num_pfts, num_columns, &(feedback->canopy_snow));
+  AllocateEcoTensorDouble(ncells_per_col_, num_columns, num_components, &(feedback->subsurface_mole_fraction_source));
 }
 
 void FreeEcoFeedback(EcoFeedback* feedback) {
@@ -355,6 +356,7 @@ void FreeEcoFeedback(EcoFeedback* feedback) {
     FreeEcoVectorDouble(&(feedback->surface_energy_source));
     FreeEcoVectorDouble(&(feedback->snow_depth));
     FreeEcoMatrixDouble(&(feedback->canopy_snow));
+    FreeEcoTensorDouble(&(feedback->subsurface_mole_fraction_source));
   }
 }
 

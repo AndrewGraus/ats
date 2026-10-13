@@ -392,6 +392,8 @@ class EcoSIM : public PK_Physical_Default {
   Key surface_water_source_ecosim_key_;
   Key subsurface_energy_source_ecosim_key_;
   Key subsurface_water_source_ecosim_key_;
+  Key subsurface_mole_fraction_source_ecosim_key_;
+  std::vector<Key> subsurface_mole_fraction_source_dof_keys_;
   Key snow_depth_key_;
   Key snow_albedo_key_;
   Key snow_temperature_key_;
@@ -424,6 +426,7 @@ class EcoSIM : public PK_Physical_Default {
   bool has_energy, has_gas, has_ice, p_bool, a_bool, pheno_bool, microbe_bool;
   std::vector<std::string> component_names_;
   int num_components;
+  int mole_fraction_num_;
 
  private:
   //factory registration

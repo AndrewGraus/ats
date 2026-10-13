@@ -96,6 +96,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
       Keys::readKey(*plist_, domain_, "subsurface energy source ecosim", "subsurface_ecosim_source");
     subsurface_water_source_ecosim_key_ =
       Keys::readKey(*plist_, domain_, "subsurface water source ecosim", "subsurface_ecosim_water_source");
+    subsurface_mole_fraction_source_ecosim_key_ =
+      Keys::readKey(*plist_, domain_, "subsurface mole fraction source ecosim", "subsurface_ecosim_mole_fraction_source");
 
     //Other
     cell_volume_key_ = Keys::readKey(*plist_, domain_, "cell volume", "cell_volume");
@@ -152,6 +154,11 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     pheno_bool = plist_->get<bool>("prescribe phenology", false);
     microbe_bool = plist_->get<bool>("microbe model", false);
     num_pfts = plist_->get<int>("number of pfts", 1);
+    mole_fraction_num_ = plist_->get<int>("number of mole fraction components", 1);
+    for (int k = 0; k < mole_fraction_num_; ++k) {
+      subsurface_mole_fraction_source_dof_keys_.push_back(
+        subsurface_mole_fraction_source_ecosim_key_ + "." + std::to_string(k));
+    }
 
     // EcoSIM internal state entries (by ATS name) to visualize; none by default
     if (plist_->isParameter("visualize ecosim state")) {
@@ -209,6 +216,33 @@ void EcoSIM::parseParameterList()
       Exceptions::amanzi_throw(msg);
     }
     S_->GetEvaluatorList(key).set<std::string>("evaluator type", "primary variable");
+  }
+
+  if (microbe_bool) {
+    const auto& key = subsurface_mole_fraction_source_ecosim_key_;
+    if (S_->HasEvaluatorList(key) &&
+        S_->GetEvaluatorList(key).get<std::string>("evaluator type", "primary variable") !=
+          "primary variable") {
+      Errors::Message msg;
+      msg << "EcoSIM: \"" << key << "\" is computed by the EcoSIM PK; remove its evaluator \""
+          << S_->GetEvaluatorList(key).get<std::string>("evaluator type")
+          << "\" from the state's evaluators list.";
+      Exceptions::amanzi_throw(msg);
+    }
+    S_->GetEvaluatorList(key).set<std::string>("evaluator type", "primary variable");
+
+    for (const auto& dof_key : subsurface_mole_fraction_source_dof_keys_) {
+      if (S_->HasEvaluatorList(dof_key) &&
+          S_->GetEvaluatorList(dof_key).get<std::string>("evaluator type", "primary variable") !=
+            "primary variable") {
+        Errors::Message msg;
+        msg << "EcoSIM: \"" << dof_key << "\" is computed by the EcoSIM PK; remove its evaluator \""
+            << S_->GetEvaluatorList(dof_key).get<std::string>("evaluator type")
+            << "\" from the state's evaluators list.";
+        Exceptions::amanzi_throw(msg);
+      }
+      S_->GetEvaluatorList(dof_key).set<std::string>("evaluator type", "primary variable");
+    }
   }
 }
 
@@ -332,6 +366,19 @@ void EcoSIM::Setup() {
     .SetMesh(mesh_)
     ->SetGhosted(false)
     ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  if (microbe_bool) {
+    requireEvaluatorPrimary(subsurface_mole_fraction_source_ecosim_key_, tag_next_, *S_, name_)
+      .SetMesh(mesh_)
+      ->SetGhosted(false)
+      ->SetComponent("cell", AmanziMesh::CELL, mole_fraction_num_);
+    for (const auto& dof_key : subsurface_mole_fraction_source_dof_keys_) {
+      requireEvaluatorPrimary(dof_key, tag_next_, *S_, name_)
+        .SetMesh(mesh_)
+        ->SetGhosted(false)
+        ->SetComponent("cell", AmanziMesh::CELL, 1);
+    }
+  }
 
   /*S_->Require<CompositeVector, CompositeVectorSpace>(snow_temperature_key_ , tag_next_, snow_temperature_key_)
           .SetMesh(mesh_)
@@ -486,6 +533,17 @@ void EcoSIM::Initialize() {
     S_->GetW<CompositeVector>(key, tag_next_, name_).PutScalar(0.0);
     S_->GetRecordW(key, tag_next_, name_).set_initialized();
     changedEvaluatorPrimary(key, tag_next_, *S_);
+  }
+
+  if (microbe_bool) {
+    S_->GetW<CompositeVector>(subsurface_mole_fraction_source_ecosim_key_, tag_next_, name_).PutScalar(0.0);
+    S_->GetRecordW(subsurface_mole_fraction_source_ecosim_key_, tag_next_, name_).set_initialized();
+    changedEvaluatorPrimary(subsurface_mole_fraction_source_ecosim_key_, tag_next_, *S_);
+    for (const auto& dof_key : subsurface_mole_fraction_source_dof_keys_) {
+      S_->GetW<CompositeVector>(dof_key, tag_next_, name_).PutScalar(0.0);
+      S_->GetRecordW(dof_key, tag_next_, name_).set_initialized();
+      changedEvaluatorPrimary(dof_key, tag_next_, *S_);
+    }
   }
 
   //S_->GetW<CompositeVector>(snow_temperature_key_, Tags::DEFAULT, snow_temperature_key_).PutScalar(0.0);
@@ -1329,6 +1387,36 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   //   q = S * molar density [mol m^-3] / (3600 [s h^-1] * cell volume [m^3])
   for (int c = 0; c != subsurface_water_source.MyLength(); ++c) {
     subsurface_water_source[c] *= liquid_density[c] / (3600.0 * cell_volume[c]);
+  }
+
+  if (microbe_bool) {
+    auto& subsurface_mole_fraction_source =
+      *S_->GetW<CompositeVector>(subsurface_mole_fraction_source_ecosim_key_, tag_next_, name_)
+         .ViewComponent("cell", false);
+    auto col_ss_mole_frac_source =
+      Teuchos::rcp(new Epetra_SerialDenseMatrix(ncells_per_col_, mole_fraction_num_));
+
+    for (int col = 0; col != num_columns_local; ++col) {
+      for (int i = 0; i < ncells_per_col_; ++i) {
+        for (int k = 0; k < mole_fraction_num_; ++k) {
+          int index = i + (col * ncells_per_col_) + (k * ncells_per_col_ * num_columns_local);
+          (*col_ss_mole_frac_source)(i, k) = feedback.subsurface_mole_fraction_source.data[index];
+        }
+      }
+      MatrixColumnToField_(col, subsurface_mole_fraction_source, col_ss_mole_frac_source.ptr());
+    }
+    changedEvaluatorPrimary(subsurface_mole_fraction_source_ecosim_key_, tag_next_, *S_);
+
+    // copy each DOF of the multi-vector into its corresponding 1-DOF field for transport
+    for (int k = 0; k < mole_fraction_num_; ++k) {
+      Epetra_MultiVector& dof_vec =
+        *S_->GetW<CompositeVector>(subsurface_mole_fraction_source_dof_keys_[k], tag_next_, name_)
+           .ViewComponent("cell", false);
+      for (int c = 0; c != subsurface_mole_fraction_source.MyLength(); ++c) {
+        dof_vec[0][c] = subsurface_mole_fraction_source[k][c];
+      }
+      changedEvaluatorPrimary(subsurface_mole_fraction_source_dof_keys_[k], tag_next_, *S_);
+    }
   }
 
   CopyInternalStateFromEcoSIM_(eco_istate_);

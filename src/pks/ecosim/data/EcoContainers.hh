@@ -176,6 +176,7 @@ extern "C" {
     EcoVectorDouble surface_energy_source;    /* EcoSIM: per hour */
     EcoVectorDouble snow_depth;               /* also sent in: EcoSIM's snow state */
     EcoMatrixDouble canopy_snow;              /* num_pfts x num_columns; also sent in */
+    EcoTensorDouble subsurface_mole_fraction_source; /* ncells x num_columns x num_components; microbes only */
   } EcoFeedback;
 
   /* EcoSIM-private data (carried state and EcoSIM-only outputs), packed by

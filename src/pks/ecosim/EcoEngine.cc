@@ -42,7 +42,7 @@ void EcoEngine::InitState(EcoEnvironment& environment,
                           int num_pfts)
 {
   AllocateEcoEnvironment(&environment, ncells_per_col_, num_components, num_columns);
-  AllocateEcoFeedback(&feedback, ncells_per_col_, num_columns, num_pfts);
+  AllocateEcoFeedback(&feedback, ncells_per_col_, num_columns, num_pfts, num_components);
 }
 
 void EcoEngine::FreeState(EcoEnvironment& environment, EcoFeedback& feedback)
