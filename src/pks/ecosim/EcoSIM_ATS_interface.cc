@@ -137,13 +137,13 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     v_type_key_ = Keys::readKey(*plist_, domain_surface_, "vegetation type", "vegetation_type");
 
     //Atmospheric abundance keys
-    /*atm_n2_ = plist_->get<double>("atmospheric N2");
-    atm_o2_ = plist_->get<double>("atmospheric O2");
-    atm_co2_ = plist_->get<double>("atmospheric CO2");
-    atm_ch4_ = plist_->get<double>("atmospheric CH4");
-    atm_n2o_ = plist_->get<double>("atmospheric N2O");
-    atm_h2_ = plist_->get<double>("atmospheric H2");
-    atm_nh3_ = plist_->get<double>("atmospheric NH3");*/
+    atm_n2_  = plist_->get<double>("atmospheric N2",  0.78084);
+    atm_o2_  = plist_->get<double>("atmospheric O2",  0.20946);
+    atm_co2_ = plist_->get<double>("atmospheric CO2", 4.15e-4);
+    atm_ch4_ = plist_->get<double>("atmospheric CH4", 1.90e-6);
+    atm_n2o_ = plist_->get<double>("atmospheric N2O", 3.30e-7);
+    atm_h2_  = plist_->get<double>("atmospheric H2",  5.50e-7);
+    atm_nh3_ = plist_->get<double>("atmospheric NH3", 1.00e-9);
 
     //Starting values and parameters for precribed phenology / albedo
 
@@ -296,6 +296,9 @@ void EcoSIM::Setup() {
   layout_sizes.num_columns = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL,
                                                         AmanziMesh::Parallel_kind::OWNED);
   layout_sizes.num_pfts = num_pfts;
+  layout_sizes.microbe_model = microbe_bool ? 1 : 0;
+  layout_sizes.num_heter_guilds = plist_->get<int>("number of heterotrophic guilds", 7);
+  layout_sizes.num_autor_guilds = plist_->get<int>("number of autotrophic guilds", 6);
   internal_state_layout_ = eco_engine_->InternalStateLayout(layout_sizes);
 
   for (const auto& name : visualize_internal_state_) {
@@ -1275,7 +1278,7 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   int mole_fraction_num = 1;
   if (microbe_bool) {
   Epetra_MultiVector& mole_fraction= *(S_->GetPtrW<CompositeVector>(mole_fraction_key_, Tags::DEFAULT, "subsurface transport")->ViewComponent("cell",false));
-  int mole_fraction_num = mole_fraction.NumVectors();
+  mole_fraction_num = mole_fraction.NumVectors();
   }
   
   auto& porosity = *(*S_->GetW<CompositeVector>(porosity_key_, Tags::DEFAULT, porosity_key_).ViewComponent("cell",false))(0);
@@ -1482,6 +1485,9 @@ int EcoSIM::InitializeSingleProcess(int proc)
   eco_sizes_.ncells_per_col_ = ncells_per_col_;
   eco_sizes_.num_components = 1;
   eco_sizes_.num_pfts = num_pfts;
+  eco_sizes_.microbe_model = microbe_bool ? 1 : 0;
+  eco_sizes_.num_heter_guilds = plist_->get<int>("number of heterotrophic guilds", 7);
+  eco_sizes_.num_autor_guilds = plist_->get<int>("number of autotrophic guilds", 6);
 
   eco_engine_->Setup(eco_config_, eco_env_, eco_feedback_, eco_istate_, eco_sizes_,
                      num_iterations, num_columns, ncells_per_col_);

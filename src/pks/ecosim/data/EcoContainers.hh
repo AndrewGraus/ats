@@ -100,6 +100,9 @@ extern "C" {
     int num_components;
     int num_columns;
     int num_pfts;
+    int microbe_model;      /* 0 or 1 */
+    int num_heter_guilds;   /* heterotrophic guilds per complex (default 7) */
+    int num_autor_guilds;   /* autotrophic guild types (default 6) */
   } EcoSizes;
 
   /* ATS -> EcoSIM, once at setup */
