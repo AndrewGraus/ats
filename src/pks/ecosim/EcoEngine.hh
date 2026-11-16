@@ -27,12 +27,14 @@ namespace EcoSIM {
 
 // One entry of the EcoSIM internal state layout (see ATSStateRegistryMod.F90)
 struct EcoInternalStateEntry {
-  std::string ats_name;    // ATS field basename, key "surface-<ats_name>"
+  std::string ats_name;    // ATS field basename
   std::string ecosim_name; // EcoSIM variable holding it
   std::string units;       // as annotated in EcoSIM
   std::string description;
-  int num_components;      // per column
+  int num_components;      // per column (total, including all layers)
   int role;                // kEcoRolePrivate or kEcoRoleOutput
+  bool on_subsurface = false; // true for entries stored on the subsurface mesh
+  int ncomp_per_cell = 0;    // per-cell components when on_subsurface (= num_components / nlay)
 };
 
 class EcoEngine {

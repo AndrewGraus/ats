@@ -301,6 +301,17 @@ void EcoSIM::Setup() {
   layout_sizes.num_autor_guilds = plist_->get<int>("number of autotrophic guilds", 6);
   internal_state_layout_ = eco_engine_->InternalStateLayout(layout_sizes);
 
+  // Tag biomass entries for subsurface storage: their layer dimension maps to
+  // subsurface cells rather than being flattened into the component index.
+  const int nlay = ncells_per_col_ + 1; // EcoSIM layers including litter (index 0)
+  for (auto& entry : internal_state_layout_) {
+    if (entry.ats_name == "heter_biomass" || entry.ats_name == "autor_biomass") {
+      entry.on_subsurface = true;
+      AMANZI_ASSERT(entry.num_components % nlay == 0);
+      entry.ncomp_per_cell = entry.num_components / nlay;
+    }
+  }
+
   for (const auto& name : visualize_internal_state_) {
     auto entry = std::find_if(internal_state_layout_.begin(), internal_state_layout_.end(),
                               [&](const EcoInternalStateEntry& e) { return e.ats_name == name; });
@@ -315,20 +326,32 @@ void EcoSIM::Setup() {
 
   internal_state_keys_.clear();
   for (const auto& entry : internal_state_layout_) {
-    Key key = Keys::getKey(domain_surface_, entry.ats_name);
-    internal_state_keys_.push_back(key);
-    S_->Require<CompositeVector, CompositeVectorSpace>(key, tag_next_, key)
-      .SetMesh(mesh_surf_)
-      ->SetGhosted(false)
-      ->SetComponent("cell", AmanziMesh::CELL, entry.num_components);
-    auto& record = S_->GetRecordW(key, tag_next_, key);
-    if (entry.role == kEcoRoleOutput) {
-      record.set_io_checkpoint(false);
-    } else {
-      bool requested = std::find(visualize_internal_state_.begin(),
-                                 visualize_internal_state_.end(),
-                                 entry.ats_name) != visualize_internal_state_.end();
+    bool requested = std::find(visualize_internal_state_.begin(),
+                               visualize_internal_state_.end(),
+                               entry.ats_name) != visualize_internal_state_.end();
+
+    if (entry.on_subsurface) {
+      Key key = Keys::getKey(domain_, entry.ats_name);
+      internal_state_keys_.push_back(key);
+      S_->Require<CompositeVector, CompositeVectorSpace>(key, tag_next_, key)
+        .SetMesh(mesh_)
+        ->SetGhosted(false)
+        ->SetComponent("cell", AmanziMesh::CELL, entry.ncomp_per_cell);
+      auto& record = S_->GetRecordW(key, tag_next_, key);
       record.set_io_vis(requested);
+    } else {
+      Key key = Keys::getKey(domain_surface_, entry.ats_name);
+      internal_state_keys_.push_back(key);
+      S_->Require<CompositeVector, CompositeVectorSpace>(key, tag_next_, key)
+        .SetMesh(mesh_surf_)
+        ->SetGhosted(false)
+        ->SetComponent("cell", AmanziMesh::CELL, entry.num_components);
+      auto& record = S_->GetRecordW(key, tag_next_, key);
+      if (entry.role == kEcoRoleOutput) {
+        record.set_io_checkpoint(false);
+      } else {
+        record.set_io_vis(requested);
+      }
     }
   }
   S_->Require<int>(internal_state_version_key_, tag_next_, name_);
@@ -337,11 +360,13 @@ void EcoSIM::Setup() {
     Teuchos::OSTab tab = vo_->getOSTab();
     *vo_->os() << "EcoSIM internal state (layout version "
                << eco_engine_->InternalStateLayoutVersion() << "):" << std::endl
-               << "  ATS field | EcoSIM variable | components | units | role" << std::endl;
+               << "  ATS field | EcoSIM variable | components | mesh | units | role" << std::endl;
     for (int i = 0; i != internal_state_layout_.size(); ++i) {
       const auto& e = internal_state_layout_[i];
       *vo_->os() << "  " << internal_state_keys_[i] << " | " << e.ecosim_name << " | "
-                 << e.num_components << " | " << e.units << " | "
+                 << (e.on_subsurface ? e.ncomp_per_cell : e.num_components)
+                 << " | " << (e.on_subsurface ? "subsurface" : "surface")
+                 << " | " << e.units << " | "
                  << (e.role == kEcoRoleOutput ? "output" : "private") << std::endl;
     }
   }
@@ -1433,36 +1458,76 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
 // Copy the EcoSIM internal state from the ATS fields that hold it. All
 // entries are copied; EcoSIM only reads back the PRIVATE ones.
+// Subsurface entries (biomass) are gathered from per-cell subsurface fields;
+// surface entries are read from per-column surface fields.
 void EcoSIM::CopyInternalStateToEcoSIM_(EcoInternalState& internal_state)
 {
   const int n = internal_state.values_per_column;
+  const int nlay = ncells_per_col_ + 1;
   int offset = 0;
   for (int i = 0; i != internal_state_layout_.size(); ++i) {
+    const auto& entry = internal_state_layout_[i];
     const auto& field =
       *S_->Get<CompositeVector>(internal_state_keys_[i], tag_next_).ViewComponent("cell", false);
-    for (int col = 0; col != num_columns_local; ++col) {
-      for (int k = 0; k != internal_state_layout_[i].num_components; ++k) {
-        internal_state.values.data[col * n + offset + k] = field[k][col];
+
+    if (entry.on_subsurface) {
+      const int npc = entry.ncomp_per_cell;
+      for (int col = 0; col != num_columns_local; ++col) {
+        // Layer 0 (litter): leave flat buffer slot as-is (zeros)
+        auto col_cells = mesh_->columns.getCells(col);
+        // Layers 1..nlay-1: gather from subsurface cells
+        for (int L = 1; L < nlay; ++L) {
+          AmanziMesh::Entity_ID cell = col_cells[L - 1];
+          for (int k = 0; k < npc; ++k) {
+            internal_state.values.data[col * n + offset + L * npc + k] = field[k][cell];
+          }
+        }
+      }
+    } else {
+      for (int col = 0; col != num_columns_local; ++col) {
+        for (int k = 0; k != entry.num_components; ++k) {
+          internal_state.values.data[col * n + offset + k] = field[k][col];
+        }
       }
     }
-    offset += internal_state_layout_[i].num_components;
+    offset += entry.num_components;
   }
 }
 
 // Copy the EcoSIM internal state into the ATS fields that hold it.
+// Subsurface entries (biomass) are scattered to per-cell subsurface fields;
+// surface entries are written to per-column surface fields.
 void EcoSIM::CopyInternalStateFromEcoSIM_(const EcoInternalState& internal_state)
 {
   const int n = internal_state.values_per_column;
+  const int nlay = ncells_per_col_ + 1;
   int offset = 0;
   for (int i = 0; i != internal_state_layout_.size(); ++i) {
+    const auto& entry = internal_state_layout_[i];
     auto& field = *S_->GetW<CompositeVector>(internal_state_keys_[i], tag_next_, internal_state_keys_[i])
                      .ViewComponent("cell", false);
-    for (int col = 0; col != num_columns_local; ++col) {
-      for (int k = 0; k != internal_state_layout_[i].num_components; ++k) {
-        field[k][col] = internal_state.values.data[col * n + offset + k];
+
+    if (entry.on_subsurface) {
+      const int npc = entry.ncomp_per_cell;
+      for (int col = 0; col != num_columns_local; ++col) {
+        // Skip layer 0 (litter) — always zero in the coupling
+        auto col_cells = mesh_->columns.getCells(col);
+        // Layers 1..nlay-1: scatter to subsurface cells
+        for (int L = 1; L < nlay; ++L) {
+          AmanziMesh::Entity_ID cell = col_cells[L - 1];
+          for (int k = 0; k < npc; ++k) {
+            field[k][cell] = internal_state.values.data[col * n + offset + L * npc + k];
+          }
+        }
+      }
+    } else {
+      for (int col = 0; col != num_columns_local; ++col) {
+        for (int k = 0; k != entry.num_components; ++k) {
+          field[k][col] = internal_state.values.data[col * n + offset + k];
+        }
       }
     }
-    offset += internal_state_layout_[i].num_components;
+    offset += entry.num_components;
   }
 }
 
