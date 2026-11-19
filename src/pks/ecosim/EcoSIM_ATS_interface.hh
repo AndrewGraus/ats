@@ -445,6 +445,9 @@ class EcoSIM : public PK_Physical_Default {
   Key heat_correction_energy_key_, heat_applied_key_, heat_last_advance_time_key_;
   bool semi_implicit_heat_ = true;
   bool shared_layer0_ = true;
+  // EcoSIM reduces its exposed-soil cover by the area covered by the ATS pond
+  // (legacy, non-shared surface layer only; ATS keeps ownership of the pond).
+  bool ponded_aware_ = false;
   Key layer0_material_key_, layer0_resistance_key_, layer0_water_key_, layer0_energy_key_;
   Key layer0_depth_key_, layer0_pressure_key_, layer0_fraction_key_, layer0_nl_key_, layer0_ni_key_;
   bool pending_heat_valid_ = false;

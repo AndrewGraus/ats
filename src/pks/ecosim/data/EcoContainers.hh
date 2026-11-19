@@ -116,6 +116,7 @@ extern "C" {
     double wind_speed_ref_height;  /* wind speed measurement height [m] */
     double soil_surface_roughness; /* soil surface roughness height [m] */
     bool shared_surface_layer; /* ATS owns combined layer-zero water and energy */
+    bool ponded_aware;      /* EcoSIM cover fractions account for the ATS pond (legacy layer only) */
     char* pft_file;         /* PFT parameter file, owned by the PK */
   } EcoConfig;
 

@@ -208,6 +208,15 @@ void EcoSIM::parseParameterList()
   PK_Physical_Default::parseParameterList();
   semi_implicit_heat_ = plist_->get<bool>("semi-implicit surface heat exchange", true);
   shared_layer0_=plist_->get<bool>("shared surface layer",true);
+  ponded_aware_=plist_->get<bool>("ponded-aware surface physics",false);
+  if (ponded_aware_ && shared_layer0_) {
+    // The shared surface layer already gives EcoSIM the pond; nothing to add.
+    ponded_aware_ = false;
+    if (vo_.get() != nullptr && vo_->os_OK(Teuchos::VERB_LOW)) {
+      *vo_->os() << "WARNING: \"ponded-aware surface physics\" is ignored when "
+                    "\"shared surface layer\" is true." << std::endl;
+    }
+  }
   auto surface_domain=Keys::getDomain(T_surf_key_);
   layer0_material_key_=Keys::getKey(surface_domain,"ecosim_layer0_material");
   layer0_resistance_key_=Keys::getKey(surface_domain,"ecosim_layer0_thermal_resistance");
@@ -1226,6 +1235,7 @@ double EcoSIM::ReadSiteParameter_(const std::string& name, const std::string& he
 void EcoSIM::CopyConfigToEcoSIM_(EcoConfig& config)
 {
   config.shared_surface_layer=shared_layer0_;
+  config.ponded_aware=ponded_aware_ && !shared_layer0_;
   config.heat_capacity = c_m_;
   config.field_capacity = pressure_at_field_capacity;
   config.wilting_point = pressure_at_wilting_point;
