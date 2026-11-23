@@ -1108,7 +1108,6 @@ double EcoSIM::ReadSiteParameter_(const std::string& name, const std::string& he
 
 void EcoSIM::CopyConfigToEcoSIM_(EcoConfig& config)
 {
-  config.shared_surface_layer=false;     // the shared surface layer is not supported (see parseParameterList)
   config.ponded_aware=ponded_aware_;
   config.heat_capacity = c_m_;
   config.field_capacity = pressure_at_field_capacity;
@@ -1323,11 +1322,8 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     //fill surface variables
 
     environment.surface_temperature.data[column] = temp_surf[column];
-    // The ATS pond is read-only for EcoSIM (ponded-aware mode); the shared-layer state is not exported.
-    environment.surface_water_liquid.data[column]=0.;
-    environment.surface_water_ice.data[column]=0.;
+    // The ATS pond is read-only for EcoSIM (ponded-aware mode).
     environment.ponded_depth.data[column]=ponded_depth[0][column];
-    environment.surface_gauge_pressure.data[column]=0.;
 
     feedback.snow_depth.data[column] = snow_depth[0][column];
     for (int pft = 0; pft != num_pfts; ++pft) {
