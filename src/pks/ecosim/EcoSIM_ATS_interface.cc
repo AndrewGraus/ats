@@ -594,6 +594,11 @@ void EcoSIM::Initialize() {
   num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
   num_columns_global_ptype = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::ALL);
 
+  // The ground slope and aspect set the solar geometry of each column in EcoSIM's initialization, so the
+  // evaluators that derive them from the mesh must have run before the first copy to EcoSIM.
+  S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
+
   //Loop over processes and Initalize EcoSIM on that process
   int numProcesses, p_rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
@@ -1266,8 +1271,11 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     auto col_iter = mesh_->columns.getCells(column);
     std::size_t ncol_cells = col_iter.size();
 
-    double column_area = mesh_->getFaceArea(f);
-    //std::cout << "column: " << column << " column_area: " << column_area << std::endl;
+    // EcoSIM's column area is the horizontal (projected) area of the surface cell: the vertical z component of
+    // the face normal, whose length is the face area. It equals the soil cell volume over its thickness, so the
+    // cells of EcoSIM and ATS have the same volume, and it is the area the standalone EcoSIM takes (DH x DV) on a
+    // slope; it is the face area itself on flat ground.
+    double column_area = std::abs(mesh_->getFaceNormal(f)[2]);
     environment.column_area.data[column] = column_area;
 
     VolDepthDz_(column, col_depth.ptr(), col_dz.ptr(), col_vol.ptr());
