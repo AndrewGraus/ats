@@ -138,7 +138,7 @@ extern "C" {
     EcoMatrixDouble relative_permeability;  /* zeros (not filled from a field) */
     EcoMatrixDouble thermal_conductivity;   /* not filled */
     EcoMatrixDouble volume;
-    EcoMatrixDouble depth;
+    EcoMatrixDouble depth;                  /* depth from the surface to the bottom of each cell [m] */
     EcoMatrixDouble dz;
     EcoMatrixDouble plant_wilting_factor;   /* placeholder, filled from porosity */
     EcoMatrixDouble rooting_depth_fraction; /* placeholder, filled from porosity */

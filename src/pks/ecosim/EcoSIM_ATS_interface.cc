@@ -1027,9 +1027,8 @@ void EcoSIM::VolDepthDz_(AmanziMesh::Entity_ID column,
   AmanziGeometry::Point neg_z(3);
   neg_z.set(0.,0.,-1);
 
+  double depth_to_bottom = 0.0;
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
-    // depth centroid
-    (*depth)[i] = surf_centroid[2] - mesh_->getCellCentroid(col_iter[i])[2];
 
     // dz
     // -- find face_below
@@ -1061,6 +1060,12 @@ void EcoSIM::VolDepthDz_(AmanziMesh::Entity_ID column,
     (*dz)[i] = mesh_->getFaceCentroid(f_above)[2] - mesh_->getFaceCentroid(f_below)[2];
     AMANZI_ASSERT( (*dz)[i] > 0. );
     f_above = f_below;
+
+    // depth from the surface to the BOTTOM of the cell, which is what EcoSIM takes as the layer depth
+    // (CumDepz2LayBottom_vr); the centroid depth would put every layer bottom half a layer too high and
+    // make EcoSIM's layer thicknesses and mid depths wrong
+    depth_to_bottom += (*dz)[i];
+    (*depth)[i] = depth_to_bottom;
   }
 }
 
