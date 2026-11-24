@@ -289,6 +289,8 @@ void AllocateEcoEnvironment(EcoEnvironment* env, int ncells_per_col_, int num_co
   AllocateEcoVectorDouble(ncol, &(env->slope));
   AllocateEcoVectorDouble(ncol, &(env->vegetation_type));
   AllocateEcoVectorDouble(ncol, &(env->snow_albedo));
+  AllocateEcoVectorDouble(ncol, &(env->ponded_depth));
+  AllocateEcoVectorDouble(ncol, &(env->surface_temperature));
 }
 
 void FreeEcoEnvironment(EcoEnvironment* env) {
@@ -330,6 +332,8 @@ void FreeEcoEnvironment(EcoEnvironment* env) {
     FreeEcoMatrixDouble(&(env->SAI));
     FreeEcoVectorDouble(&(env->vegetation_type));
     FreeEcoVectorDouble(&(env->snow_albedo));
+    FreeEcoVectorDouble(&(env->ponded_depth));
+    FreeEcoVectorDouble(&(env->surface_temperature));
   }
 }
 
@@ -343,6 +347,8 @@ void AllocateEcoFeedback(EcoFeedback* feedback, int ncells_per_col_, int num_col
   AllocateEcoMatrixDouble(ncells_per_col_, num_columns, &(feedback->subsurface_energy_source));
   AllocateEcoVectorDouble(num_columns, &(feedback->surface_water_source));
   AllocateEcoVectorDouble(num_columns, &(feedback->surface_energy_source));
+  AllocateEcoVectorDouble(num_columns, &(feedback->surface_energy_source_dtemperature));
+  AllocateEcoVectorDouble(num_columns, &(feedback->surface_energy_reference_temperature));
   AllocateEcoVectorDouble(num_columns, &(feedback->snow_depth));
   AllocateEcoMatrixDouble(num_pfts, num_columns, &(feedback->canopy_snow));
   AllocateEcoTensorDouble(ncells_per_col_, num_columns, num_components, &(feedback->subsurface_mole_fraction_source));
@@ -354,6 +360,8 @@ void FreeEcoFeedback(EcoFeedback* feedback) {
     FreeEcoMatrixDouble(&(feedback->subsurface_energy_source));
     FreeEcoVectorDouble(&(feedback->surface_water_source));
     FreeEcoVectorDouble(&(feedback->surface_energy_source));
+    FreeEcoVectorDouble(&(feedback->surface_energy_source_dtemperature));
+    FreeEcoVectorDouble(&(feedback->surface_energy_reference_temperature));
     FreeEcoVectorDouble(&(feedback->snow_depth));
     FreeEcoMatrixDouble(&(feedback->canopy_snow));
     FreeEcoTensorDouble(&(feedback->subsurface_mole_fraction_source));

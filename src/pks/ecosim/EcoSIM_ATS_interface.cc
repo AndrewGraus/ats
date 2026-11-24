@@ -1,3 +1,4 @@
+#include "ecosim_interface.h"
 /*--------------------------------------------------------------------------
   ATS
 
@@ -14,8 +15,10 @@
   --------------------------------------------------------------------------*/
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <set>
+#include <sstream>
 #include <string>
 
 // TPLs
@@ -37,6 +40,7 @@
 // #include "hydraulic_conductivity_evaluator.hh"
 
 #include "PK_Helpers.hh"
+#include "Reader.hh"
 #include "EcoSIM_ATS_interface.hh"
 
 namespace Amanzi {
@@ -110,7 +114,9 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     //bulk_density_key_ = Keys::readKey(*plist_, domain_, "bulk density", "bulk_density");
 
     //Surface balance items
-    T_surf_key_ = Keys::readKey(*plist_, domain_surface_, "temperature", "temperature");
+    // distinct basename: readKey stores "<basename> key" in plist_, so reusing
+    // "temperature" would return the subsurface key set for T_key_ above
+    T_surf_key_ = Keys::readKey(*plist_, domain_surface_, "surface temperature", "temperature");
     sw_key_ =
       Keys::readKey(*plist_, domain_surface_, "incoming shortwave radiation", "incoming_shortwave_radiation");
     sw_incident_key_ =
@@ -154,6 +160,8 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     pheno_bool = plist_->get<bool>("prescribe phenology", false);
     microbe_bool = plist_->get<bool>("microbe model", false);
     num_pfts = plist_->get<int>("number of pfts", 1);
+    wind_speed_ref_height_ = plist_->get<double>("wind speed reference height [m]", 3.0);
+    soil_surface_roughness_ = plist_->get<double>("soil surface roughness height [m]", 0.001);
     mole_fraction_num_ = plist_->get<int>("number of mole fraction components", 1);
     for (int k = 0; k < mole_fraction_num_; ++k) {
       subsurface_mole_fraction_source_dof_keys_.push_back(
@@ -171,8 +179,14 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
     //Parameters for times and time of year
     dt_ = plist_->get<double>("initial time step");
     c_m_ = plist_->get<double>("heat capacity [MJ mol^-1 K^-1]");
-    day0_ = plist_->get<int>("starting day of year [0-364]");
-    year0_ = plist_->get<int>("starting year");
+    // site and calendar: each a value, a {"file", "header"} sublist, or a default
+    year0_ = static_cast<int>(ReadSiteParameter_("starting year", "start year", nullptr));
+    day0_ = static_cast<int>(
+      ReadSiteParameter_("starting day of year [0-364]", "start day of year [0-364]", nullptr));
+    const double default_hour = 0.0, default_latitude = 40.0, default_solar_noon = 12.0;
+    hour0_ = ReadSiteParameter_("starting hour [h]", "start hour [h]", &default_hour);
+    latitude_ = ReadSiteParameter_("latitude [degrees]", "latitude [deg]", &default_latitude);
+    solar_noon_ = ReadSiteParameter_("solar noon [h]", "solar noon [h]", &default_solar_noon);
 
     curr_day_ = day0_;
     curr_year_ = year0_;
@@ -199,13 +213,54 @@ EcoSIM::EcoSIM(Teuchos::ParameterList& pk_tree,
 void EcoSIM::parseParameterList()
 {
   PK_Physical_Default::parseParameterList();
+  semi_implicit_heat_ = plist_->get<bool>("semi-implicit surface heat exchange", true);
+  if (plist_->get<bool>("shared surface layer", false)) {
+    // EcoSIM's litter layer shared with the ATS surface (EcoSIM layer zero) needs ATS-side routing of its
+    // ground water and heat into the soil PKs and a layer-zero storage evaluator; neither exists any more.
+    Errors::Message msg;
+    msg << "EcoSIM for ATS: \"shared surface layer\" = true is no longer supported; remove it or set it to false.";
+    Exceptions::amanzi_throw(msg);
+  }
+  ponded_aware_=plist_->get<bool>("ponded-aware surface physics",false);
+  auto surface_domain=Keys::getDomain(T_surf_key_);
+  ponded_depth_key_=Keys::getKey(surface_domain,"ponded_depth");
+  heat_slope_key_ = surface_energy_source_ecosim_key_ + "_dtemperature";
+  heat_reference_temperature_key_ = surface_energy_source_ecosim_key_ + "_temperature_ref";
+  heat_linearized_key_ = surface_energy_source_ecosim_key_ + "_linearized";
+  heat_temperature_increment_key_ = surface_energy_source_ecosim_key_ + "_temperature_increment";
+  heat_correction_key_ = surface_energy_source_ecosim_key_ + "_temperature_correction";
+  heat_correction_energy_key_ = surface_energy_source_ecosim_key_ + "_correction_energy";
+  heat_applied_key_ = surface_energy_source_ecosim_key_ + "_applied";
+  heat_last_advance_time_key_ = surface_energy_source_ecosim_key_ + "_last_advance_time";
+
+  if (semi_implicit_heat_) {
+    // Reuse the generic evaluator DAG so both the residual and its analytic
+    // derivative see q(T) = q_ref + K_ref * (T - T_ref). Reference fields are
+    // owned by this PK and stay fixed throughout the physical solve.
+    // Energy PKs consuming the raw EcoSIM source discover this replacement
+    // after all PKs have parsed, preserving existing input source keys.
+    S_->GetEvaluatorList(surface_energy_source_ecosim_key_)
+      .set("temperature linearized source key", heat_linearized_key_);
+    auto& delta = S_->GetEvaluatorList(heat_temperature_increment_key_);
+    delta.set("evaluator type", "additive evaluator");
+    delta.set("dependencies", Teuchos::Array<std::string>{T_surf_key_, heat_reference_temperature_key_});
+    delta.set(heat_reference_temperature_key_ + " coefficient", -1.0);
+    auto& correction = S_->GetEvaluatorList(heat_correction_key_);
+    correction.set("evaluator type", "multiplicative evaluator");
+    correction.set("dependencies", Teuchos::Array<std::string>{heat_slope_key_, heat_temperature_increment_key_});
+    auto& source = S_->GetEvaluatorList(heat_linearized_key_);
+    source.set("evaluator type", "additive evaluator");
+    source.set("dependencies", Teuchos::Array<std::string>{surface_energy_source_ecosim_key_, heat_correction_key_});
+  }
 
   // These sources are primary variables owned by this PK (see Setup). PKs
   // that use them (e.g. overland flow) are set up before this one, so declare
   // the evaluator type here: parseParameterList() runs for every PK before
   // any Setup().
   for (const auto& key : { surface_energy_source_ecosim_key_, surface_water_source_ecosim_key_,
-                           subsurface_energy_source_ecosim_key_, subsurface_water_source_ecosim_key_ }) {
+                           subsurface_energy_source_ecosim_key_, subsurface_water_source_ecosim_key_,
+                           heat_slope_key_, heat_reference_temperature_key_,
+                           heat_correction_energy_key_, heat_applied_key_ }) {
     if (S_->HasEvaluatorList(key) &&
         S_->GetEvaluatorList(key).get<std::string>("evaluator type", "primary variable") !=
           "primary variable") {
@@ -379,6 +434,16 @@ void EcoSIM::Setup() {
     .SetMesh(mesh_surf_)
     ->SetGhosted(false)
     ->SetComponent("cell", AmanziMesh::CELL, 1);
+
+  for (const auto& key : {heat_slope_key_, heat_reference_temperature_key_,
+                          heat_correction_energy_key_, heat_applied_key_}) {
+    requireEvaluatorPrimary(key, tag_next_, *S_, name_)
+      .SetMesh(mesh_surf_)->SetGhosted(false)->SetComponent("cell", AmanziMesh::CELL, 1);
+  }
+  S_->Require<double>(heat_last_advance_time_key_, tag_next_, name_);
+  S_->RequireEvaluator(ponded_depth_key_,tag_next_);
+
+  if (semi_implicit_heat_) S_->RequireEvaluator(heat_linearized_key_, tag_next_);
 
   requireEvaluatorPrimary(surface_water_source_ecosim_key_, tag_next_, *S_, name_)
     .SetMesh(mesh_surf_)
@@ -557,12 +622,21 @@ void EcoSIM::Initialize() {
   S_->GetRecordW(canopy_snow_key_, Tags::DEFAULT, canopy_snow_key_).set_initialized();
 
   for (const auto& key : { surface_energy_source_ecosim_key_, surface_water_source_ecosim_key_,
-                           subsurface_energy_source_ecosim_key_, subsurface_water_source_ecosim_key_ }) {
+                           subsurface_energy_source_ecosim_key_, subsurface_water_source_ecosim_key_,
+                           heat_slope_key_, heat_reference_temperature_key_,
+                           heat_correction_energy_key_, heat_applied_key_ }) {
     S_->GetW<CompositeVector>(key, tag_next_, name_).PutScalar(0.0);
     S_->GetRecordW(key, tag_next_, name_).set_initialized();
     changedEvaluatorPrimary(key, tag_next_, *S_);
   }
 
+  // Persist the per-PK refresh clock with the reference fields. Zero retains
+  // the former cold-start behavior of the process-static clock.
+  S_->GetW<double>(heat_last_advance_time_key_, tag_next_, name_) = 0.0;
+  S_->GetRecordW(heat_last_advance_time_key_, tag_next_, name_).set_initialized();
+
+  // Zero slope keeps the cold-start heat source explicit until the first
+  // EcoSIM refresh supplies the reference flux, temperature, and derivative.
   if (microbe_bool) {
     S_->GetW<CompositeVector>(subsurface_mole_fraction_source_ecosim_key_, tag_next_, name_).PutScalar(0.0);
     S_->GetRecordW(subsurface_mole_fraction_source_ecosim_key_, tag_next_, name_).set_initialized();
@@ -615,6 +689,7 @@ void EcoSIM::Initialize() {
       num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
 
       InitializeSingleProcess(p_rank);
+
     }
   }
 
@@ -632,6 +707,20 @@ void EcoSIM::CommitStep(double t_old, double t_new, const Tag& tag) {
   // Data to the pfts, which we won't be doing. In Alquimia they just save the time
   // As below.
 
+  // Do not accumulate trial/Newton corrections or count duplicate commits.
+  if (pending_heat_valid_ && t_new == pending_heat_time_ && t_new > t_old) {
+    auto& energy = *(*S_->GetW<CompositeVector>(heat_correction_energy_key_, tag_next_, name_)
+                       .ViewComponent("cell", false))(0);
+    auto& applied = *(*S_->GetW<CompositeVector>(heat_applied_key_, tag_next_, name_)
+                        .ViewComponent("cell", false))(0);
+    for (int c = 0; c != energy.MyLength(); ++c) {
+      energy[c] += (t_new - t_old) * pending_heat_correction_[c]; // MJ m^-2
+      applied[c] = pending_heat_applied_[c];                    // MW m^-2
+    }
+    changedEvaluatorPrimary(heat_correction_energy_key_, tag_next_, *S_);
+    changedEvaluatorPrimary(heat_applied_key_, tag_next_, *S_);
+    pending_heat_valid_ = false;
+  }
   saved_time_ = t_new;
 
 }
@@ -639,6 +728,26 @@ void EcoSIM::CommitStep(double t_old, double t_new, const Tag& tag) {
 bool EcoSIM::AdvanceStep(double t_old, double t_new, bool reinit) {
   double dt = t_new - t_old;
   current_time_ = saved_time_ + dt;
+  pending_heat_valid_ = false;
+  // Physical PKs have solved the candidate temperature. Capture the source
+  // they used BEFORE EcoSIM replaces the reference triple for the next step.
+  const auto& raw_heat = *(*S_->Get<CompositeVector>(surface_energy_source_ecosim_key_, tag_next_)
+                             .ViewComponent("cell", false))(0);
+  pending_heat_correction_.assign(raw_heat.MyLength(), 0.0);
+  pending_heat_applied_.resize(raw_heat.MyLength());
+  if (semi_implicit_heat_) {
+    S_->GetEvaluator(heat_linearized_key_, tag_next_).Update(*S_, name_);
+    const auto& used_heat = *(*S_->Get<CompositeVector>(heat_linearized_key_, tag_next_)
+                                .ViewComponent("cell", false))(0);
+    for (int c = 0; c != raw_heat.MyLength(); ++c) {
+      pending_heat_applied_[c] = used_heat[c];
+      pending_heat_correction_[c] = used_heat[c] - raw_heat[c];
+    }
+  } else {
+    for (int c = 0; c != raw_heat.MyLength(); ++c) pending_heat_applied_[c] = raw_heat[c];
+  }
+  pending_heat_time_ = t_new;
+  pending_heat_valid_ = true;
 
 
   Teuchos::OSTab out = vo_->getOSTab();
@@ -1036,15 +1145,66 @@ void EcoSIM::VolDepthDz_(AmanziMesh::Entity_ID column,
 }
 
 // ATS -> EcoSIM, once at setup: run parameters and flags
+double EcoSIM::ReadSiteParameter_(const std::string& name, const std::string& header,
+                                  const double* default_value)
+{
+  double value;
+  std::string source;
+  if (plist_->isSublist(name)) {
+    Teuchos::ParameterList& sub = plist_->sublist(name);
+    std::string filename = sub.get<std::string>("file");
+    std::string dataset = sub.get<std::string>("header", header);
+    Teuchos::Array<double> v;
+    try {
+      createReader(filename)->read(dataset, v);
+    } catch (const std::exception& e) {
+      // thrown while the PK is constructed, where it is not reported: say what failed
+      Errors::Message msg;
+      msg << "EcoSIM: \"" << name << "\": cannot read dataset \"" << dataset << "\" from \""
+          << filename << "\": " << e.what();
+      std::cerr << msg.what() << std::endl;
+      Exceptions::amanzi_throw(msg);
+    }
+    if (v.size() != 1) {
+      Errors::Message msg;
+      msg << "EcoSIM: \"" << name << "\": dataset \"" << dataset << "\" in \"" << filename
+          << "\" must have one value, it has " << static_cast<int>(v.size());
+      Exceptions::amanzi_throw(msg);
+    }
+    value = v[0];
+    source = "file " + filename + ", dataset \"" + dataset + "\"";
+  } else if (plist_->isParameter(name)) {
+    value = plist_->isType<int>(name) ? plist_->get<int>(name) : plist_->get<double>(name);
+    source = "input";
+  } else if (default_value) {
+    value = *default_value;
+    source = "default";
+  } else {
+    Errors::Message msg;
+    msg << "EcoSIM: parameter \"" << name << "\" is required (a value, or a sublist with "
+        << "\"file\" and \"header\")";
+    Exceptions::amanzi_throw(msg);
+  }
+  std::stringstream line;
+  line << "  " << name << " = " << value << " (" << source << ")\n";
+  site_log_ += line.str();
+  return value;
+}
+
 void EcoSIM::CopyConfigToEcoSIM_(EcoConfig& config)
 {
+  config.ponded_aware=ponded_aware_;
   config.heat_capacity = c_m_;
   config.field_capacity = pressure_at_field_capacity;
   config.wilting_point = pressure_at_wilting_point;
+  config.latitude = latitude_;
+  config.solar_noon = solar_noon_;
   config.p_bool = p_bool;
   config.a_bool = a_bool;
   config.pheno_bool = pheno_bool;
   config.microbe_bool = microbe_bool;
+  config.wind_speed_ref_height = wind_speed_ref_height_;
+  config.soil_surface_roughness = soil_surface_roughness_;
   config.pft_file = engine_inputfile.data();
 }
 
@@ -1083,10 +1243,13 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
   const Epetra_Vector& capillary_pressure = *(*S_->Get<CompositeVector>(cap_pres_key_, water_tag).ViewComponent("cell", false))(0);
 
   //const auto& shortwave_radiation = *S_.Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false);
+
+  S_->GetEvaluator(ponded_depth_key_,water_tag).Update(*S_,name_);
+  const Epetra_MultiVector& ponded_depth=*S_->Get<CompositeVector>(ponded_depth_key_,water_tag).ViewComponent("cell",false);
   const Epetra_Vector& temp_surf = *(*S_->Get<CompositeVector>(T_surf_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& shortwave_radiation = *(*S_->Get<CompositeVector>(sw_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& shortwave_incident_radiation = *(*S_->Get<CompositeVector>(sw_incident_key_, water_tag).ViewComponent("cell", false))(0);
-  //const Epetra_Vector& longwave_radiation = *(*S_->Get<CompositeVector>(lw_key_, water_tag).ViewComponent("cell", false))(0);
+  const Epetra_Vector& longwave_radiation = *(*S_->Get<CompositeVector>(lw_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& air_temperature = *(*S_->Get<CompositeVector>(air_temp_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& vapor_pressure_air = *(*S_->Get<CompositeVector>(vp_air_key_, water_tag).ViewComponent("cell", false))(0);
   const Epetra_Vector& wind_speed= *(*S_->Get<CompositeVector>(wind_speed_key_, water_tag).ViewComponent("cell", false))(0);
@@ -1219,6 +1382,7 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
       //environment.bulk_density.data[column * ncells_per_col_ + i] = (*col_b_dens)[i];
       environment.matric_pressure.data[column * ncells_per_col_ + i] = (*col_mat_p)[i];
       environment.temperature.data[column * ncells_per_col_ + i] = (*col_temp)[i];
+      environment.thermal_conductivity.data[column * ncells_per_col_ + i] = (*col_cond)[i];
       //environment.plant_functional_type.data[column * ncells_per_col_ + i] = (*col_v_type)[i];
       environment.plant_wilting_factor.data[column * ncells_per_col_ + i] = (*col_wp)[i];
       environment.rooting_depth_fraction.data[column * ncells_per_col_ + i] = (*col_rf)[i];
@@ -1242,14 +1406,17 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     }
     //fill surface variables
 
-    //environment.temperature.data[1] = temp_surf[column];
+    environment.surface_temperature.data[column] = temp_surf[column];
+    // The ATS pond is read-only for EcoSIM (ponded-aware mode).
+    environment.ponded_depth.data[column]=ponded_depth[0][column];
+
     feedback.snow_depth.data[column] = snow_depth[0][column];
     for (int pft = 0; pft != num_pfts; ++pft) {
       feedback.canopy_snow.data[column * num_pfts + pft] = canopy_snow_in[pft][column];
     }
 
     environment.shortwave_radiation.data[column] = shortwave_radiation[column];
-    //environment.longwave_radiation.data[column] = longwave_radiation[column];
+    environment.longwave_radiation.data[column] = longwave_radiation[column];
     environment.air_temperature.data[column] = air_temperature[column];
     environment.vapor_pressure_air.data[column] = vapor_pressure_air[column];
     environment.wind_speed.data[column] = wind_speed[column];
@@ -1371,6 +1538,11 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
   double water_source_tot = feedback.surface_water_source.data[0];
   double snow_depth_cell = feedback.snow_depth.data[0];
 
+  auto& slope = *(*S_->GetW<CompositeVector>(heat_slope_key_, tag_next_, name_)
+                      .ViewComponent("cell", false))(0);
+  auto& reference = *(*S_->GetW<CompositeVector>(heat_reference_temperature_key_, tag_next_, name_)
+                          .ViewComponent("cell", false))(0);
+
   for (int col=0; col!=num_columns_local; ++col) {
     
     /*for (int i=0; i < ncells_per_col_; ++i) {
@@ -1385,8 +1557,10 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     ColumnToField_(col, snow_temperature, col_snow_temperature.ptr());
     ColumnToField_(col, canopy_snow, col_canopy_snow.ptr());*/
     
-    surface_energy_source[col] = feedback.surface_energy_source.data[col]/(3600.0);
-    surface_water_source[col] = feedback.surface_water_source.data[col]/(3600.0);
+    surface_energy_source[col] = feedback.surface_energy_source.data[col]/3600.;
+    slope[col] = feedback.surface_energy_source_dtemperature.data[col] / 3600.0;
+    reference[col] = feedback.surface_energy_reference_temperature.data[col];
+    surface_water_source[col] = feedback.surface_water_source.data[col]/3600.;
     snow_depth[0][col] = feedback.snow_depth.data[col];
     for (int pft = 0; pft != num_pfts; ++pft) {
       canopy_snow_out[pft][col] = feedback.canopy_snow.data[col * num_pfts + pft];
@@ -1417,6 +1591,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
     subsurface_water_source[c] *= liquid_density[c] / (3600.0 * cell_volume[c]);
   }
 
+  // The subsurface has no EcoSIM energy source (heat reaches the soil through the surface source).
+  subsurface_energy_source.PutScalar(0.);
   if (microbe_bool) {
     auto& subsurface_mole_fraction_source =
       *S_->GetW<CompositeVector>(subsurface_mole_fraction_source_ecosim_key_, tag_next_, name_)
@@ -1451,7 +1627,8 @@ void EcoSIM::CopyFromEcoSIM_process(const int column,
 
   // tell the evaluators that use EcoSIM's sources that they changed
   for (const auto& key : { surface_energy_source_ecosim_key_, surface_water_source_ecosim_key_,
-                           subsurface_energy_source_ecosim_key_, subsurface_water_source_ecosim_key_ }) {
+                           subsurface_energy_source_ecosim_key_, subsurface_water_source_ecosim_key_,
+                           heat_slope_key_, heat_reference_temperature_key_ }) {
     changedEvaluatorPrimary(key, tag_next_, *S_);
   }
 }
@@ -1543,6 +1720,7 @@ int EcoSIM::InitializeSingleProcess(int proc)
   // C and Fortran must agree on the exchange containers
   eco_engine_->CheckContainerSizes();
 
+  *vo_->os() << "EcoSIM site and calendar:\n" << site_log_;
   CopyConfigToEcoSIM_(eco_config_);
   CopyToEcoSIM_process(proc, eco_env_, eco_feedback_, Tags::DEFAULT);
 
@@ -1575,19 +1753,25 @@ int EcoSIM::AdvanceSingleProcess(double dt, int proc)
 
   // Time tracking variables
   current_time_ = S_->get_time();        //Current time
-  static double last_ecosim_time = 0.0;
-  int total_days = static_cast<int>(current_time_ / 86400.0);
+  double& last_ecosim_time =
+    S_->GetW<double>(heat_last_advance_time_key_, tag_next_, name_);
+  // clock: time 0 is the starting year, day and hour (365-day calendar)
+  double t_clock = current_time_ + hour0_ * 3600.0;
+  int total_days = static_cast<int>(t_clock / 86400.0);
   int current_day = (day0_ + total_days) % 365;
   int current_year = year0_ + ((day0_ + total_days)/365);
+  int current_hour = static_cast<int>(std::fmod(t_clock, 86400.0) / 3600.0);
 
   eco_env_.current_day = current_day;
   eco_env_.current_year = current_year;
+  eco_env_.current_hour = current_hour;
 
   Teuchos::OSTab tab = vo_->getOSTab();
 
   if (current_time_ - last_ecosim_time >= 3600.0) {
     *vo_->os() << "Hour completed at total_time: " << current_time_
-               << ", Year: " << current_year << ", Day: " << current_day << std::endl;
+               << ", Year: " << current_year << ", Day: " << current_day
+               << ", Hour: " << current_hour << std::endl;
     *vo_->os() << "Running EcoSIM Advance: " << std::endl;
 
 	// the restored internal state must have been written with this EcoSIM layout

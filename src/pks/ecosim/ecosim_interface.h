@@ -63,6 +63,7 @@ void ecosim_internal_state_entry(int i,
                                  int* num_components,
                                  int* role);
 
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

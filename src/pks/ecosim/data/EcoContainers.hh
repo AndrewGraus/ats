@@ -110,10 +110,15 @@ extern "C" {
     double heat_capacity;   /* [MJ mol^-1 K^-1] */
     double field_capacity;  /* pressure at field capacity [MPa] */
     double wilting_point;   /* pressure at wilting point [MPa] */
+    double latitude;        /* site latitude [degrees] */
+    double solar_noon;      /* hour of solar noon in the forcing's clock [h] */
     bool p_bool;            /* EcoSIM precipitation (total, partitioned by EcoSIM) */
     bool a_bool;            /* prescribe snow albedo */
     bool pheno_bool;        /* prescribe phenology */
     bool microbe_bool;      /* microbe model (not copied by EcoSIM) */
+    double wind_speed_ref_height;  /* wind speed measurement height [m] */
+    double soil_surface_roughness; /* soil surface roughness height [m] */
+    bool ponded_aware;      /* EcoSIM cover fractions account for the ATS pond */
     char* pft_file;         /* PFT parameter file, owned by the PK */
   } EcoConfig;
 
@@ -147,7 +152,7 @@ extern "C" {
     /* per column: num_columns */
     EcoVectorDouble column_area;
     EcoVectorDouble shortwave_radiation;
-    EcoVectorDouble longwave_radiation;     /* not filled */
+    EcoVectorDouble longwave_radiation;     
     EcoVectorDouble air_temperature;
     EcoVectorDouble vapor_pressure_air;
     EcoVectorDouble wind_speed;
@@ -158,6 +163,8 @@ extern "C" {
     EcoVectorDouble slope;
     EcoVectorDouble vegetation_type;        /* not filled */
     EcoVectorDouble snow_albedo;
+    EcoVectorDouble ponded_depth; /* mobile ATS ponding [m] */
+    EcoVectorDouble surface_temperature;    /* surface-temperature [K] */
     /* atmosphere composition (not initialized by the PK) */
     double atm_n2;
     double atm_o2;
@@ -169,14 +176,17 @@ extern "C" {
     /* clock (set before every advance) */
     int current_day;
     int current_year;
+    int current_hour;        /* hour of the day [0-23] starting at the current time */
   } EcoEnvironment;
 
   /* EcoSIM -> ATS, every advance */
   typedef struct {
     EcoMatrixDouble subsurface_water_source;  /* EcoSIM: m3 per grid cell per hour */
     EcoMatrixDouble subsurface_energy_source; /* not read back by ATS */
-    EcoVectorDouble surface_water_source;     /* EcoSIM: m h-1 */
-    EcoVectorDouble surface_energy_source;    /* EcoSIM: per hour */
+    EcoVectorDouble surface_water_source;     /* ground [m h-1] */
+    EcoVectorDouble surface_energy_source;    /* same receiver as water [MJ m^-2 h^-1] */
+    EcoVectorDouble surface_energy_source_dtemperature; /* MJ m^-2 K^-1 per hour; radiation+sensible */
+    EcoVectorDouble surface_energy_reference_temperature; /* K, paired with the source and slope */
     EcoVectorDouble snow_depth;               /* also sent in: EcoSIM's snow state */
     EcoMatrixDouble canopy_snow;              /* num_pfts x num_columns; also sent in */
     EcoTensorDouble subsurface_mole_fraction_source; /* ncells x num_columns x num_components; microbes only */
