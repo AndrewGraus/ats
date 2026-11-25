@@ -679,6 +679,11 @@ void EcoSIM::Initialize() {
   num_columns_local = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::OWNED);
   num_columns_global_ptype = mesh_surf_->getNumEntities(AmanziMesh::Entity_kind::CELL, AmanziMesh::Parallel_kind::ALL);
 
+  // The ground slope and aspect set the solar geometry of each column in EcoSIM's initialization, so the
+  // evaluators that derive them from the mesh must have run before the first copy to EcoSIM.
+  S_->GetEvaluator(aspect_key_, Tags::DEFAULT).Update(*S_, name_);
+  S_->GetEvaluator(slope_key_, Tags::DEFAULT).Update(*S_, name_);
+
   //Loop over processes and Initalize EcoSIM on that process
   int numProcesses, p_rank;
   MPI_Comm_size(MPI_COMM_WORLD, &numProcesses);
@@ -1107,9 +1112,8 @@ void EcoSIM::VolDepthDz_(AmanziMesh::Entity_ID column,
   AmanziGeometry::Point neg_z(3);
   neg_z.set(0.,0.,-1);
 
+  double depth_to_bottom = 0.0;
   for (std::size_t i=0; i!=col_iter.size(); ++i) {
-    // depth centroid
-    (*depth)[i] = surf_centroid[2] - mesh_->getCellCentroid(col_iter[i])[2];
 
     // dz
     // -- find face_below
@@ -1141,6 +1145,12 @@ void EcoSIM::VolDepthDz_(AmanziMesh::Entity_ID column,
     (*dz)[i] = mesh_->getFaceCentroid(f_above)[2] - mesh_->getFaceCentroid(f_below)[2];
     AMANZI_ASSERT( (*dz)[i] > 0. );
     f_above = f_below;
+
+    // depth from the surface to the BOTTOM of the cell, which is what EcoSIM takes as the layer depth
+    // (CumDepz2LayBottom_vr); the centroid depth would put every layer bottom half a layer too high and
+    // make EcoSIM's layer thicknesses and mid depths wrong
+    depth_to_bottom += (*dz)[i];
+    (*depth)[i] = depth_to_bottom;
   }
 }
 
@@ -1351,8 +1361,11 @@ void EcoSIM::CopyToEcoSIM_process(int proc_rank,
     auto col_iter = mesh_->columns.getCells(column);
     std::size_t ncol_cells = col_iter.size();
 
-    double column_area = mesh_->getFaceArea(f);
-    //std::cout << "column: " << column << " column_area: " << column_area << std::endl;
+    // EcoSIM's column area is the horizontal (projected) area of the surface cell: the vertical z component of
+    // the face normal, whose length is the face area. It equals the soil cell volume over its thickness, so the
+    // cells of EcoSIM and ATS have the same volume, and it is the area the standalone EcoSIM takes (DH x DV) on a
+    // slope; it is the face area itself on flat ground.
+    double column_area = std::abs(mesh_->getFaceNormal(f)[2]);
     environment.column_area.data[column] = column_area;
 
     VolDepthDz_(column, col_depth.ptr(), col_dz.ptr(), col_vol.ptr());
